@@ -1,0 +1,35 @@
+{
+  "name": "@chargemesh/mobile",
+  "version": "1.0.0",
+  "private": true,
+  "description": "ChargeMesh Cross-Platform Driver Application (Android & iOS)",
+  "main": "index.js",
+  "scripts": {
+    "start": "react-native start",
+    "android": "react-native run-android",
+    "ios": "react-native run-ios",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@chargemesh/shared-constants": "*",
+    "@chargemesh/shared-types": "*",
+    "@react-native-async-storage/async-storage": "^1.23.1",
+    "@react-navigation/bottom-tabs": "^6.5.20",
+    "@react-navigation/native": "^6.1.17",
+    "@react-navigation/native-stack": "^6.9.26",
+    "react": "18.2.0",
+    "react-native": "0.74.2",
+    "react-native-gesture-handler": "^2.16.2",
+    "react-native-safe-area-context": "^4.10.1",
+    "react-native-screens": "^3.31.1"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.24.0",
+    "@babel/runtime": "^7.24.0",
+    "@types/react": "^18.2.0",
+    "@types/react-native": "^0.73.0",
+    "typescript": "^5.5.0"
+  }
+}

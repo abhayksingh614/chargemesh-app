@@ -1,0 +1,11 @@
+{
+  "name": "@chargemesh/shared-types",
+  "version": "1.0.0",
+  "description": "ChargeMesh canonical TypeScript types and data models",
+  "main": "index.ts",
+  "types": "index.ts",
+  "private": true,
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  }
+}

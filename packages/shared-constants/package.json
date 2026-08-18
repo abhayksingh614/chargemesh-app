@@ -1,0 +1,11 @@
+{
+  "name": "@chargemesh/shared-constants",
+  "version": "1.0.0",
+  "description": "ChargeMesh shared business constants, thresholds, and enums",
+  "main": "index.ts",
+  "types": "index.ts",
+  "private": true,
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  }
+}
