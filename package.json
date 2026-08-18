@@ -1,0 +1,43 @@
+{
+  "name": "chargemesh",
+  "version": "1.0.0",
+  "private": true,
+  "description": "ChargeMesh EV Charging Interoperability Platform — Monorepo",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:backend": "npm run dev --workspace=apps/backend",
+    "dev:admin": "npm run dev --workspace=apps/admin",
+    "dev:mobile": "npm run start --workspace=apps/mobile",
+    "build:backend": "npm run build --workspace=apps/backend",
+    "build:admin": "npm run build --workspace=apps/admin",
+    "test": "npm run test --workspaces --if-present",
+    "test:backend": "npm run test --workspace=apps/backend",
+    "test:admin": "npm run test --workspace=apps/admin",
+    "lint": "npm run lint --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:tools": "docker-compose --profile tools up -d",
+    "clean": "npm run clean --workspaces --if-present && rimraf node_modules"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  },
+  "devDependencies": {
+    "rimraf": "^5.0.0",
+    "typescript": "^5.5.0"
+  },
+  "keywords": [
+    "ev",
+    "charging",
+    "ocpi",
+    "interoperability",
+    "chargemesh"
+  ],
+  "author": "ChargeMesh",
+  "license": "UNLICENSED"
+}

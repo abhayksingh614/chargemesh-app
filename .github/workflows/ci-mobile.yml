@@ -1,0 +1,58 @@
+name: CI — Mobile
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'apps/mobile/**'
+      - 'packages/**'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'apps/mobile/**'
+      - 'packages/**'
+
+jobs:
+  test:
+    name: Lint, Typecheck & Unit Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck --workspace=apps/mobile
+
+      - name: Lint
+        run: npm run lint --workspace=apps/mobile
+
+      - name: Unit Tests
+        run: npm run test --workspace=apps/mobile
+        env:
+          NODE_ENV: test
+
+  # Android build check (optional — requires Android SDK setup)
+  # android-build:
+  #   name: Android Build Check
+  #   runs-on: ubuntu-latest
+  #   needs: test
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: Setup Java
+  #       uses: actions/setup-java@v4
+  #       with:
+  #         java-version: '17'
+  #         distribution: 'temurin'
+  #     - name: Setup Android SDK
+  #       uses: android-actions/setup-android@v3
+  #     - name: Build Android Debug
+  #       run: cd apps/mobile/android && ./gradlew assembleDebug
