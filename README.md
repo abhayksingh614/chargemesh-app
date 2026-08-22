@@ -58,7 +58,7 @@ chargemesh-app/
 ### 1. Clone & Install
 
 ```bash
-git clone https://github.com/your-org/chargemesh-app.git
+git clone https://github.com/abhayksingh614/chargemesh-app.git
 cd chargemesh-app
 npm install
 ```
@@ -120,16 +120,23 @@ See:
 
 ---
 
-## Documentation
+## Documentation & Guidelines
 
-All project documentation lives in [`.docs/`](.docs/):
+All canonical project specifications and architectural documentation live in [`docs/`](docs/) and [`.docs/`](.docs/):
 
 | Document | Description |
 |----------|-------------|
-| [Project Documentation](.docs/ChargeMesh_Project_Documentation.md) | Functional overview, features, roadmap, user flows |
-| [Technical Documentation](.docs/ChargeMesh_Technical_Documentation.md) | Architecture, APIs, DB, security, testing |
-| [UI/UX Documentation](.docs/ChargeMesh_UIUX_Documentation.md) | Design system, screens, components, flows |
-| [Legal Documentation](.docs/ChargeMesh_Legal_Documentation.md) | Legal framework (requires legal counsel review) |
+| [Technology Stack](docs/TECHNOLOGY_STACK.md) | Authoritative stack specification & version matrix |
+| [Development Rules](DEVELOPMENT_RULES.md) | Local-first development rules & git workflow gates |
+| [Design System](DESIGN_SYSTEM.md) | ChargeMesh UI/UX Design System, tokens, modal architecture & design guidelines |
+| [Project Overview](docs/PROJECT_OVERVIEW.md) | Product vision, value proposition & core architecture |
+| [Requirements](docs/REQUIREMENTS.md) | Functional & non-functional requirements specification |
+| [System Architecture](docs/ARCHITECTURE.md) | Subsystem architecture & data flow diagrams |
+| [Application Workflows](docs/WORKFLOW.md) | Driver journey & OCPP sequence diagrams |
+| [API Documentation](docs/API_DOCUMENTATION.md) | REST & WebSocket telemetry API specs |
+| [Database Schema](docs/DATABASE_SCHEMA.md) | Relational & time-series data models |
+| [Deployment Guide](docs/DEPLOYMENT.md) | Local container setup & service port matrix |
+| [Deep Project Specs](.docs/ChargeMesh_Project_Documentation.md) | Extended product requirements & business model |
 
 ---
 

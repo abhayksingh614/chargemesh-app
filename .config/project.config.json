@@ -1,0 +1,55 @@
+{
+  "project_name": "ChargeMesh",
+  "version": "1.0.0",
+  "monorepo": {
+    "manager": "npm",
+    "workspaces": [
+      "apps/*",
+      "packages/*"
+    ],
+    "node_version": ">=20.0.0"
+  },
+  "frontend": {
+    "mobile": {
+      "framework": "React Native",
+      "version": "0.74.2",
+      "ui_library": "React 18.2.0",
+      "language": "TypeScript 5.5.0",
+      "navigation": "React Navigation 6.x",
+      "platforms": ["android", "ios"]
+    },
+    "admin": {
+      "framework": "Next.js",
+      "language": "TypeScript 5.5.0",
+      "platform": "web"
+    }
+  },
+  "backend": {
+    "runtime": "Node.js",
+    "framework": "NestJS",
+    "language": "TypeScript 5.5.0",
+    "protocols": [
+      "REST",
+      "GraphQL",
+      "OCPP-1.6J",
+      "OCPP-2.0.1",
+      "OCPI-2.3.0"
+    ],
+    "auth": "JWT"
+  },
+  "database": {
+    "primary": "PostgreSQL 16",
+    "extensions": ["postgis", "postgis_topology", "uuid-ossp", "pg_trgm"],
+    "cache": "Redis 7"
+  },
+  "testing": {
+    "unit": "Jest",
+    "linter": "ESLint",
+    "typechecker": "TypeScript"
+  },
+  "deployment": {
+    "containerization": "Docker",
+    "orchestration": "Docker Compose 3.9",
+    "ci_cd": "GitHub Actions"
+  }
+}

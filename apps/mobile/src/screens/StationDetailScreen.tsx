@@ -5,12 +5,22 @@ import {
   StyleSheet,
   ScrollView,
   SafeAreaView,
-  TouchableOpacity
+  TouchableOpacity,
+  Platform,
 } from 'react-native';
 import { mockStations } from '../services/mockData';
-import { Header, ConnectorCard, PrimaryButton } from '../components';
-import { colors, typography, borderRadius } from '../theme';
+import {
+  Header,
+  ConnectorCard,
+  PrimaryButton,
+  BookingModal,
+  FormInputModal,
+  StatusModal,
+  AuthGateModal,
+} from '../components';
+import { colors, typography, spacing, borderRadius, shadows } from '../theme';
 import { Connector, ConnectorStatus } from '@chargemesh/shared-types';
+import { useAuth } from '../context';
 
 interface StationDetailScreenProps {
   route: any;
@@ -21,14 +31,51 @@ export const StationDetailScreen: React.FC<StationDetailScreenProps> = ({
   route,
   navigation,
 }) => {
+  const { isGuest } = useAuth();
   const stationId = route?.params?.stationId || mockStations[0].id;
-  const station = mockStations.find(s => s.id === stationId) || mockStations[0];
+  const station = mockStations.find((s) => s.id === stationId) || mockStations[0];
 
   const [selectedConnector, setSelectedConnector] = useState<Connector>(
-    station.connectors.find(c => c.status === ConnectorStatus.AVAILABLE) || station.connectors[0]
+    station.connectors.find((c) => c.status === ConnectorStatus.AVAILABLE) || station.connectors[0]
   );
 
+  const [showBookingModal, setShowBookingModal] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [showAuthGate, setShowAuthGate] = useState(false);
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [statusModalContent, setStatusModalContent] = useState({
+    title: '',
+    message: '',
+    type: 'success' as any,
+  });
+
   const isUsable = selectedConnector.status === ConnectorStatus.AVAILABLE;
+
+  const handleBooking = () => {
+    if (isGuest) {
+      setShowAuthGate(true);
+      return;
+    }
+    setShowBookingModal(true);
+  };
+
+  const handleConfirmBooking = (_connectorId: string, durationMinutes: number) => {
+    setStatusModalContent({
+      title: 'Slot Reserved Successfully! ⚡',
+      message: `Bay ${selectedConnector.type} has been held exclusively for ${durationMinutes} minutes at ${station.name}. Navigate now to plug in.`,
+      type: 'success',
+    });
+    setShowStatusModal(true);
+  };
+
+  const handleReportIssue = (_values: Record<string, string>) => {
+    setStatusModalContent({
+      title: 'Feedback Received',
+      message: 'Thank you for helping maintain charging network reliability. Ticket dispatched to CPO operations.',
+      type: 'success',
+    });
+    setShowStatusModal(true);
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -37,8 +84,12 @@ export const StationDetailScreen: React.FC<StationDetailScreenProps> = ({
         subtitle={station.cpo.name}
         onBack={() => navigation.goBack()}
         rightAction={
-          <TouchableOpacity style={styles.shareBtn}>
-            <Text style={styles.shareIcon}>↗</Text>
+          <TouchableOpacity
+            style={styles.reportBtn}
+            onPress={() => setShowReportModal(true)}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.reportBtnText}>⚠️ Report</Text>
           </TouchableOpacity>
         }
       />
@@ -68,6 +119,18 @@ export const StationDetailScreen: React.FC<StationDetailScreenProps> = ({
               <Text style={styles.summaryLabel}>Tariff</Text>
             </View>
           </View>
+        </View>
+
+        {/* Quick Action Row */}
+        <View style={styles.quickActionRow}>
+          <TouchableOpacity
+            style={styles.reserveBtn}
+            onPress={handleBooking}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.reserveBtnIcon}>📅</Text>
+            <Text style={styles.reserveBtnText}>Reserve Slot (15m Hold)</Text>
+          </TouchableOpacity>
         </View>
 
         {/* Station Metadata & Amenities */}
@@ -119,7 +182,7 @@ export const StationDetailScreen: React.FC<StationDetailScreenProps> = ({
         </View>
 
         <PrimaryButton
-          title={isUsable ? "Continue to Pre-Charge" : "Select Available Connector"}
+          title={isUsable ? 'Continue to Pre-Charge' : 'Select Available Connector'}
           disabled={!isUsable}
           onPress={() => {
             navigation.navigate('PreCharge', {
@@ -130,6 +193,47 @@ export const StationDetailScreen: React.FC<StationDetailScreenProps> = ({
           style={styles.chargeCta}
         />
       </View>
+
+      {/* Unified Modals */}
+      <BookingModal
+        visible={showBookingModal}
+        stationName={station.name}
+        connectors={station.connectors.filter((c) => c.status === ConnectorStatus.AVAILABLE)}
+        onClose={() => setShowBookingModal(false)}
+        onConfirmBooking={handleConfirmBooking}
+      />
+
+      <FormInputModal
+        visible={showReportModal}
+        badge="Quality & Support"
+        iconEmoji="⚠️"
+        title="Report Station Issue"
+        subtitle={`Notify ChargeMesh and ${station.cpo.name} about hardware, parking or payment issues.`}
+        submitLabel="Send Report"
+        fields={[
+          { key: 'issueType', label: 'Issue Category', placeholder: 'e.g. Gun damaged, Blocked bay, Offline', required: true },
+          { key: 'details', label: 'Description', placeholder: 'Provide additional details for our field crew...', multiline: true },
+        ]}
+        onClose={() => setShowReportModal(false)}
+        onSubmit={handleReportIssue}
+      />
+
+      <AuthGateModal
+        visible={showAuthGate}
+        featureName="Slot Reservation"
+        onClose={() => setShowAuthGate(false)}
+        onLogin={() => navigation.navigate('Login')}
+        onRegister={() => navigation.navigate('Register')}
+      />
+
+      <StatusModal
+        visible={showStatusModal}
+        type={statusModalContent.type}
+        title={statusModalContent.title}
+        message={statusModalContent.message}
+        buttonLabel="Got It"
+        onClose={() => setShowStatusModal(false)}
+      />
     </SafeAreaView>
   );
 };
@@ -140,23 +244,30 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   content: {
-    padding: 20,
-    paddingBottom: 100,
+    padding: spacing.lg,
+    paddingBottom: 110,
   },
-  shareBtn: {
-    padding: 8,
+  reportBtn: {
+    backgroundColor: colors.surfaceSecondary,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
+    borderRadius: borderRadius.md,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
   },
-  shareIcon: {
-    fontSize: 20,
-    color: colors.textPrimary,
+  reportBtnText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.textSecondary,
   },
   decisionCard: {
     backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
-    padding: 16,
+    borderRadius: borderRadius.xxl,
+    padding: spacing.lg,
     borderWidth: 1,
-    borderColor: colors.border,
-    marginBottom: 20,
+    borderColor: colors.borderLight,
+    marginBottom: spacing.md,
+    ...shadows.card,
   },
   decisionRow: {
     flexDirection: 'row',
@@ -169,6 +280,7 @@ const styles = StyleSheet.create({
   summaryValue: {
     ...typography.h3,
     color: colors.darkGreen,
+    fontWeight: '800',
   },
   summaryLabel: {
     ...typography.caption,
@@ -178,64 +290,95 @@ const styles = StyleSheet.create({
   summaryDivider: {
     width: 1,
     height: 32,
-    backgroundColor: colors.divider,
+    backgroundColor: colors.borderLight,
+  },
+  quickActionRow: {
+    marginBottom: spacing.md,
+  },
+  reserveBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.ecoLight,
+    borderRadius: borderRadius.xl,
+    paddingVertical: 12,
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
+    ...shadows.card,
+  },
+  reserveBtnIcon: {
+    fontSize: 16,
+    marginRight: spacing.xs,
+  },
+  reserveBtnText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: colors.primaryDark,
   },
   metaSection: {
     backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
-    padding: 16,
+    borderRadius: borderRadius.xxl,
+    padding: spacing.lg,
+    marginBottom: spacing.lg,
     borderWidth: 1,
-    borderColor: colors.border,
-    marginBottom: 24,
+    borderColor: colors.borderLight,
+    ...shadows.card,
   },
   sectionTitle: {
-    ...typography.h3,
+    fontSize: 15,
+    fontWeight: '800',
     color: colors.textPrimary,
-    marginBottom: 10,
+    marginBottom: spacing.sm,
   },
   addressText: {
-    ...typography.body,
+    fontSize: 13,
     color: colors.textPrimary,
-    marginBottom: 6,
+    marginBottom: 4,
+    lineHeight: 18,
   },
   openingText: {
-    ...typography.bodySecondary,
-    marginBottom: 6,
+    fontSize: 12,
+    color: colors.textSecondary,
+    marginBottom: 4,
   },
   directionsText: {
-    ...typography.caption,
+    fontSize: 12,
     color: colors.textSecondary,
-    marginBottom: 12,
+    marginBottom: spacing.sm,
+    fontStyle: 'italic',
   },
   facilityPills: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 6,
-    marginTop: 4,
+    gap: spacing.xs,
+    marginTop: spacing.xs,
   },
   facilityChip: {
-    backgroundColor: colors.ecoLight,
-    paddingHorizontal: 10,
+    backgroundColor: colors.surfaceSecondary,
+    paddingHorizontal: spacing.sm,
     paddingVertical: 4,
     borderRadius: borderRadius.sm,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
   },
   facilityText: {
-    ...typography.captionBold,
-    color: colors.darkGreen,
     fontSize: 11,
+    color: colors.textSecondary,
+    fontWeight: '600',
   },
   connectorsSection: {
-    marginBottom: 20,
+    marginBottom: spacing.lg,
   },
   connectorHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: spacing.xs,
   },
   freshnessNotice: {
-    ...typography.caption,
+    fontSize: 11,
     color: colors.primary,
+    fontWeight: '600',
   },
   bottomBar: {
     position: 'absolute',
@@ -244,24 +387,29 @@ const styles = StyleSheet.create({
     right: 0,
     backgroundColor: colors.surface,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
-    paddingHorizontal: 20,
-    paddingVertical: 14,
+    borderTopColor: colors.borderLight,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+    paddingBottom: Platform.OS === 'ios' ? 24 : spacing.md,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    ...shadows.elevated,
   },
   bottomPriceInfo: {
     flex: 1,
-    marginRight: 14,
+    marginRight: spacing.md,
   },
   bottomSelectedLabel: {
-    ...typography.captionBold,
+    fontSize: 12,
+    fontWeight: '700',
     color: colors.textPrimary,
   },
   bottomTariff: {
-    ...typography.subtitle,
+    fontSize: 16,
+    fontWeight: '800',
     color: colors.primary,
+    marginTop: 1,
   },
   chargeCta: {
     flex: 1.4,

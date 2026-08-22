@@ -1,5 +1,5 @@
 import React from 'react';
-import { Text } from 'react-native';
+import { View, StyleSheet, Platform } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import {
   HomeScreen,
@@ -8,49 +8,91 @@ import {
   ActivityScreen,
   ProfileScreen,
 } from '../screens';
-import { colors, typography } from '../theme';
+import { ThreeDIcon } from '../components';
+import { useTheme } from '../context';
 
 const Tab = createBottomTabNavigator();
 
 export const MainTabNavigator: React.FC = () => {
+  const { theme } = useTheme();
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.textSecondary,
+        tabBarActiveTintColor: theme.primary,
+        tabBarInactiveTintColor: theme.textSecondary,
         tabBarStyle: {
-          backgroundColor: colors.surface,
-          borderTopColor: colors.border,
-          height: 62,
-          paddingBottom: 8,
+          backgroundColor: theme.surface,
+          borderTopColor: theme.border,
+          borderTopWidth: 1,
+          height: Platform.OS === 'ios' ? 82 : 64,
+          paddingBottom: Platform.OS === 'ios' ? 22 : 8,
           paddingTop: 6,
+          elevation: 10,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: -4 },
+          shadowOpacity: 0.2,
+          shadowRadius: 8,
         },
         tabBarLabelStyle: {
-          ...typography.captionBold,
-          fontSize: 11,
+          fontSize: 10.5,
+          fontWeight: '700',
+          marginTop: 2,
         },
         tabBarIcon: ({ focused }) => {
-          let icon = '⚡';
-          if (route.name === 'Home') icon = '🏠';
-          else if (route.name === 'Map') icon = '🗺️';
-          else if (route.name === 'Charge') icon = '⚡';
-          else if (route.name === 'Activity') icon = '📜';
-          else if (route.name === 'Profile') icon = '👤';
+          if (route.name === 'Charge') {
+            return (
+              <View style={styles.floatingCenterWrapper}>
+                <ThreeDIcon name="scan" size={46} focused={focused} />
+              </View>
+            );
+          }
+
+          let iconName: 'home' | 'map' | 'bookings' | 'profile' = 'home';
+          if (route.name === 'Home') iconName = 'home';
+          else if (route.name === 'Map') iconName = 'map';
+          else if (route.name === 'Activity') iconName = 'bookings';
+          else if (route.name === 'Profile') iconName = 'profile';
 
           return (
-            <Text style={{ fontSize: focused ? 22 : 18, opacity: focused ? 1 : 0.7 }}>
-              {icon}
-            </Text>
+            <ThreeDIcon
+              name={iconName}
+              size={28}
+              focused={focused}
+            />
           );
         },
       })}
     >
-      <Tab.Screen name="Home" component={HomeScreen} options={{ tabBarLabel: 'Discover' }} />
+      <Tab.Screen name="Home" component={HomeScreen} options={{ tabBarLabel: 'Home' }} />
       <Tab.Screen name="Map" component={MapScreen} options={{ tabBarLabel: 'Map' }} />
-      <Tab.Screen name="Charge" component={QRScannerScreen} options={{ tabBarLabel: 'Charge' }} />
-      <Tab.Screen name="Activity" component={ActivityScreen} options={{ tabBarLabel: 'Activity' }} />
+      <Tab.Screen
+        name="Charge"
+        component={QRScannerScreen}
+        options={{
+          tabBarLabel: 'Scan & Charge',
+          tabBarLabelStyle: {
+            fontSize: 10,
+            fontWeight: '800',
+            color: theme.primary,
+            marginTop: 4,
+          },
+        }}
+      />
+      <Tab.Screen name="Activity" component={ActivityScreen} options={{ tabBarLabel: 'Bookings' }} />
       <Tab.Screen name="Profile" component={ProfileScreen} options={{ tabBarLabel: 'Profile' }} />
     </Tab.Navigator>
   );
 };
+
+const styles = StyleSheet.create({
+  floatingCenterWrapper: {
+    marginTop: -14,
+    shadowColor: '#00D084',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.45,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+});

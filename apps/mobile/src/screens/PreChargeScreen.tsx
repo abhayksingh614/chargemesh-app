@@ -5,12 +5,14 @@ import {
   StyleSheet,
   ScrollView,
   SafeAreaView,
-  TouchableOpacity
+  TouchableOpacity,
+  Platform,
 } from 'react-native';
-import { mockStations, mockDefaultVehicle } from '../services/mockData';
-import { Header, PrimaryButton } from '../components';
-import { colors, typography, borderRadius } from '../theme';
+import { mockStations } from '../services/mockData';
+import { Header, PrimaryButton, AuthGateModal, StatusModal } from '../components';
+import { colors, spacing, borderRadius } from '../theme';
 import { ChargeTarget } from '@chargemesh/shared-types';
+import { useAuth, useCharging } from '../context';
 
 interface PreChargeScreenProps {
   route: any;
@@ -21,44 +23,117 @@ export const PreChargeScreen: React.FC<PreChargeScreenProps> = ({
   route,
   navigation,
 }) => {
+  const { activeVehicle, isGuest } = useAuth();
+  const { startSession } = useCharging();
+  const [showAuthGate, setShowAuthGate] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+
   const stationId = route?.params?.stationId || mockStations[0].id;
   const connectorId = route?.params?.connectorId || mockStations[0].connectors[0].id;
 
-  const station = mockStations.find(s => s.id === stationId) || mockStations[0];
-  const connector = station.connectors.find(c => c.id === connectorId) || station.connectors[0];
+  const station = mockStations.find((s) => s.id === stationId) || mockStations[0];
+  const connector =
+    station.connectors.find((c) => c.id === connectorId) || station.connectors[0];
 
   const [selectedTarget, setSelectedTarget] = useState<ChargeTarget>(ChargeTarget.AMOUNT);
   const [targetAmount, setTargetAmount] = useState<number>(500); // ₹500 default
+  const [targetEnergyKwh, setTargetEnergyKwh] = useState<number>(25); // 25 kWh
+  const [targetSoc, setTargetSoc] = useState<number>(85); // 85%
+  const [targetMins, setTargetMins] = useState<number>(35); // 35 mins
+  const [isStarting, setIsStarting] = useState(false);
 
-  const estimatedKwh = (targetAmount / station.tariffPerKwh).toFixed(1);
-  const estimatedMins = Math.round((Number(estimatedKwh) / connector.maxPower!) * 60);
+  // Estimation formulas
+  const batteryCap = activeVehicle?.batteryCapacityKwh || 40.5;
+  const currentEstSoc = 28; // starting test SOC: 28%
+  const stationPower = connector.maxPower || 60;
+  const tariff = station.tariffPerKwh || 18.5;
+
+  let estimatedKwhNumber = 0;
+  let estimatedDurationMins = 0;
+  let estimatedTotalAmount = 0;
+
+  if (selectedTarget === ChargeTarget.AMOUNT) {
+    estimatedTotalAmount = targetAmount;
+    estimatedKwhNumber = Math.round((targetAmount / tariff) * 10) / 10;
+    estimatedDurationMins = Math.max(
+      5,
+      Math.round((estimatedKwhNumber / stationPower) * 60)
+    );
+  } else if (selectedTarget === ChargeTarget.ENERGY) {
+    estimatedKwhNumber = targetEnergyKwh;
+    estimatedTotalAmount = Math.round(targetEnergyKwh * tariff);
+    estimatedDurationMins = Math.max(
+      5,
+      Math.round((targetEnergyKwh / stationPower) * 60)
+    );
+  } else if (selectedTarget === ChargeTarget.BATTERY) {
+    const socDiff = Math.max(5, targetSoc - currentEstSoc);
+    estimatedKwhNumber = Math.round(((socDiff / 100) * batteryCap) * 10) / 10;
+    estimatedTotalAmount = Math.round(estimatedKwhNumber * tariff);
+    estimatedDurationMins = Math.max(
+      5,
+      Math.round((estimatedKwhNumber / stationPower) * 60)
+    );
+  } else {
+    estimatedDurationMins = targetMins;
+    estimatedKwhNumber = Math.round(((targetMins / 60) * stationPower) * 10) / 10;
+    estimatedTotalAmount = Math.round(estimatedKwhNumber * tariff);
+  }
+
+  const handleStartCharging = async () => {
+    if (isGuest) {
+      setShowAuthGate(true);
+      return;
+    }
+
+    setIsStarting(true);
+    try {
+      let targetVal = targetAmount;
+      if (selectedTarget === ChargeTarget.ENERGY) targetVal = targetEnergyKwh;
+      if (selectedTarget === ChargeTarget.BATTERY) targetVal = targetSoc;
+      if (selectedTarget === ChargeTarget.TIME) targetVal = targetMins;
+
+      await startSession(station, connector, selectedTarget, targetVal, currentEstSoc);
+      navigation.replace('LiveCharging');
+    } catch {
+      setShowErrorModal(true);
+    } finally {
+      setIsStarting(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <Header
         title="Ready to Charge? ⚡"
-        subtitle="Confirm session parameters"
+        subtitle="Confirm session parameters & start"
         onBack={() => navigation.goBack()}
       />
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Charger & Vehicle Confirmation */}
+        {/* Charger & Vehicle Confirmation Summary Card */}
         <View style={styles.summaryCard}>
           <View style={styles.rowItem}>
             <Text style={styles.itemLabel}>Station</Text>
-            <Text style={styles.itemValue}>{station.name}</Text>
+            <Text style={styles.itemValue} numberOfLines={1}>
+              {station.name}
+            </Text>
           </View>
           <View style={styles.rowItem}>
-            <Text style={styles.itemLabel}>Operator (CPO)</Text>
+            <Text style={styles.itemLabel}>Operator Network</Text>
             <Text style={styles.itemValue}>{station.cpo.name}</Text>
           </View>
           <View style={styles.rowItem}>
             <Text style={styles.itemLabel}>Connector</Text>
-            <Text style={styles.itemValue}>{connector.type} • {connector.maxPower} kW DC</Text>
+            <Text style={styles.itemValue}>
+              {connector.type} • {connector.maxPower} kW DC Fast
+            </Text>
           </View>
           <View style={styles.rowItem}>
-            <Text style={styles.itemLabel}>Vehicle</Text>
-            <Text style={styles.itemValue}>{mockDefaultVehicle.make} {mockDefaultVehicle.model}</Text>
+            <Text style={styles.itemLabel}>Target Vehicle</Text>
+            <Text style={styles.itemValue}>
+              {activeVehicle ? `${activeVehicle.make} ${activeVehicle.model}` : 'Standard EV'}
+            </Text>
           </View>
           <View style={styles.rowItem}>
             <Text style={styles.itemLabel}>Tariff Rate</Text>
@@ -66,98 +141,237 @@ export const PreChargeScreen: React.FC<PreChargeScreenProps> = ({
           </View>
         </View>
 
-        {/* Set Charging Target */}
+        {/* Set Charging Target Tabs */}
         <View style={styles.targetSection}>
-          <Text style={styles.sectionTitle}>Select Charging Target</Text>
-          
+          <Text style={styles.sectionTitle}>Set Charging Target</Text>
+
           <View style={styles.targetTypeTabs}>
             <TouchableOpacity
-              style={[styles.tab, selectedTarget === ChargeTarget.AMOUNT && styles.tabSelected]}
+              style={[
+                styles.tab,
+                selectedTarget === ChargeTarget.AMOUNT && styles.tabSelected,
+              ]}
               onPress={() => setSelectedTarget(ChargeTarget.AMOUNT)}
             >
-              <Text style={[styles.tabText, selectedTarget === ChargeTarget.AMOUNT && styles.tabTextSelected]}>
-                By Amount (₹)
+              <Text
+                style={[
+                  styles.tabText,
+                  selectedTarget === ChargeTarget.AMOUNT && styles.tabTextSelected,
+                ]}
+              >
+                ₹ Amount
               </Text>
             </TouchableOpacity>
+
             <TouchableOpacity
-              style={[styles.tab, selectedTarget === ChargeTarget.ENERGY && styles.tabSelected]}
+              style={[
+                styles.tab,
+                selectedTarget === ChargeTarget.BATTERY && styles.tabSelected,
+              ]}
+              onPress={() => setSelectedTarget(ChargeTarget.BATTERY)}
+            >
+              <Text
+                style={[
+                  styles.tabText,
+                  selectedTarget === ChargeTarget.BATTERY && styles.tabTextSelected,
+                ]}
+              >
+                % Battery
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.tab,
+                selectedTarget === ChargeTarget.ENERGY && styles.tabSelected,
+              ]}
               onPress={() => setSelectedTarget(ChargeTarget.ENERGY)}
             >
-              <Text style={[styles.tabText, selectedTarget === ChargeTarget.ENERGY && styles.tabTextSelected]}>
-                By Energy (kWh)
+              <Text
+                style={[
+                  styles.tabText,
+                  selectedTarget === ChargeTarget.ENERGY && styles.tabTextSelected,
+                ]}
+              >
+                kWh Energy
               </Text>
             </TouchableOpacity>
+
             <TouchableOpacity
-              style={[styles.tab, selectedTarget === ChargeTarget.TIME && styles.tabSelected]}
+              style={[
+                styles.tab,
+                selectedTarget === ChargeTarget.TIME && styles.tabSelected,
+              ]}
               onPress={() => setSelectedTarget(ChargeTarget.TIME)}
             >
-              <Text style={[styles.tabText, selectedTarget === ChargeTarget.TIME && styles.tabTextSelected]}>
-                By Time (min)
+              <Text
+                style={[
+                  styles.tabText,
+                  selectedTarget === ChargeTarget.TIME && styles.tabTextSelected,
+                ]}
+              >
+                ⏱️ Time
               </Text>
             </TouchableOpacity>
           </View>
 
-          {/* Quick Target Values */}
-          <View style={styles.quickOptionsGrid}>
-            {[200, 500, 1000, 1500].map((amt) => (
-              <TouchableOpacity
-                key={amt}
-                style={[styles.quickPill, targetAmount === amt && styles.quickPillSelected]}
-                onPress={() => setTargetAmount(amt)}
-              >
-                <Text style={[styles.quickPillText, targetAmount === amt && styles.quickPillTextSelected]}>
-                  ₹{amt}
-                </Text>
-              </TouchableOpacity>
-            ))}
+          {/* Quick Preset Selector Buttons */}
+          <View style={styles.presetContainer}>
+            {selectedTarget === ChargeTarget.AMOUNT && (
+              <View style={styles.presetRow}>
+                {[300, 500, 800, 1200].map((amt) => (
+                  <TouchableOpacity
+                    key={amt}
+                    style={[
+                      styles.presetChip,
+                      targetAmount === amt && styles.presetChipActive,
+                    ]}
+                    onPress={() => setTargetAmount(amt)}
+                  >
+                    <Text
+                      style={[
+                        styles.presetChipText,
+                        targetAmount === amt && styles.presetChipTextActive,
+                      ]}
+                    >
+                      ₹{amt}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+
+            {selectedTarget === ChargeTarget.BATTERY && (
+              <View style={styles.presetRow}>
+                {[80, 85, 90, 100].map((soc) => (
+                  <TouchableOpacity
+                    key={soc}
+                    style={[
+                      styles.presetChip,
+                      targetSoc === soc && styles.presetChipActive,
+                    ]}
+                    onPress={() => setTargetSoc(soc)}
+                  >
+                    <Text
+                      style={[
+                        styles.presetChipText,
+                        targetSoc === soc && styles.presetChipTextActive,
+                      ]}
+                    >
+                      {soc}% {soc === 80 ? '⚡ (Fast)' : ''}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+
+            {selectedTarget === ChargeTarget.ENERGY && (
+              <View style={styles.presetRow}>
+                {[15, 25, 35, 45].map((kwh) => (
+                  <TouchableOpacity
+                    key={kwh}
+                    style={[
+                      styles.presetChip,
+                      targetEnergyKwh === kwh && styles.presetChipActive,
+                    ]}
+                    onPress={() => setTargetEnergyKwh(kwh)}
+                  >
+                    <Text
+                      style={[
+                        styles.presetChipText,
+                        targetEnergyKwh === kwh && styles.presetChipTextActive,
+                      ]}
+                    >
+                      {kwh} kWh
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+
+            {selectedTarget === ChargeTarget.TIME && (
+              <View style={styles.presetRow}>
+                {[20, 30, 45, 60].map((m) => (
+                  <TouchableOpacity
+                    key={m}
+                    style={[
+                      styles.presetChip,
+                      targetMins === m && styles.presetChipActive,
+                    ]}
+                    onPress={() => setTargetMins(m)}
+                  >
+                    <Text
+                      style={[
+                        styles.presetChipText,
+                        targetMins === m && styles.presetChipTextActive,
+                      ]}
+                    >
+                      {m} mins
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+          </View>
+
+          {/* Session Forecast Projection Box */}
+          <View style={styles.forecastBox}>
+            <View style={styles.forecastCol}>
+              <Text style={styles.forecastVal}>~{estimatedKwhNumber} kWh</Text>
+              <Text style={styles.forecastLbl}>Est. Energy</Text>
+            </View>
+            <View style={styles.forecastDivider} />
+            <View style={styles.forecastCol}>
+              <Text style={styles.forecastVal}>~{estimatedDurationMins} min</Text>
+              <Text style={styles.forecastLbl}>Est. Time</Text>
+            </View>
+            <View style={styles.forecastDivider} />
+            <View style={styles.forecastCol}>
+              <Text style={[styles.forecastVal, { color: colors.primary }]}>
+                ₹{estimatedTotalAmount}
+              </Text>
+              <Text style={styles.forecastLbl}>Est. Cost</Text>
+            </View>
           </View>
         </View>
 
-        {/* Estimate Breakdown Card */}
-        <View style={styles.estimateCard}>
-          <Text style={styles.estimateTitle}>Session Estimate</Text>
-          <View style={styles.estimateGrid}>
-            <View style={styles.estimateItem}>
-              <Text style={styles.estimateValue}>~{estimatedKwh} kWh</Text>
-              <Text style={styles.estimateLabel}>Energy</Text>
-            </View>
-            <View style={styles.estimateItem}>
-              <Text style={styles.estimateValue}>~{estimatedMins} min</Text>
-              <Text style={styles.estimateLabel}>Est. Duration</Text>
-            </View>
-            <View style={styles.estimateItem}>
-              <Text style={styles.estimateValue}>₹{targetAmount}</Text>
-              <Text style={styles.estimateLabel}>Pre-Auth</Text>
-            </View>
+        {/* Payment & Security Notice */}
+        <View style={styles.paymentNoticeCard}>
+          <Text style={styles.noticeIcon}>🔒</Text>
+          <View style={styles.noticeContent}>
+            <Text style={styles.noticeTitle}>Pre-Authorized via Razorpay</Text>
+            <Text style={styles.noticeSub}>
+              Only actual delivered energy will be billed upon session stop.
+            </Text>
           </View>
-          <Text style={styles.legalDisclaimer}>
-            *Final cost will be reconciled against actual CDR and energy consumed. Unused funds are automatically released.
-          </Text>
-        </View>
-
-        {/* Payment Method Preview */}
-        <View style={styles.paymentCard}>
-          <View style={styles.paymentHeader}>
-            <Text style={styles.paymentTitle}>💳 Payment Method</Text>
-            <Text style={styles.paymentChange}>Razorpay UPI</Text>
-          </View>
-          <Text style={styles.paymentSub}>upi-driver@okhdfcbank (Auto-deduct on session completion)</Text>
         </View>
       </ScrollView>
 
-      {/* Start Charging CTA */}
+      {/* Fixed Bottom Action Bar */}
       <View style={styles.bottomBar}>
         <PrimaryButton
-          title={`Authorize ₹${targetAmount} & Start Charging`}
-          onPress={() => {
-            navigation.navigate('LiveCharging', {
-              stationId: station.id,
-              connectorId: connector.id,
-              targetAmount,
-            });
-          }}
+          title={isStarting ? 'Initiating Session...' : '⚡ Plug In & Start Charging'}
+          onPress={handleStartCharging}
+          disabled={isStarting}
         />
       </View>
+
+      <AuthGateModal
+        visible={showAuthGate}
+        featureName="Live EV Charging"
+        onClose={() => setShowAuthGate(false)}
+        onLogin={() => navigation.navigate('Login')}
+        onRegister={() => navigation.navigate('Register')}
+      />
+
+      <StatusModal
+        visible={showErrorModal}
+        type="error"
+        title="Session Initiation Failed"
+        message="Unable to handshake with the charging point. Please check connector plug status and try again."
+        buttonLabel="Retry"
+        onClose={() => setShowErrorModal(false)}
+      />
     </SafeAreaView>
   );
 };
@@ -168,160 +382,172 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   content: {
-    padding: 20,
-    paddingBottom: 100,
+    padding: spacing.lg,
+    paddingBottom: 110,
   },
   summaryCard: {
     backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
-    padding: 16,
+    borderRadius: borderRadius.xl,
+    padding: spacing.md,
+    marginBottom: spacing.md,
     borderWidth: 1,
-    borderColor: colors.border,
-    marginBottom: 20,
+    borderColor: colors.borderLight,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
   },
   rowItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingVertical: 6,
+    paddingVertical: 7,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.borderLight,
   },
   itemLabel: {
-    ...typography.bodySecondary,
+    fontSize: 13,
+    color: colors.textSecondary,
   },
   itemValue: {
-    ...typography.bodyMedium,
+    fontSize: 13,
+    fontWeight: '600',
     color: colors.textPrimary,
+    maxWidth: '65%',
+    textAlign: 'right',
   },
   tariffHighlight: {
-    ...typography.subtitle,
+    fontSize: 14,
+    fontWeight: '800',
     color: colors.primary,
   },
   targetSection: {
     backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
-    padding: 16,
+    borderRadius: borderRadius.xl,
+    padding: spacing.md,
+    marginBottom: spacing.md,
     borderWidth: 1,
-    borderColor: colors.border,
-    marginBottom: 20,
+    borderColor: colors.borderLight,
   },
   sectionTitle: {
-    ...typography.h3,
+    fontSize: 15,
+    fontWeight: '700',
     color: colors.textPrimary,
-    marginBottom: 12,
+    marginBottom: spacing.sm,
   },
   targetTypeTabs: {
     flexDirection: 'row',
-    backgroundColor: colors.background,
-    borderRadius: borderRadius.md,
-    padding: 4,
-    marginBottom: 16,
+    backgroundColor: colors.surfaceSecondary,
+    borderRadius: borderRadius.lg,
+    padding: 3,
+    marginBottom: spacing.md,
   },
   tab: {
     flex: 1,
-    paddingVertical: 8,
+    paddingVertical: spacing.xs + 3,
     alignItems: 'center',
-    borderRadius: borderRadius.sm,
+    borderRadius: borderRadius.md,
   },
   tabSelected: {
     backgroundColor: colors.surface,
-    elevation: 2,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 2,
+    shadowRadius: 4,
+    elevation: 3,
   },
   tabText: {
-    ...typography.caption,
-    color: colors.textSecondary,
+    fontSize: 12,
     fontWeight: '600',
+    color: colors.textSecondary,
   },
   tabTextSelected: {
-    color: colors.darkGreen,
+    color: colors.primary,
+    fontWeight: '800',
   },
-  quickOptionsGrid: {
+  presetContainer: {
+    marginBottom: spacing.md,
+  },
+  presetRow: {
     flexDirection: 'row',
+    gap: spacing.xs,
     justifyContent: 'space-between',
-    gap: 8,
   },
-  quickPill: {
+  presetChip: {
     flex: 1,
-    height: 44,
+    backgroundColor: colors.surfaceSecondary,
+    paddingVertical: spacing.sm,
     borderRadius: borderRadius.md,
+    alignItems: 'center',
     borderWidth: 1,
     borderColor: colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.surface,
   },
-  quickPillSelected: {
+  presetChipActive: {
+    backgroundColor: 'rgba(0, 192, 115, 0.12)',
     borderColor: colors.primary,
-    backgroundColor: colors.ecoLight,
   },
-  quickPillText: {
-    ...typography.subtitle,
+  presetChipText: {
+    fontSize: 13,
+    fontWeight: '700',
     color: colors.textPrimary,
   },
-  quickPillTextSelected: {
+  presetChipTextActive: {
     color: colors.primary,
   },
-  estimateCard: {
-    backgroundColor: colors.ecoLight,
+  forecastBox: {
+    backgroundColor: colors.surfaceSecondary,
     borderRadius: borderRadius.lg,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: colors.primary,
-    marginBottom: 20,
-  },
-  estimateTitle: {
-    ...typography.subtitle,
-    color: colors.darkGreen,
-    marginBottom: 12,
-  },
-  estimateGrid: {
+    paddingVertical: spacing.md,
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 12,
+    alignItems: 'center',
+    justifyContent: 'space-around',
+    borderWidth: 1,
+    borderColor: colors.borderLight,
   },
-  estimateItem: {
+  forecastCol: {
     alignItems: 'center',
   },
-  estimateValue: {
-    ...typography.h3,
-    color: colors.darkGreen,
+  forecastVal: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: colors.textPrimary,
   },
-  estimateLabel: {
-    ...typography.caption,
+  forecastLbl: {
+    fontSize: 11,
+    fontWeight: '500',
     color: colors.textSecondary,
     marginTop: 2,
   },
-  legalDisclaimer: {
-    ...typography.caption,
-    color: colors.textSecondary,
-    fontSize: 11,
-    lineHeight: 15,
+  forecastDivider: {
+    width: 1,
+    height: 24,
+    backgroundColor: colors.border,
   },
-  paymentCard: {
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  paymentHeader: {
+  paymentNoticeCard: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 6,
+    alignItems: 'center',
+    backgroundColor: '#F8FAFC',
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
   },
-  paymentTitle: {
-    ...typography.subtitle,
+  noticeIcon: {
+    fontSize: 22,
+    marginRight: spacing.sm,
+  },
+  noticeContent: {
+    flex: 1,
+  },
+  noticeTitle: {
+    fontSize: 13,
+    fontWeight: '700',
     color: colors.textPrimary,
   },
-  paymentChange: {
-    ...typography.captionBold,
-    color: colors.primary,
-  },
-  paymentSub: {
-    ...typography.caption,
+  noticeSub: {
+    fontSize: 11,
     color: colors.textSecondary,
+    marginTop: 1,
   },
   bottomBar: {
     position: 'absolute',
@@ -329,8 +555,10 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     backgroundColor: colors.surface,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+    paddingBottom: Platform.OS === 'ios' ? 24 : spacing.md,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
-    padding: 20,
+    borderTopColor: colors.borderLight,
   },
 });

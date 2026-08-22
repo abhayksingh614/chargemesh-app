@@ -4,49 +4,55 @@ import {
   Text,
   StyleSheet,
   SafeAreaView,
-  Alert
+  ScrollView,
+  TouchableOpacity,
+  Platform,
 } from 'react-native';
-import { mockStations } from '../services/mockData';
-import { PrimaryButton } from '../components';
-import { colors, typography, borderRadius } from '../theme';
+import {
+  Header,
+  ChargingGauge,
+  MetricCard,
+  PrimaryButton,
+  ConfirmationModal,
+} from '../components';
+import { colors, spacing, borderRadius } from '../theme';
+import { useCharging } from '../context';
 
 interface LiveChargingScreenProps {
-  route: any;
   navigation: any;
 }
 
-export const LiveChargingScreen: React.FC<LiveChargingScreenProps> = ({
-  route,
-  navigation,
-}) => {
-  const stationId = route?.params?.stationId || mockStations[0].id;
-  const connectorId = route?.params?.connectorId || mockStations[0].connectors[0].id;
-  const targetAmount = route?.params?.targetAmount || 500;
+export const LiveChargingScreen: React.FC<LiveChargingScreenProps> = ({ navigation }) => {
+  const { activeSession, lastCompletedSession, isCharging, stopSession } = useCharging();
+  const [showStopModal, setShowStopModal] = useState(false);
+  const [isStopping, setIsStopping] = useState(false);
 
-  const station = mockStations.find(s => s.id === stationId) || mockStations[0];
-  const connector = station.connectors.find(c => c.id === connectorId) || station.connectors[0];
-
-  const [energyDeliveredKwh, setEnergyDeliveredKwh] = useState<number>(3.2);
-  const [currentPowerKw, setCurrentPowerKw] = useState<number>(54.6);
-  const [elapsedSeconds, setElapsedSeconds] = useState<number>(340); // ~5m 40s
-  const [batterySoc, setBatterySoc] = useState<number>(44); // 44%
-
-  // Simulated charging tick
+  // If session completes, navigate to SessionComplete screen
   useEffect(() => {
-    const timer = setInterval(() => {
-      setElapsedSeconds((prev) => prev + 1);
-      setEnergyDeliveredKwh((prev) => +(prev + 0.015).toFixed(3));
-      setCurrentPowerKw(+(54 + Math.sin(Date.now() / 3000) * 2).toFixed(1));
-      if (elapsedSeconds % 45 === 0) {
-        setBatterySoc((prev) => Math.min(prev + 1, 100));
-      }
-    }, 1000);
+    if (!isCharging && lastCompletedSession) {
+      navigation.replace('SessionComplete');
+    }
+  }, [isCharging, lastCompletedSession]);
 
-    return () => clearInterval(timer);
-  }, [elapsedSeconds]);
-
-  const currentCostPaise = Math.round(energyDeliveredKwh * station.tariffPerKwh * 100);
-  const currentCostRupees = (currentCostPaise / 100).toFixed(2);
+  if (!activeSession) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <Header title="Charging Status ⚡" onBack={() => navigation.navigate('MainTabs')} />
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyEmoji}>🔌</Text>
+          <Text style={styles.emptyTitle}>No Active Charging Session</Text>
+          <Text style={styles.emptySubtitle}>
+            Scan a QR code or select a charger to begin charging.
+          </Text>
+          <PrimaryButton
+            title="Discover Chargers"
+            onPress={() => navigation.navigate('MainTabs', { screen: 'Map' })}
+            style={styles.discoverBtn}
+          />
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   const formatDuration = (totalSecs: number) => {
     const mins = Math.floor(totalSecs / 60);
@@ -54,92 +60,147 @@ export const LiveChargingScreen: React.FC<LiveChargingScreenProps> = ({
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const handleStopCharging = () => {
-    Alert.alert(
-      'Stop Charging Session?',
-      'Are you sure you want to stop? Final amount will be calculated from delivered energy.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Confirm Stop',
-          style: 'destructive',
-          onPress: () => {
-            navigation.replace('SessionComplete', {
-              stationId: station.id,
-              energyDeliveredKwh,
-              durationSeconds: elapsedSeconds,
-              finalAmountRupees: currentCostRupees,
-            });
-          }
-        }
-      ]
-    );
+  const currentCostRupees = (activeSession.accruedCostPaise / 100).toFixed(2);
+
+  const handleConfirmStop = async () => {
+    setIsStopping(true);
+    setShowStopModal(false);
+    await stopSession();
+    setIsStopping(false);
   };
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      {/* Session Active Top Bar */}
-      <View style={styles.topStatus}>
-        <View style={styles.livePill}>
-          <View style={styles.pulsingDot} />
-          <Text style={styles.livePillText}>CHARGING ACTIVE</Text>
-        </View>
-        <Text style={styles.cpoHeader}>{station.cpo.name}</Text>
-      </View>
+      {/* Top Header with Minimize Option */}
+      <Header
+        title="Live Charging ⚡"
+        subtitle={`${activeSession.station.name}`}
+        rightAction={
+          <TouchableOpacity
+            style={styles.minimizeBtn}
+            onPress={() => navigation.navigate('MainTabs')}
+          >
+            <Text style={styles.minimizeText}>Minimize ✕</Text>
+          </TouchableOpacity>
+        }
+      />
 
-      <View style={styles.container}>
-        {/* Visual Pulse Meter */}
-        <View style={styles.meterContainer}>
-          <View style={styles.meterRing}>
-            <Text style={styles.batterySocText}>{batterySoc}%</Text>
-            <Text style={styles.batteryLabel}>Battery SOC</Text>
-            <Text style={styles.currentSpeedText}>⚡ {currentPowerKw} kW</Text>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        {/* Network & Station Pill */}
+        <View style={styles.networkPillRow}>
+          <View style={styles.networkPill}>
+            <Text style={styles.networkPillText}>
+              {activeSession.station.cpo.name} • {activeSession.connector.type}
+            </Text>
+          </View>
+          <View style={styles.liveIndicator}>
+            <Text style={styles.liveDot}>●</Text>
+            <Text style={styles.liveText}>TELEMETRY LIVE</Text>
           </View>
         </View>
 
-        {/* Live Metrics Grid */}
+        {/* Animated Charging Gauge */}
+        <ChargingGauge
+          socPercent={activeSession.currentSoc}
+          powerKw={activeSession.currentPowerKw}
+          isCharging={isCharging}
+        />
+
+        {/* Target Milestone Progress */}
+        <View style={styles.targetProgressCard}>
+          <View style={styles.targetRow}>
+            <Text style={styles.targetLabel}>Target Milestone</Text>
+            <Text style={styles.targetValue}>
+              {activeSession.targetType === 'BATTERY'
+                ? `${activeSession.targetValue}% Battery`
+                : activeSession.targetType === 'AMOUNT'
+                ? `₹${activeSession.targetValue} Amount`
+                : activeSession.targetType === 'ENERGY'
+                ? `${activeSession.targetValue} kWh`
+                : `${activeSession.targetValue} mins`}
+            </Text>
+          </View>
+          <View style={styles.progressBarBg}>
+            <View
+              style={[
+                styles.progressBarFill,
+                { width: `${Math.min(100, activeSession.currentSoc)}%` },
+              ]}
+            />
+          </View>
+        </View>
+
+        {/* Live Telemetry Metrics Grid */}
         <View style={styles.metricsGrid}>
-          <View style={styles.metricBox}>
-            <Text style={styles.metricBoxValue}>{energyDeliveredKwh.toFixed(2)}</Text>
-            <Text style={styles.metricBoxUnit}>kWh Delivered</Text>
+          <View style={styles.metricRow}>
+            <MetricCard
+              icon="⚡"
+              label="Charging Power"
+              value={activeSession.currentPowerKw.toFixed(1)}
+              unit="kW"
+              subtitle="DC High Speed"
+              color={colors.primary}
+            />
+            <MetricCard
+              icon="🔋"
+              label="Energy Delivered"
+              value={activeSession.energyDeliveredKwh.toFixed(2)}
+              unit="kWh"
+              subtitle={`Rate: ₹${activeSession.tariffPerKwh}/kWh`}
+              color={colors.primaryDark}
+            />
           </View>
 
-          <View style={styles.metricBox}>
-            <Text style={styles.metricBoxValue}>{formatDuration(elapsedSeconds)}</Text>
-            <Text style={styles.metricBoxUnit}>Duration (MM:SS)</Text>
-          </View>
-
-          <View style={styles.metricBox}>
-            <Text style={styles.metricBoxValue}>₹{currentCostRupees}</Text>
-            <Text style={styles.metricBoxUnit}>Accrued Cost</Text>
-          </View>
-
-          <View style={styles.metricBox}>
-            <Text style={styles.metricBoxValue}>₹{targetAmount}</Text>
-            <Text style={styles.metricBoxUnit}>Target Limit</Text>
+          <View style={styles.metricRow}>
+            <MetricCard
+              icon="⏱️"
+              label="Session Time"
+              value={formatDuration(activeSession.elapsedSeconds)}
+              subtitle={`~${activeSession.estimatedRemainingMinutes}m remaining`}
+              color={colors.textPrimary}
+            />
+            <MetricCard
+              icon="💰"
+              label="Accrued Cost"
+              value={`₹${currentCostRupees}`}
+              subtitle="Pre-authorized"
+              color={colors.primary}
+            />
           </View>
         </View>
 
-        {/* Station Details Footer */}
-        <View style={styles.stationInfoCard}>
-          <Text style={styles.stationTitle}>{station.name}</Text>
-          <Text style={styles.stationConnector}>
-            Connector 1 • {connector.type} • Tariff: ₹{station.tariffPerKwh}/kWh
-          </Text>
-          <Text style={styles.telemetryHealth}>
-            ✓ Encrypted CPO Telemetry stream active
+        {/* Eco Impact Live Stat */}
+        <View style={styles.ecoBanner}>
+          <Text style={styles.ecoIcon}>🌱</Text>
+          <Text style={styles.ecoText}>
+            You have prevented{' '}
+            <Text style={styles.ecoBold}>{activeSession.carbonSavedKg.toFixed(2)} kg</Text> of
+            CO₂ emissions in this session.
           </Text>
         </View>
-      </View>
+      </ScrollView>
 
       {/* Stop Charging Button */}
       <View style={styles.bottomBar}>
         <PrimaryButton
-          title="Stop Charging"
+          title={isStopping ? 'Stopping Session...' : '🛑 Stop Charging'}
           variant="danger"
-          onPress={handleStopCharging}
+          onPress={() => setShowStopModal(true)}
+          disabled={isStopping}
         />
       </View>
+
+      {/* Safety Confirmation Modal */}
+      <ConfirmationModal
+        visible={showStopModal}
+        title="Stop Charging Session?"
+        message="Are you sure you want to end charging? The session will complete and a final receipt will be generated based on energy delivered."
+        confirmLabel="Confirm & Stop"
+        cancelLabel="Keep Charging"
+        isDestructive={true}
+        onConfirm={handleConfirmStop}
+        onCancel={() => setShowStopModal(false)}
+      />
     </SafeAreaView>
   );
 };
@@ -149,129 +210,162 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  topStatus: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  content: {
+    padding: spacing.lg,
+    paddingBottom: 110,
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-    backgroundColor: colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
   },
-  livePill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.ecoLight,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+  minimizeBtn: {
+    backgroundColor: colors.surfaceSecondary,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
     borderRadius: borderRadius.full,
     borderWidth: 1,
-    borderColor: colors.primary,
+    borderColor: colors.border,
   },
-  pulsingDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: colors.primary,
-    marginRight: 6,
-  },
-  livePillText: {
-    ...typography.captionBold,
-    color: colors.primary,
-    letterSpacing: 0.5,
-  },
-  cpoHeader: {
-    ...typography.captionBold,
+  minimizeText: {
+    fontSize: 12,
+    fontWeight: '600',
     color: colors.textSecondary,
   },
-  container: {
-    flex: 1,
-    padding: 20,
+  networkPillRow: {
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    width: '100%',
+    marginBottom: spacing.xs,
   },
-  meterContainer: {
-    marginTop: 20,
+  networkPill: {
+    backgroundColor: colors.surfaceSecondary,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 5,
+    borderRadius: borderRadius.full,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+  },
+  networkPillText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.textPrimary,
+  },
+  liveIndicator: {
+    flexDirection: 'row',
     alignItems: 'center',
   },
-  meterRing: {
-    width: 200,
-    height: 200,
-    borderRadius: 100,
-    backgroundColor: colors.ecoLight,
-    borderWidth: 8,
-    borderColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  batterySocText: {
-    ...typography.metricLarge,
-    fontSize: 48,
-    color: colors.darkGreen,
-  },
-  batteryLabel: {
-    ...typography.captionBold,
-    color: colors.textSecondary,
-  },
-  currentSpeedText: {
-    ...typography.subtitle,
+  liveDot: {
     color: colors.primary,
-    marginTop: 8,
+    fontSize: 12,
+    marginRight: 4,
+  },
+  liveText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: colors.primary,
+    letterSpacing: 0.8,
+  },
+  targetProgressCard: {
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    width: '100%',
+    marginVertical: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+  },
+  targetRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: spacing.xs,
+  },
+  targetLabel: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    fontWeight: '500',
+  },
+  targetValue: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: colors.textPrimary,
+  },
+  progressBarBg: {
+    height: 8,
+    backgroundColor: colors.surfaceSecondary,
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
+  progressBarFill: {
+    height: '100%',
+    backgroundColor: colors.primary,
+    borderRadius: 4,
   },
   metricsGrid: {
+    width: '100%',
+    marginTop: spacing.xs,
+  },
+  metricRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-    width: '100%',
-    marginVertical: 20,
+    justifyContent: 'space-between',
   },
-  metricBox: {
-    flex: 1,
-    minWidth: '45%',
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: colors.border,
+  ecoBanner: {
+    flexDirection: 'row',
     alignItems: 'center',
-  },
-  metricBoxValue: {
-    ...typography.h2,
-    color: colors.textPrimary,
-  },
-  metricBoxUnit: {
-    ...typography.caption,
-    color: colors.textSecondary,
-    marginTop: 4,
-  },
-  stationInfoCard: {
-    backgroundColor: colors.surface,
+    backgroundColor: 'rgba(0, 192, 115, 0.08)',
     borderRadius: borderRadius.lg,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: colors.border,
+    padding: spacing.md,
     width: '100%',
+    marginTop: spacing.md,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 192, 115, 0.2)',
   },
-  stationTitle: {
-    ...typography.subtitle,
+  ecoIcon: {
+    fontSize: 20,
+    marginRight: spacing.sm,
+  },
+  ecoText: {
+    flex: 1,
+    fontSize: 12,
     color: colors.textPrimary,
+    lineHeight: 18,
   },
-  stationConnector: {
-    ...typography.caption,
-    color: colors.textSecondary,
-    marginTop: 4,
-  },
-  telemetryHealth: {
-    ...typography.captionBold,
-    color: colors.primary,
-    marginTop: 8,
-    fontSize: 11,
+  ecoBold: {
+    fontWeight: '700',
+    color: colors.primaryDark,
   },
   bottomBar: {
-    padding: 20,
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
     backgroundColor: colors.surface,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+    paddingBottom: Platform.OS === 'ios' ? 24 : spacing.md,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
+    borderTopColor: colors.borderLight,
+  },
+  emptyContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: spacing.xl,
+  },
+  emptyEmoji: {
+    fontSize: 48,
+    marginBottom: spacing.md,
+  },
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: colors.textPrimary,
+  },
+  emptySubtitle: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginTop: 4,
+    marginBottom: spacing.xl,
+  },
+  discoverBtn: {
+    minWidth: 200,
   },
 });

@@ -1,41 +1,54 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   SafeAreaView,
   ScrollView,
-  Alert
+  TouchableOpacity,
+  Platform,
 } from 'react-native';
-import { mockStations } from '../services/mockData';
-import { PrimaryButton } from '../components';
-import { colors, typography, borderRadius } from '../theme';
+import { PrimaryButton, StatusModal } from '../components';
+import { colors, spacing, borderRadius, shadows } from '../theme';
+import { useCharging } from '../context';
 
 interface SessionCompleteScreenProps {
-  route: any;
   navigation: any;
 }
 
-export const SessionCompleteScreen: React.FC<SessionCompleteScreenProps> = ({
-  route,
-  navigation,
-}) => {
-  const stationId = route?.params?.stationId || mockStations[0].id;
-  const energyDeliveredKwh = route?.params?.energyDeliveredKwh || 18.5;
-  const durationSeconds = route?.params?.durationSeconds || 1920;
-  const finalAmountRupees = route?.params?.finalAmountRupees || '342.25';
+export const SessionCompleteScreen: React.FC<SessionCompleteScreenProps> = ({ navigation }) => {
+  const { lastCompletedSession, clearCompletedSession } = useCharging();
+  const [showInvoiceModal, setShowInvoiceModal] = useState(false);
 
-  const station = mockStations.find(s => s.id === stationId) || mockStations[0];
-  const co2AvoidedKg = (energyDeliveredKwh * 0.71).toFixed(1);
+  const session = lastCompletedSession;
+  const energyDeliveredKwh = session?.energyDeliveredKwh || 18.5;
+  const durationSeconds = session?.elapsedSeconds || 1800;
+  const finalAmountRupees = session
+    ? (session.accruedCostPaise / 100).toFixed(2)
+    : '342.25';
+  const stationName = session?.station.name || 'Connaught Place Fast Charging Hub';
+  const cpoName = session?.station.cpo.name || 'Tata Power EZ Charge';
+  const tariffPerKwh = session?.tariffPerKwh || 18.5;
+  const co2SavedKg = session?.carbonSavedKg.toFixed(2) || '15.17';
 
   const formatDuration = (totalSecs: number) => {
     const mins = Math.floor(totalSecs / 60);
-    return `${mins} mins`;
+    const secs = totalSecs % 60;
+    return `${mins}m ${secs}s`;
+  };
+
+  const handleDone = () => {
+    clearCompletedSession();
+    navigation.replace('MainTabs');
+  };
+
+  const handleDownloadInvoice = () => {
+    setShowInvoiceModal(true);
   };
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {/* Success Icon & Header */}
         <View style={styles.header}>
           <View style={styles.iconCircle}>
@@ -43,69 +56,98 @@ export const SessionCompleteScreen: React.FC<SessionCompleteScreenProps> = ({
           </View>
           <Text style={styles.title}>Charging Complete!</Text>
           <Text style={styles.subtitle}>
-            Your vehicle is charged and receipt has been generated.
+            Your battery has reached the configured charge target safely.
           </Text>
         </View>
 
-        {/* Invoice Summary Card */}
+        {/* Receipt & Bill Summary Card */}
         <View style={styles.receiptCard}>
           <View style={styles.totalAmountSection}>
-            <Text style={styles.totalLabel}>Total Paid</Text>
+            <Text style={styles.totalLabel}>TOTAL AMOUNT BILLED</Text>
             <Text style={styles.totalValue}>₹{finalAmountRupees}</Text>
-            <Text style={styles.paymentMethod}>Paid via Razorpay UPI</Text>
+            <View style={styles.reconciledPill}>
+              <Text style={styles.reconciledText}>✓ Paid via Fast Wallet</Text>
+            </View>
           </View>
 
-          <View style={styles.divider} />
+          <View style={styles.dashedDivider} />
 
-          <View style={styles.receiptRow}>
-            <Text style={styles.receiptLabel}>Station</Text>
-            <Text style={styles.receiptVal}>{station.name}</Text>
-          </View>
-          <View style={styles.receiptRow}>
-            <Text style={styles.receiptLabel}>Operator</Text>
-            <Text style={styles.receiptVal}>{station.cpo.name}</Text>
-          </View>
-          <View style={styles.receiptRow}>
-            <Text style={styles.receiptLabel}>Energy Delivered</Text>
-            <Text style={styles.receiptVal}>{Number(energyDeliveredKwh).toFixed(2)} kWh</Text>
-          </View>
-          <View style={styles.receiptRow}>
-            <Text style={styles.receiptLabel}>Duration</Text>
-            <Text style={styles.receiptVal}>{formatDuration(durationSeconds)}</Text>
-          </View>
-          <View style={styles.receiptRow}>
-            <Text style={styles.receiptLabel}>Tariff Applied</Text>
-            <Text style={styles.receiptVal}>₹{station.tariffPerKwh}/kWh</Text>
-          </View>
-          <View style={styles.receiptRow}>
-            <Text style={styles.receiptLabel}>Transaction Ref</Text>
-            <Text style={styles.refCode}>CM-TXN-2026-8819</Text>
-          </View>
-        </View>
+          {/* Session Metrics Breakdown */}
+          <View style={styles.detailsGrid}>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Station Hub</Text>
+              <Text style={styles.detailVal} numberOfLines={1}>
+                {stationName}
+              </Text>
+            </View>
 
-        {/* Eco Impact Storytelling */}
-        <View style={styles.ecoCard}>
-          <Text style={styles.ecoTitle}>🌱 Eco Impact Contribution</Text>
-          <Text style={styles.ecoValue}>~{co2AvoidedKg} kg CO₂</Text>
-          <Text style={styles.ecoDescription}>
-            Estimated tailpipe emissions avoided compared to an internal combustion engine vehicle.
-          </Text>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>CPO Network</Text>
+              <Text style={styles.detailVal}>{cpoName}</Text>
+            </View>
+
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Energy Delivered</Text>
+              <Text style={styles.detailVal}>{energyDeliveredKwh.toFixed(2)} kWh</Text>
+            </View>
+
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Duration</Text>
+              <Text style={styles.detailVal}>{formatDuration(durationSeconds)}</Text>
+            </View>
+
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Average Tariff</Text>
+              <Text style={styles.detailVal}>₹{tariffPerKwh}/kWh</Text>
+            </View>
+          </View>
+
+          <View style={styles.dashedDivider} />
+
+          {/* Environmental Savings Banner */}
+          <View style={styles.ecoImpactRow}>
+            <Text style={styles.ecoEmoji}>🌱</Text>
+            <View style={styles.ecoTextWrap}>
+              <Text style={styles.ecoTitle}>{co2SavedKg} kg CO₂ Prevented</Text>
+              <Text style={styles.ecoSub}>
+                Thank you for driving electric and reducing urban emissions.
+              </Text>
+            </View>
+          </View>
+
+          {/* Download Invoice Button */}
+          <TouchableOpacity
+            style={styles.invoiceButton}
+            onPress={handleDownloadInvoice}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.invoiceButtonText}>📄 View Tax Invoice Details</Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
 
-      {/* Footer CTAs */}
+      {/* Done / Continue CTA */}
       <View style={styles.bottomBar}>
-        <PrimaryButton
-          title="Done & Return Home"
-          onPress={() => navigation.navigate('MainTabs', { screen: 'Home' })}
-          style={styles.doneBtn}
-        />
-        <PrimaryButton
-          title="Download Tax Invoice (PDF)"
-          variant="outline"
-          onPress={() => Alert.alert('Invoice', 'Tax Invoice PDF generated and sent to email.')}
-        />
+        <PrimaryButton title="Done & Return Home" onPress={handleDone} />
       </View>
+
+      {/* Invoice Download Status Modal */}
+      <StatusModal
+        visible={showInvoiceModal}
+        type="success"
+        badge="Tax Invoice"
+        iconEmoji="📄"
+        title="Official Tax Invoice Ready"
+        message={`Invoice #${session?.sessionId || 'INV-2026-0818'} for ₹${finalAmountRupees} is saved to your account and emailed to your registered address.`}
+        details={[
+          { icon: '⚡', title: 'Energy Billed', value: `${energyDeliveredKwh.toFixed(2)} kWh` },
+          { icon: '⏱️', title: 'Duration', value: formatDuration(durationSeconds) },
+          { icon: '💰', title: 'Total Paid', value: `₹${finalAmountRupees}` },
+          { icon: '🏛️', title: 'GSTIN', value: '07AABCT2384P1Z4' },
+        ]}
+        buttonLabel="Done"
+        onClose={() => setShowInvoiceModal(false)}
+      />
     </SafeAreaView>
   );
 };
@@ -116,109 +158,142 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   content: {
-    padding: 20,
+    padding: spacing.lg,
+    paddingBottom: 110,
     alignItems: 'center',
-    paddingBottom: 120,
   },
   header: {
     alignItems: 'center',
-    marginVertical: 20,
+    marginBottom: spacing.lg,
   },
   iconCircle: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
+    width: 68,
+    height: 68,
+    borderRadius: 34,
     backgroundColor: colors.ecoLight,
     borderWidth: 2,
-    borderColor: colors.primary,
+    borderColor: '#A7F3D0',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 16,
+    marginBottom: spacing.md,
+    ...shadows.card,
   },
   successEmoji: {
-    fontSize: 36,
+    fontSize: 30,
   },
   title: {
-    ...typography.h2,
+    fontSize: 22,
+    fontWeight: '800',
     color: colors.textPrimary,
-    marginBottom: 6,
+    letterSpacing: -0.3,
   },
   subtitle: {
-    ...typography.bodySecondary,
+    fontSize: 13,
+    color: colors.textSecondary,
     textAlign: 'center',
-    paddingHorizontal: 20,
+    marginTop: 4,
+    paddingHorizontal: spacing.lg,
+    lineHeight: 18,
   },
   receiptCard: {
     backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
-    padding: 20,
-    borderWidth: 1,
-    borderColor: colors.border,
+    borderRadius: borderRadius.xxl,
+    padding: spacing.lg,
     width: '100%',
-    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+    ...shadows.elevated,
   },
   totalAmountSection: {
     alignItems: 'center',
-    paddingBottom: 14,
+    paddingVertical: spacing.sm,
   },
   totalLabel: {
-    ...typography.caption,
+    fontSize: 11,
+    fontWeight: '700',
     color: colors.textSecondary,
+    letterSpacing: 0.5,
   },
   totalValue: {
-    ...typography.metricLarge,
-    color: colors.darkGreen,
+    fontSize: 34,
+    fontWeight: '900',
+    color: colors.primary,
     marginVertical: 4,
   },
-  paymentMethod: {
-    ...typography.captionBold,
-    color: colors.primary,
+  reconciledPill: {
+    backgroundColor: colors.ecoLight,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 4,
+    borderRadius: borderRadius.full,
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
   },
-  divider: {
+  reconciledText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: colors.primaryDark,
+  },
+  dashedDivider: {
     height: 1,
-    backgroundColor: colors.divider,
-    marginVertical: 14,
+    backgroundColor: colors.borderLight,
+    marginVertical: spacing.md,
   },
-  receiptRow: {
+  detailsGrid: {
+    gap: spacing.sm,
+  },
+  detailRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingVertical: 6,
+    alignItems: 'center',
   },
-  receiptLabel: {
-    ...typography.caption,
+  detailLabel: {
+    fontSize: 13,
     color: colors.textSecondary,
   },
-  receiptVal: {
-    ...typography.captionBold,
+  detailVal: {
+    fontSize: 13,
+    fontWeight: '700',
     color: colors.textPrimary,
   },
-  refCode: {
-    ...typography.captionBold,
-    color: colors.primary,
-    fontFamily: 'Courier',
-  },
-  ecoCard: {
+  ecoImpactRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: colors.ecoLight,
-    borderRadius: borderRadius.lg,
-    padding: 16,
+    borderRadius: borderRadius.xl,
+    padding: spacing.md,
+    marginBottom: spacing.md,
     borderWidth: 1,
-    borderColor: colors.primary,
-    width: '100%',
+    borderColor: '#A7F3D0',
+  },
+  ecoEmoji: {
+    fontSize: 24,
+    marginRight: spacing.sm,
+  },
+  ecoTextWrap: {
+    flex: 1,
   },
   ecoTitle: {
-    ...typography.subtitle,
-    color: colors.darkGreen,
-    marginBottom: 6,
+    fontSize: 13,
+    fontWeight: '700',
+    color: colors.primaryDark,
   },
-  ecoValue: {
-    ...typography.h3,
-    color: colors.primary,
-    marginBottom: 4,
+  ecoSub: {
+    fontSize: 11,
+    color: '#047857',
+    marginTop: 2,
   },
-  ecoDescription: {
-    ...typography.caption,
-    color: colors.textSecondary,
-    lineHeight: 16,
+  invoiceButton: {
+    backgroundColor: colors.surfaceSecondary,
+    borderRadius: borderRadius.lg,
+    paddingVertical: 14,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.borderDark,
+  },
+  invoiceButtonText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: colors.textPrimary,
   },
   bottomBar: {
     position: 'absolute',
@@ -227,11 +302,10 @@ const styles = StyleSheet.create({
     right: 0,
     backgroundColor: colors.surface,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
-    padding: 20,
-    gap: 10,
-  },
-  doneBtn: {
-    marginBottom: 2,
+    borderTopColor: colors.borderLight,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+    paddingBottom: Platform.OS === 'ios' ? 24 : spacing.md,
+    ...shadows.elevated,
   },
 });

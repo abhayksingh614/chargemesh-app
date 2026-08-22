@@ -1,3 +1,7 @@
+export * from './SplashScreen';
+export * from './OnboardingScreen';
+export * from './LoginScreen';
+export * from './RegisterScreen';
 export * from './HomeScreen';
 export * from './MapScreen';
 export * from './StationDetailScreen';
