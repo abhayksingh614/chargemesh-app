@@ -140,6 +140,21 @@ All canonical project specifications and architectural documentation live in [`d
 
 ---
 
+## Key Features & Recent Updates
+
+| Feature / Update | Description |
+|---|---|
+| ☀️ **Dynamic Time-Based Greeting** | Homepage dynamically greets the driver based on local device time: *Good Morning* (5 AM – 12 PM), *Good Afternoon* (12 PM – 5 PM), or *Good Evening* (5 PM – 5 AM). |
+| 🗺️ **State & District Search Engine** | Comprehensive master dataset of **36 Indian States & Union Territories** and **700+ verified districts** integrated into interactive Map bottom sheets with instant search & filter. |
+| 🎁 **₹100 Joining Bonus** | New driver registrations automatically receive an initial **₹100 joining bonus** credited to their in-app charging wallet. |
+| 📱 **Portrait-Only Lock** | Android screen orientation locked strictly to vertical portrait mode for consistent layout rendering and zero distortion. |
+| 🔐 **Clean Background Authentication** | Streamlined production login & registration screens. Demo driver profiles (*Rahul Sharma* `9412602135` & *Abhay Kumar Singh* `6399414330`, OTP `123456`) operate in the background layer without cluttering the UI. |
+| 🧼 **Streamlined Dashboard** | Removed redundant "Offers for You" carousel from the homepage for a focused EV telemetry and station discovery experience. |
+| 🎨 **Standardized UI Spacing System** | Global tokenized design system (`spacing.*`, `borderRadius.*`, `CM_COLORS.*`) with dynamic safe-area insets across modals, sticky bottom bars, and cards. |
+| 🏗️ **Monorepo Workspaces** | Complete npm workspace support for `@chargemesh/mobile`, `@chargemesh/backend`, `@chargemesh/admin`, `@chargemesh/shared-types`, `@chargemesh/shared-constants`, and `@chargemesh/tsconfig`. |
+
+---
+
 ## Key Product Rules
 
 1. **UNKNOWN ≠ AVAILABLE** — Unknown/Stale charger status must never show as Available
