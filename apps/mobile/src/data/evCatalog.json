@@ -1,0 +1,594 @@
+{
+  "brands": [
+    {
+      "id": "tata",
+      "name": "Tata Motors",
+      "logoEmoji": "🚗",
+      "models": [
+        {
+          "id": "nexon-ev",
+          "name": "Nexon EV",
+          "variants": [
+            {
+              "name": "Empowered+ Long Range",
+              "batteryCapacityKwh": 45.0,
+              "maxDcPowerKw": 60,
+              "maxAcPowerKw": 7.2,
+              "rangeKm": 489,
+              "connectorTypes": ["CCS2", "TYPE2"]
+            },
+            {
+              "name": "Max (40.5 kWh)",
+              "batteryCapacityKwh": 40.5,
+              "maxDcPowerKw": 50,
+              "maxAcPowerKw": 7.2,
+              "rangeKm": 453,
+              "connectorTypes": ["CCS2", "TYPE2"]
+            },
+            {
+              "name": "Medium Range (30 kWh)",
+              "batteryCapacityKwh": 30.0,
+              "maxDcPowerKw": 30,
+              "maxAcPowerKw": 3.3,
+              "rangeKm": 325,
+              "connectorTypes": ["CCS2", "TYPE2"]
+            }
+          ]
+        },
+        {
+          "id": "punch-ev",
+          "name": "Punch EV",
+          "variants": [
+            {
+              "name": "Long Range (35 kWh)",
+              "batteryCapacityKwh": 35.0,
+              "maxDcPowerKw": 50,
+              "maxAcPowerKw": 7.2,
+              "rangeKm": 421,
+              "connectorTypes": ["CCS2", "TYPE2"]
+            },
+            {
+              "name": "Standard (25 kWh)",
+              "batteryCapacityKwh": 25.0,
+              "maxDcPowerKw": 30,
+              "maxAcPowerKw": 3.3,
+              "rangeKm": 315,
+              "connectorTypes": ["CCS2", "TYPE2"]
+            }
+          ]
+        },
+        {
+          "id": "curvv-ev",
+          "name": "Curvv EV",
+          "variants": [
+            {
+              "name": "Empowered+ (55 kWh)",
+              "batteryCapacityKwh": 55.0,
+              "maxDcPowerKw": 70,
+              "maxAcPowerKw": 7.2,
+              "rangeKm": 585,
+              "connectorTypes": ["CCS2", "TYPE2"]
+            },
+            {
+              "name": "Creative (45 kWh)",
+              "batteryCapacityKwh": 45.0,
+              "maxDcPowerKw": 60,
+              "maxAcPowerKw": 7.2,
+              "rangeKm": 502,
+              "connectorTypes": ["CCS2", "TYPE2"]
+            }
+          ]
+        },
+        {
+          "id": "tiago-ev",
+          "name": "Tiago EV",
+          "variants": [
+            {
+              "name": "Long Range (24 kWh)",
+              "batteryCapacityKwh": 24.0,
+              "maxDcPowerKw": 25,
+              "maxAcPowerKw": 7.2,
+              "rangeKm": 315,
+              "connectorTypes": ["CCS2", "TYPE2"]
+            },
+            {
+              "name": "Medium Range (19.2 kWh)",
+              "batteryCapacityKwh": 19.2,
+              "maxDcPowerKw": 20,
+              "maxAcPowerKw": 3.3,
+              "rangeKm": 250,
+              "connectorTypes": ["CCS2", "TYPE2"]
+            }
+          ]
+        },
+        {
+          "id": "tigor-ev",
+          "name": "Tigor EV",
+          "variants": [
+            {
+              "name": "XZ+ LUX (26 kWh)",
+              "batteryCapacityKwh": 26.0,
+              "maxDcPowerKw": 25,
+              "maxAcPowerKw": 3.3,
+              "rangeKm": 315,
+              "connectorTypes": ["CCS2", "TYPE2"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mg",
+      "name": "MG Motor",
+      "logoEmoji": "🚙",
+      "models": [
+        {
+          "id": "zs-ev",
+          "name": "ZS EV",
+          "variants": [
+            {
+              "name": "Exclusive Pro (50.3 kWh)",
+              "batteryCapacityKwh": 50.3,
+              "maxDcPowerKw": 75,
+              "maxAcPowerKw": 7.4,
+              "rangeKm": 461,
+              "connectorTypes": ["CCS2", "TYPE2"]
+            },
+            {
+              "name": "Excite (50.3 kWh)",
+              "batteryCapacityKwh": 50.3,
+              "maxDcPowerKw": 75,
+              "maxAcPowerKw": 7.4,
+              "rangeKm": 461,
+              "connectorTypes": ["CCS2", "TYPE2"]
+            }
+          ]
+        },
+        {
+          "id": "windsor-ev",
+          "name": "Windsor EV",
+          "variants": [
+            {
+              "name": "Essence / Exclusive (38 kWh)",
+              "batteryCapacityKwh": 38.0,
+              "maxDcPowerKw": 45,
+              "maxAcPowerKw": 7.4,
+              "rangeKm": 331,
+              "connectorTypes": ["CCS2", "TYPE2"]
+            }
+          ]
+        },
+        {
+          "id": "comet-ev",
+          "name": "Comet EV",
+          "variants": [
+            {
+              "name": "Exclusive Fast Charge (17.3 kWh)",
+              "batteryCapacityKwh": 17.3,
+              "maxDcPowerKw": 0,
+              "maxAcPowerKw": 7.4,
+              "rangeKm": 230,
+              "connectorTypes": ["TYPE2"]
+            },
+            {
+              "name": "Pace / Play (17.3 kWh)",
+              "batteryCapacityKwh": 17.3,
+              "maxDcPowerKw": 0,
+              "maxAcPowerKw": 3.3,
+              "rangeKm": 230,
+              "connectorTypes": ["TYPE2"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mahindra",
+      "name": "Mahindra",
+      "logoEmoji": "⚡",
+      "models": [
+        {
+          "id": "xuv400",
+          "name": "XUV400 EV",
+          "variants": [
+            {
+              "name": "EL Pro (39.4 kWh)",
+              "batteryCapacityKwh": 39.4,
+              "maxDcPowerKw": 50,
+              "maxAcPowerKw": 7.2,
+              "rangeKm": 456,
+              "connectorTypes": ["CCS2", "TYPE2"]
+            },
+            {
+              "name": "EC Pro (34.5 kWh)",
+              "batteryCapacityKwh": 34.5,
+              "maxDcPowerKw": 50,
+              "maxAcPowerKw": 3.3,
+              "rangeKm": 375,
+              "connectorTypes": ["CCS2", "TYPE2"]
+            }
+          ]
+        },
+        {
+          "id": "be-6e",
+          "name": "BE 6e",
+          "variants": [
+            {
+              "name": "Long Range (79 kWh)",
+              "batteryCapacityKwh": 79.0,
+              "maxDcPowerKw": 175,
+              "maxAcPowerKw": 11.0,
+              "rangeKm": 682,
+              "connectorTypes": ["CCS2", "TYPE2"]
+            },
+            {
+              "name": "Standard (59 kWh)",
+              "batteryCapacityKwh": 59.0,
+              "maxDcPowerKw": 140,
+              "maxAcPowerKw": 11.0,
+              "rangeKm": 535,
+              "connectorTypes": ["CCS2", "TYPE2"]
+            }
+          ]
+        },
+        {
+          "id": "xev-9e",
+          "name": "XEV 9e",
+          "variants": [
+            {
+              "name": "Long Range (79 kWh)",
+              "batteryCapacityKwh": 79.0,
+              "maxDcPowerKw": 175,
+              "maxAcPowerKw": 11.0,
+              "rangeKm": 656,
+              "connectorTypes": ["CCS2", "TYPE2"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hyundai",
+      "name": "Hyundai",
+      "logoEmoji": "🚙",
+      "models": [
+        {
+          "id": "ioniq-5",
+          "name": "Ioniq 5",
+          "variants": [
+            {
+              "name": "Long Range RWD (72.6 kWh)",
+              "batteryCapacityKwh": 72.6,
+              "maxDcPowerKw": 350,
+              "maxAcPowerKw": 11.0,
+              "rangeKm": 631,
+              "connectorTypes": ["CCS2", "TYPE2"]
+            }
+          ]
+        },
+        {
+          "id": "creta-ev",
+          "name": "Creta EV",
+          "variants": [
+            {
+              "name": "Long Range (50 kWh)",
+              "batteryCapacityKwh": 50.0,
+              "maxDcPowerKw": 60,
+              "maxAcPowerKw": 7.2,
+              "rangeKm": 475,
+              "connectorTypes": ["CCS2", "TYPE2"]
+            },
+            {
+              "name": "Standard (45 kWh)",
+              "batteryCapacityKwh": 45.0,
+              "maxDcPowerKw": 50,
+              "maxAcPowerKw": 7.2,
+              "rangeKm": 410,
+              "connectorTypes": ["CCS2", "TYPE2"]
+            }
+          ]
+        },
+        {
+          "id": "kona-electric",
+          "name": "Kona Electric",
+          "variants": [
+            {
+              "name": "Premium (39.2 kWh)",
+              "batteryCapacityKwh": 39.2,
+              "maxDcPowerKw": 50,
+              "maxAcPowerKw": 7.2,
+              "rangeKm": 452,
+              "connectorTypes": ["CCS2", "TYPE2"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "kia",
+      "name": "Kia",
+      "logoEmoji": "🚘",
+      "models": [
+        {
+          "id": "ev6",
+          "name": "EV6",
+          "variants": [
+            {
+              "name": "GT Line AWD (77.4 kWh)",
+              "batteryCapacityKwh": 77.4,
+              "maxDcPowerKw": 350,
+              "maxAcPowerKw": 11.0,
+              "rangeKm": 708,
+              "connectorTypes": ["CCS2", "TYPE2"]
+            },
+            {
+              "name": "GT Line RWD (77.4 kWh)",
+              "batteryCapacityKwh": 77.4,
+              "maxDcPowerKw": 350,
+              "maxAcPowerKw": 11.0,
+              "rangeKm": 708,
+              "connectorTypes": ["CCS2", "TYPE2"]
+            }
+          ]
+        },
+        {
+          "id": "ev9",
+          "name": "EV9",
+          "variants": [
+            {
+              "name": "GT Line AWD (99.8 kWh)",
+              "batteryCapacityKwh": 99.8,
+              "maxDcPowerKw": 350,
+              "maxAcPowerKw": 11.0,
+              "rangeKm": 561,
+              "connectorTypes": ["CCS2", "TYPE2"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "byd",
+      "name": "BYD",
+      "logoEmoji": "🔋",
+      "models": [
+        {
+          "id": "atto-3",
+          "name": "Atto 3",
+          "variants": [
+            {
+              "name": "Superior (60.48 kWh)",
+              "batteryCapacityKwh": 60.48,
+              "maxDcPowerKw": 80,
+              "maxAcPowerKw": 7.4,
+              "rangeKm": 521,
+              "connectorTypes": ["CCS2", "TYPE2"]
+            },
+            {
+              "name": "Dynamic (49.92 kWh)",
+              "batteryCapacityKwh": 49.92,
+              "maxDcPowerKw": 70,
+              "maxAcPowerKw": 7.4,
+              "rangeKm": 468,
+              "connectorTypes": ["CCS2", "TYPE2"]
+            }
+          ]
+        },
+        {
+          "id": "seal",
+          "name": "Seal",
+          "variants": [
+            {
+              "name": "Performance AWD (82.56 kWh)",
+              "batteryCapacityKwh": 82.56,
+              "maxDcPowerKw": 150,
+              "maxAcPowerKw": 7.0,
+              "rangeKm": 580,
+              "connectorTypes": ["CCS2", "TYPE2"]
+            },
+            {
+              "name": "Premium RWD (82.56 kWh)",
+              "batteryCapacityKwh": 82.56,
+              "maxDcPowerKw": 150,
+              "maxAcPowerKw": 7.0,
+              "rangeKm": 650,
+              "connectorTypes": ["CCS2", "TYPE2"]
+            },
+            {
+              "name": "Dynamic (61.44 kWh)",
+              "batteryCapacityKwh": 61.44,
+              "maxDcPowerKw": 110,
+              "maxAcPowerKw": 7.0,
+              "rangeKm": 510,
+              "connectorTypes": ["CCS2", "TYPE2"]
+            }
+          ]
+        },
+        {
+          "id": "emax-7",
+          "name": "eMAX 7",
+          "variants": [
+            {
+              "name": "Superior (71.8 kWh)",
+              "batteryCapacityKwh": 71.8,
+              "maxDcPowerKw": 115,
+              "maxAcPowerKw": 7.0,
+              "rangeKm": 530,
+              "connectorTypes": ["CCS2", "TYPE2"]
+            },
+            {
+              "name": "Premium (55.4 kWh)",
+              "batteryCapacityKwh": 55.4,
+              "maxDcPowerKw": 89,
+              "maxAcPowerKw": 7.0,
+              "rangeKm": 420,
+              "connectorTypes": ["CCS2", "TYPE2"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "citroen",
+      "name": "Citroën",
+      "logoEmoji": "🚙",
+      "models": [
+        {
+          "id": "e-c3",
+          "name": "ë-C3",
+          "variants": [
+            {
+              "name": "Shine / Feel (29.2 kWh)",
+              "batteryCapacityKwh": 29.2,
+              "maxDcPowerKw": 30,
+              "maxAcPowerKw": 3.3,
+              "rangeKm": 320,
+              "connectorTypes": ["CCS2", "TYPE2"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "bmw",
+      "name": "BMW",
+      "logoEmoji": "🏎️",
+      "models": [
+        {
+          "id": "ix1",
+          "name": "iX1",
+          "variants": [
+            {
+              "name": "xDrive30 (66.5 kWh)",
+              "batteryCapacityKwh": 66.5,
+              "maxDcPowerKw": 130,
+              "maxAcPowerKw": 11.0,
+              "rangeKm": 440,
+              "connectorTypes": ["CCS2", "TYPE2"]
+            }
+          ]
+        },
+        {
+          "id": "i4",
+          "name": "i4",
+          "variants": [
+            {
+              "name": "eDrive40 (83.9 kWh)",
+              "batteryCapacityKwh": 83.9,
+              "maxDcPowerKw": 205,
+              "maxAcPowerKw": 11.0,
+              "rangeKm": 590,
+              "connectorTypes": ["CCS2", "TYPE2"]
+            }
+          ]
+        },
+        {
+          "id": "ix",
+          "name": "iX",
+          "variants": [
+            {
+              "name": "xDrive50 (111.5 kWh)",
+              "batteryCapacityKwh": 111.5,
+              "maxDcPowerKw": 195,
+              "maxAcPowerKw": 11.0,
+              "rangeKm": 630,
+              "connectorTypes": ["CCS2", "TYPE2"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mercedes",
+      "name": "Mercedes-Benz",
+      "logoEmoji": "⭐",
+      "models": [
+        {
+          "id": "eqa",
+          "name": "EQA",
+          "variants": [
+            {
+              "name": "250+ (70.5 kWh)",
+              "batteryCapacityKwh": 70.5,
+              "maxDcPowerKw": 100,
+              "maxAcPowerKw": 11.0,
+              "rangeKm": 560,
+              "connectorTypes": ["CCS2", "TYPE2"]
+            }
+          ]
+        },
+        {
+          "id": "eqe-suv",
+          "name": "EQE SUV",
+          "variants": [
+            {
+              "name": "500 4MATIC (90.6 kWh)",
+              "batteryCapacityKwh": 90.6,
+              "maxDcPowerKw": 170,
+              "maxAcPowerKw": 11.0,
+              "rangeKm": 550,
+              "connectorTypes": ["CCS2", "TYPE2"]
+            }
+          ]
+        },
+        {
+          "id": "eqs",
+          "name": "EQS Sedan",
+          "variants": [
+            {
+              "name": "580 4MATIC (107.8 kWh)",
+              "batteryCapacityKwh": 107.8,
+              "maxDcPowerKw": 200,
+              "maxAcPowerKw": 22.0,
+              "rangeKm": 857,
+              "connectorTypes": ["CCS2", "TYPE2"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "volvo",
+      "name": "Volvo",
+      "logoEmoji": "🛡️",
+      "models": [
+        {
+          "id": "ex40",
+          "name": "EX40 / XC40 Recharge",
+          "variants": [
+            {
+              "name": "Twin Motor (78 kWh)",
+              "batteryCapacityKwh": 78.0,
+              "maxDcPowerKw": 150,
+              "maxAcPowerKw": 11.0,
+              "rangeKm": 475,
+              "connectorTypes": ["CCS2", "TYPE2"]
+            },
+            {
+              "name": "Single Motor (69 kWh)",
+              "batteryCapacityKwh": 69.0,
+              "maxDcPowerKw": 130,
+              "maxAcPowerKw": 11.0,
+              "rangeKm": 475,
+              "connectorTypes": ["CCS2", "TYPE2"]
+            }
+          ]
+        },
+        {
+          "id": "c40",
+          "name": "C40 Recharge",
+          "variants": [
+            {
+              "name": "Twin Motor (78 kWh)",
+              "batteryCapacityKwh": 78.0,
+              "maxDcPowerKw": 150,
+              "maxAcPowerKw": 11.0,
+              "rangeKm": 530,
+              "connectorTypes": ["CCS2", "TYPE2"]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -12,7 +12,7 @@ import { mockStations } from '../services/mockData';
 import { Header, PrimaryButton, AuthGateModal, StatusModal } from '../components';
 import { colors, spacing, borderRadius } from '../theme';
 import { ChargeTarget } from '@chargemesh/shared-types';
-import { useAuth, useCharging } from '../context';
+import { useAuth, useCharging, useLanguage } from '../context';
 
 interface PreChargeScreenProps {
   route: any;
@@ -25,6 +25,7 @@ export const PreChargeScreen: React.FC<PreChargeScreenProps> = ({
 }) => {
   const { activeVehicle, isGuest } = useAuth();
   const { startSession } = useCharging();
+  const { t } = useLanguage();
   const [showAuthGate, setShowAuthGate] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
 
@@ -105,8 +106,8 @@ export const PreChargeScreen: React.FC<PreChargeScreenProps> = ({
   return (
     <SafeAreaView style={styles.safeArea}>
       <Header
-        title="Ready to Charge? ⚡"
-        subtitle="Confirm session parameters & start"
+        title={t('preCharge.title')}
+        subtitle={t('preCharge.subtitle')}
         onBack={() => navigation.goBack()}
       />
 
@@ -350,7 +351,7 @@ export const PreChargeScreen: React.FC<PreChargeScreenProps> = ({
       {/* Fixed Bottom Action Bar */}
       <View style={styles.bottomBar}>
         <PrimaryButton
-          title={isStarting ? 'Initiating Session...' : '⚡ Plug In & Start Charging'}
+          title={isStarting ? t('preCharge.initiating') : t('preCharge.proceedToCharge')}
           onPress={handleStartCharging}
           disabled={isStarting}
         />

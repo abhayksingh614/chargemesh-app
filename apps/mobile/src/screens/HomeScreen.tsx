@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -9,120 +9,97 @@ import {
   SafeAreaView,
   StatusBar,
   Image,
-  Dimensions,
 } from 'react-native';
 import { mockStations, StationWithDetails } from '../services/mockData';
-import { StationCard, ActiveSessionBanner, ThreeDIcon } from '../components';
-import { spacing, borderRadius } from '../theme';
-import { useAuth, useCharging, useTheme } from '../context';
-
-const { width } = Dimensions.get('window');
-
-// 5 Quick Actions with 3D Embossed Depth Icons
-const QUICK_ACTIONS = [
-  {
-    id: 'scan',
-    label: 'Scan & Charge',
-    iconName: 'scan' as const,
-    route: 'QRScanner',
-  },
-  {
-    id: 'vehicles',
-    label: 'My Vehicles',
-    iconName: 'vehicle' as const,
-    route: 'Vehicle',
-  },
-  {
-    id: 'history',
-    label: 'Charging History',
-    iconName: 'history' as const,
-    route: 'Activity',
-  },
-  {
-    id: 'bookings',
-    label: 'My Bookings',
-    iconName: 'bookings' as const,
-    route: 'Activity',
-  },
-  {
-    id: 'wallet',
-    label: 'Wallet & Pay',
-    iconName: 'wallet' as const,
-    route: 'Profile',
-  },
-];
+import {
+  StationCard,
+  ActiveSessionBanner,
+  ThreeDIcon,
+  FavoriteButton,
+  AuthGateModal,
+} from '../components';
+import { borderRadius, shadows } from '../theme';
+import { useAuth, useCharging, useTheme, useLanguage } from '../context';
 
 interface HomeScreenProps {
   navigation: any;
 }
 
 export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
-  const { user, activeVehicle } = useAuth();
+  const { user, activeVehicle, isGuest, isAuthenticated } = useAuth();
+  const isGuestUser = isGuest || !isAuthenticated;
   const { isCharging } = useCharging();
   const { mode, theme, toggleTheme } = useTheme();
+  const isDark = mode === 'dark';
+  const { t } = useLanguage();
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeFilter, setActiveFilter] = useState<'all' | 'fast' | 'ac' | 'available'>('all');
-  const [favorites, setFavorites] = useState<{ [id: string]: boolean }>({});
-  const [batteryPercent] = useState(62);
-  const [batteryRangeKm] = useState(219);
-  const [isRefreshingEv, setIsRefreshingEv] = useState(false);
+  const [activeFilter, setActiveFilter] = useState<'all' | 'fast' | 'ac' | 'available'>('available');
+  const [showAuthGate, setShowAuthGate] = useState(false);
+  const [gateFeature, setGateFeature] = useState('Vehicle Garage');
 
   // Dynamic Time-Based Greeting
   const getGreeting = (): string => {
     const hour = new Date().getHours();
+    let g = 'Good Evening';
     if (hour >= 4 && hour < 12) {
-      return 'Good Morning';
+      g = t('home.greetingMorning') || 'Good Morning';
     } else if (hour >= 12 && hour < 17) {
-      return 'Good Afternoon';
+      g = t('home.greetingAfternoon') || 'Good Afternoon';
     } else {
-      return 'Good Evening';
+      g = t('home.greetingEvening') || 'Good Evening';
     }
+    // Clean any trailing commas/spaces to guarantee strict "{Greeting}, {Name}" format
+    return g.replace(/[, ]+$/, '');
   };
 
-  const toggleFavorite = (stationId: string) => {
-    setFavorites((prev) => ({ ...prev, [stationId]: !prev[stationId] }));
-  };
+  const driverName = isGuestUser ? 'Explorer' : user?.name ? user.name.split(' ')[0] : 'Driver';
+  const vehicleName = !isGuestUser && activeVehicle ? `${activeVehicle.make} ${activeVehicle.model}` : 'My Car';
 
-  const handleRefreshEv = () => {
-    setIsRefreshingEv(true);
-    setTimeout(() => {
-      setIsRefreshingEv(false);
-    }, 600);
-  };
+  // 1. Intelligent "Best Match For You" Station
+  const bestMatchStation = useMemo<StationWithDetails>(() => {
+    // Priority: available > DC fast > nearest
+    const availableStations = mockStations.filter((s) => s.availableCount > 0);
+    const sorted = [...(availableStations.length ? availableStations : mockStations)].sort(
+      (a, b) => {
+        // Boost stations matching user max power or >= 50kW
+        const aScore = (a.availableCount > 0 ? 100 : 0) + (a.maxPowerKw >= 50 ? 50 : 0) - a.distanceKm * 2;
+        const bScore = (b.availableCount > 0 ? 100 : 0) + (b.maxPowerKw >= 50 ? 50 : 0) - b.distanceKm * 2;
+        return bScore - aScore;
+      }
+    );
+    return sorted[0] || mockStations[0];
+  }, []);
 
-  // Filtered stations based on Search, State, District, and Quick Category Pills
-  const filteredStations = mockStations.filter((station) => {
-    const q = searchQuery.toLowerCase().trim();
-    const matchesSearch =
-      !q ||
-      station.name.toLowerCase().includes(q) ||
-      station.cpo.name.toLowerCase().includes(q) ||
-      station.city.toLowerCase().includes(q) ||
-      (station.district && station.district.toLowerCase().includes(q)) ||
-      station.state.toLowerCase().includes(q) ||
-      station.address.toLowerCase().includes(q);
+  // 2. Filtered Stations based on Search and Filter Pills
+  const filteredStations = useMemo(() => {
+    return mockStations.filter((station) => {
+      const q = searchQuery.toLowerCase().trim();
+      const matchesSearch =
+        !q ||
+        station.name.toLowerCase().includes(q) ||
+        station.cpo.name.toLowerCase().includes(q) ||
+        station.city.toLowerCase().includes(q) ||
+        (station.district && station.district.toLowerCase().includes(q)) ||
+        station.state.toLowerCase().includes(q) ||
+        station.address.toLowerCase().includes(q);
 
-    if (!matchesSearch) return false;
+      if (!matchesSearch) return false;
 
-    if (activeFilter === 'available') {
-      return station.availableCount > 0;
-    }
-    if (activeFilter === 'fast') {
-      return station.maxPowerKw >= 50;
-    }
-    if (activeFilter === 'ac') {
-      return station.connectors.some((c) => c.type === 'TYPE2');
-    }
-    return true;
-  });
+      if (activeFilter === 'available') {
+        return station.availableCount > 0;
+      }
+      if (activeFilter === 'fast') {
+        return station.maxPowerKw >= 50;
+      }
+      if (activeFilter === 'ac') {
+        return station.connectors.some((c) => c.type === 'TYPE2');
+      }
+      return true;
+    });
+  }, [searchQuery, activeFilter]);
 
-  // Dynamically sorted nearby stations based on distanceKm
-  const nearbyStations: StationWithDetails[] = [...mockStations]
-    .sort((a, b) => a.distanceKm - b.distanceKm)
-    .slice(0, 6);
-
-  const driverName = user?.name ? user.name.split(' ')[0] : 'Abhay';
+  const nearbyList = filteredStations.slice(0, 6);
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]}>
@@ -131,7 +108,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         backgroundColor={theme.surface}
       />
 
-      {/* 1. Header: Compact, No Excessive Gap */}
+      {/* 1. Header: Logo, Theme Switcher, Wallet Balance & Profile */}
       <View
         style={[
           styles.topHeader,
@@ -141,7 +118,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           },
         ]}
       >
-        {/* Left: Brand Identity */}
         <View style={styles.brandTitleWrap}>
           <Image
             source={require('../assets/logo/cm_fevicon_logo_trans.png')}
@@ -151,26 +127,24 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           <View>
             <Text style={[styles.brandTitle, { color: theme.textPrimary }]}>ChargeMesh</Text>
             <Text style={[styles.headerTagline, { color: theme.primary }]}>
-              Charge Smarter. Drive Further.
+              Universal EV Network
             </Text>
           </View>
         </View>
 
-        {/* Right: Theme Toggle, Wallet Balance & Profile Shortcut */}
         <View style={styles.headerRightActions}>
-          {/* Light / Dark Mode Toggle Switch */}
           <TouchableOpacity
             style={[
               styles.themeToggleBtn,
               {
-                backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.1)' : '#F1F5F9',
+                backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : '#F1F5F9',
                 borderColor: theme.border,
               },
             ]}
             onPress={toggleTheme}
             activeOpacity={0.8}
           >
-            <Text style={styles.themeToggleIcon}>{theme.isDark ? '☀️' : '🌙'}</Text>
+            <Text style={styles.themeToggleIcon}>{isDark ? '☀️' : '🌙'}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -181,12 +155,20 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                 borderColor: theme.primary,
               },
             ]}
-            onPress={() => navigation.navigate('Profile')}
+            onPress={() => {
+              if (isGuestUser) {
+                navigation.navigate('Login');
+              } else {
+                navigation.navigate('PaymentMethods');
+              }
+            }}
             activeOpacity={0.8}
           >
             <Text style={styles.walletIcon}>⚡</Text>
             <Text style={[styles.walletBalanceText, { color: theme.primary }]}>
-              ₹{((user?.walletBalancePaise || 10000) / 100).toLocaleString('en-IN')}
+              {isGuestUser
+                ? 'Login'
+                : `₹${((user?.walletBalancePaise || 0) / 100).toLocaleString('en-IN')}`}
             </Text>
           </TouchableOpacity>
 
@@ -194,7 +176,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
             style={[
               styles.profileAvatarButton,
               {
-                backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.12)' : '#E2E8F0',
+                backgroundColor: isDark ? 'rgba(255, 255, 255, 0.12)' : '#E2E8F0',
                 borderColor: theme.border,
               },
             ]}
@@ -208,52 +190,65 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         </View>
       </View>
 
-      {/* Active Charging Banner if in session */}
+      {/* Active Charging Banner if currently in session */}
       {isCharging && <ActiveSessionBanner />}
 
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        {/* 2. User Greeting (Dynamic Time-Based) */}
+        {/* 2. User Greeting & Active EV Selector Row */}
         <View style={styles.greetingSection}>
-          <Text style={[styles.greetingTitle, { color: theme.textPrimary }]}>
-            {getGreeting()}, {driverName}! 👋
-          </Text>
-          <Text style={[styles.greetingSubtitle, { color: theme.textSecondary }]}>
-            Let's power your next journey.
-          </Text>
-        </View>
-
-        {/* 3. Find Charging Station (Primary Action Card) */}
-        <View
-          style={[
-            styles.searchCard,
-            {
-              backgroundColor: theme.cardBg,
-              borderColor: theme.cardBorder,
-            },
-          ]}
-        >
-          {/* Card Header */}
-          <View style={styles.searchCardHeader}>
-            <View style={styles.searchTitleRow}>
-              <Text style={styles.searchTitleIcon}>⚡</Text>
-              <Text style={[styles.searchCardTitle, { color: theme.textPrimary }]}>
-                Find EV Charging Station
-              </Text>
-            </View>
-            <Text style={[styles.searchCardSubtitle, { color: theme.textSecondary }]}>
-              Locate 5,000+ verified chargers across all CPO networks
+          <View>
+            <Text style={[styles.greetingTitle, { color: theme.textPrimary }]}>
+              {getGreeting()}, {driverName}
+            </Text>
+            <Text style={[styles.greetingSubtitle, { color: theme.textSecondary }]}>
+              Ready to find verified chargers.
             </Text>
           </View>
 
-          {/* Search Input Bar */}
+          <TouchableOpacity
+            style={[
+              styles.evSelectorPill,
+              {
+                backgroundColor: isDark ? 'rgba(255, 255, 255, 0.06)' : '#F0FDF4',
+                borderColor: isDark ? 'rgba(255, 255, 255, 0.12)' : '#BBF7D0',
+              },
+            ]}
+            onPress={() => {
+              if (isGuestUser) {
+                setGateFeature('Vehicle Garage');
+                setShowAuthGate(true);
+              } else {
+                navigation.navigate('MyVehicles');
+              }
+            }}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.evSelectorIcon}>🚗</Text>
+            <Text
+              style={[
+                styles.evSelectorText,
+                { color: isDark ? theme.textPrimary : '#166534' },
+              ]}
+              numberOfLines={1}
+            >
+              {vehicleName}
+            </Text>
+            <Text style={[styles.evSelectorChevron, { color: isDark ? theme.textMuted : '#166534' }]}>
+              ▾
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* 3. Universal Search & Quick Scan Bar */}
+        <View style={styles.searchSection}>
           <View
             style={[
               styles.searchInputWrapper,
               {
-                backgroundColor: theme.inputBg,
+                backgroundColor: theme.surface,
                 borderColor: theme.border,
               },
             ]}
@@ -261,522 +256,342 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
             <Text style={styles.inputSearchIcon}>🔍</Text>
             <TextInput
               style={[styles.searchInputField, { color: theme.textPrimary }]}
-              placeholder="Search state, district, city or station..."
+              placeholder="Search station, operator, city or area..."
               placeholderTextColor={theme.textMuted}
               value={searchQuery}
               onChangeText={setSearchQuery}
             />
             {searchQuery.length > 0 && (
-              <TouchableOpacity onPress={() => setSearchQuery('')}>
+              <TouchableOpacity onPress={() => setSearchQuery('')} style={{ padding: 4 }}>
                 <Text style={[styles.clearSearchIcon, { color: theme.textSecondary }]}>✕</Text>
               </TouchableOpacity>
             )}
-          </View>
 
-          {/* Quick Filter Chips */}
-          <View style={styles.filterChipsRow}>
+            {/* Quick Camera QR Launcher */}
             <TouchableOpacity
-              style={[
-                styles.chipButton,
-                { backgroundColor: theme.inputBg, borderColor: theme.border },
-                activeFilter === 'all' && {
-                  backgroundColor: theme.primaryLight,
-                  borderColor: theme.primary,
-                },
-              ]}
-              onPress={() => setActiveFilter('all')}
-              activeOpacity={0.8}
-            >
-              <Text
-                style={[
-                  styles.chipText,
-                  { color: theme.textSecondary },
-                  activeFilter === 'all' && { color: theme.primary, fontWeight: '800' },
-                ]}
-              >
-                All Chargers
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[
-                styles.chipButton,
-                { backgroundColor: theme.inputBg, borderColor: theme.border },
-                activeFilter === 'fast' && {
-                  backgroundColor: theme.primaryLight,
-                  borderColor: theme.primary,
-                },
-              ]}
-              onPress={() => setActiveFilter('fast')}
-              activeOpacity={0.8}
-            >
-              <Text
-                style={[
-                  styles.chipText,
-                  { color: theme.textSecondary },
-                  activeFilter === 'fast' && { color: theme.primary, fontWeight: '800' },
-                ]}
-              >
-                ⚡ Fast DC (50kW+)
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[
-                styles.chipButton,
-                { backgroundColor: theme.inputBg, borderColor: theme.border },
-                activeFilter === 'ac' && {
-                  backgroundColor: theme.primaryLight,
-                  borderColor: theme.primary,
-                },
-              ]}
-              onPress={() => setActiveFilter('ac')}
-              activeOpacity={0.8}
-            >
-              <Text
-                style={[
-                  styles.chipText,
-                  { color: theme.textSecondary },
-                  activeFilter === 'ac' && { color: theme.primary, fontWeight: '800' },
-                ]}
-              >
-                🔌 AC Type-2
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[
-                styles.chipButton,
-                { backgroundColor: theme.inputBg, borderColor: theme.border },
-                activeFilter === 'available' && {
-                  backgroundColor: theme.primaryLight,
-                  borderColor: theme.primary,
-                },
-              ]}
-              onPress={() => setActiveFilter('available')}
-              activeOpacity={0.8}
-            >
-              <Text
-                style={[
-                  styles.chipText,
-                  { color: theme.textSecondary },
-                  activeFilter === 'available' && { color: theme.primary, fontWeight: '800' },
-                ]}
-              >
-                🟢 Available Now
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Primary CTA Buttons (Explore on Map + Scan QR) */}
-          <View style={styles.ctaButtonsRow}>
-            <TouchableOpacity
-              style={[styles.primaryCtaBtn, { backgroundColor: theme.primary }]}
-              onPress={() => navigation.navigate('Map')}
+              style={[styles.scanQuickBtn, { backgroundColor: theme.primary }]}
+              onPress={() => {
+                if (isGuestUser) {
+                  setGateFeature('QR Scanner');
+                  setShowAuthGate(true);
+                } else {
+                  navigation.navigate('QRScanner');
+                }
+              }}
               activeOpacity={0.85}
             >
-              <Text style={styles.primaryCtaText}>🗺️ Explore Interactive Map</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[
-                styles.secondaryCtaBtn,
-                {
-                  backgroundColor: theme.inputBg,
-                  borderColor: theme.border,
-                },
-              ]}
-              onPress={() => navigation.navigate('QRScanner')}
-              activeOpacity={0.85}
-            >
-              <Text style={[styles.secondaryCtaText, { color: theme.textPrimary }]}>
-                📷 Scan Charger
-              </Text>
+              <Text style={styles.scanQuickBtnText}>⚡ Scan QR</Text>
             </TouchableOpacity>
           </View>
         </View>
 
-        {/* 4. Quick Actions Grid (5 Clean 3D Embossed Icons) */}
-        <View style={styles.quickActionsSection}>
-          <Text style={[styles.sectionHeaderTitle, { color: theme.textPrimary }]}>
-            Quick Services
-          </Text>
-          <View style={styles.quickActionsGrid}>
-            {QUICK_ACTIONS.map((action) => (
-              <TouchableOpacity
-                key={action.id}
-                style={styles.quickActionItem}
-                onPress={() => navigation.navigate(action.route)}
-                activeOpacity={0.8}
-              >
-                <View style={styles.actionIconContainer}>
-                  <ThreeDIcon name={action.iconName} size={48} />
-                </View>
-                <Text
-                  style={[styles.quickActionLabel, { color: theme.textPrimary }]}
-                  numberOfLines={2}
-                >
-                  {action.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-
-        {/* 5. EV Telemetry Status Card */}
-        <TouchableOpacity
-          style={[
-            styles.evStatusCard,
-            {
-              backgroundColor: theme.cardBg,
-              borderColor: theme.cardBorder,
-            },
-          ]}
-          activeOpacity={0.9}
-          onPress={() => navigation.navigate('Vehicle')}
-        >
-          {/* Top Row: Vehicle Name & Connectivity */}
-          <View style={styles.evCardTopRow}>
-            <View style={styles.evVehicleInfo}>
-              <Text style={[styles.evTagLabel, { color: theme.textMuted }]}>
-                CONNECTED VEHICLE
-              </Text>
-              <Text style={[styles.evModelTitle, { color: theme.textPrimary }]}>
-                {activeVehicle
-                  ? `${activeVehicle.make} ${activeVehicle.model}`
-                  : 'Tata Nexon EV Empowered+'}
-              </Text>
-            </View>
-            <View style={[styles.evConnectedPill, { backgroundColor: theme.primaryLight }]}>
-              <View style={[styles.connectedDot, { backgroundColor: theme.primary }]} />
-              <Text style={[styles.connectedText, { color: theme.primary }]}>Connected</Text>
-            </View>
-          </View>
-
-          {/* Battery Telemetry Meters */}
-          <View
-            style={[
-              styles.evTelemetryGrid,
-              { backgroundColor: theme.inputBg },
-            ]}
-          >
-            <View style={styles.telemetryStatBox}>
-              <Text style={[styles.telemetryValueLarge, { color: theme.textPrimary }]}>
-                {batteryPercent}%
-              </Text>
-              <Text style={[styles.telemetryLabel, { color: theme.textSecondary }]}>
-                Battery Level
-              </Text>
-              {/* Visual Battery Bar */}
-              <View
-                style={[
-                  styles.batteryBarBg,
-                  { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.12)' : '#CBD5E1' },
-                ]}
-              >
-                <View
-                  style={[
-                    styles.batteryBarFill,
-                    { width: `${batteryPercent}%`, backgroundColor: theme.primary },
-                  ]}
-                />
-              </View>
-            </View>
-
+        {/* 4. ⭐ "Best Match For Your EV" Recommendation Hero Card */}
+        {bestMatchStation && (
+          <View style={styles.bestMatchSection}>
             <View
               style={[
-                styles.telemetryDivider,
-                { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.12)' : '#CBD5E1' },
+                styles.bestMatchCard,
+                {
+                  backgroundColor: isDark ? '#0F172A' : '#0B192C',
+                  borderColor: isDark ? 'rgba(0, 208, 132, 0.3)' : '#1E293B',
+                },
               ]}
-            />
-
-            <View style={styles.telemetryStatBox}>
-              <Text style={[styles.telemetryValueLarge, { color: theme.textPrimary }]}>
-                {batteryRangeKm} km
-              </Text>
-              <Text style={[styles.telemetryLabel, { color: theme.textSecondary }]}>
-                Estimated Range
-              </Text>
-              <Text style={[styles.telemetryEfficiency, { color: theme.primary }]}>
-                ⚡ 142 Wh/km eco rate
-              </Text>
-            </View>
-          </View>
-
-          {/* Footer Info & Refresh */}
-          <View style={styles.evCardFooter}>
-            <Text style={[styles.lastUpdatedText, { color: theme.textMuted }]}>
-              Last Updated: 5 min ago • Battery Guard Active
-            </Text>
-            <TouchableOpacity
-              onPress={handleRefreshEv}
-              style={styles.refreshIconButton}
-              activeOpacity={0.7}
             >
-              <Text style={styles.refreshIconEmoji}>
-                {isRefreshingEv ? '⏳' : '🔄'}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </TouchableOpacity>
-
-        {/* 6. Nearby Charging Stations (Horizontal Cards with Real Distances) */}
-        <View style={styles.nearbySection}>
-          <View style={styles.sectionHeaderRow}>
-            <View>
-              <Text style={[styles.sectionHeaderTitle, { color: theme.textPrimary }]}>
-                Nearby Charging Stations
-              </Text>
-              <Text style={[styles.sectionHeaderSubtitle, { color: theme.textSecondary }]}>
-                Verified high-speed hubs with live availability
-              </Text>
-            </View>
-            <TouchableOpacity
-              onPress={() => navigation.navigate('Map')}
-              activeOpacity={0.8}
-            >
-              <Text style={[styles.viewAllText, { color: theme.primary }]}>View All →</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Horizontal Station Cards */}
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.nearbyCardsScroll}
-          >
-            {nearbyStations.map((st) => {
-              const isFav = !!favorites[st.id];
-              const isAvailable = st.availableCount > 0;
-              const estTimeMins = Math.max(3, Math.round(st.distanceKm * 2.5));
-
-              return (
-                <View
-                  key={st.id}
-                  style={[
-                    styles.nearbyStationCard,
-                    {
-                      backgroundColor: theme.cardBg,
-                      borderColor: theme.cardBorder,
-                    },
-                  ]}
-                >
-                  {/* Top CPO Header & Favorite Button */}
-                  <View style={styles.nearbyCardTop}>
-                    <View style={styles.cpoBadge}>
-                      <Text style={styles.cpoBadgeText}>{st.cpo.name}</Text>
-                    </View>
-                    <TouchableOpacity
-                      onPress={() => toggleFavorite(st.id)}
-                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                    >
-                      <Text style={styles.favIcon}>{isFav ? '❤️' : '🤍'}</Text>
-                    </TouchableOpacity>
-                  </View>
-
-                  {/* Station Name */}
-                  <Text style={[styles.nearbyStationName, { color: theme.textPrimary }]} numberOfLines={1}>
-                    {st.name}
-                  </Text>
-
-                  {/* Availability Badge */}
-                  <View style={styles.nearbyAvailabilityRow}>
-                    <View
-                      style={[
-                        styles.availDot,
-                        {
-                          backgroundColor: isAvailable
-                            ? theme.primary
-                            : '#EF4444',
-                        },
-                      ]}
-                    />
-                    <Text
-                      style={[
-                        styles.availText,
-                        {
-                          color: isAvailable
-                            ? theme.primary
-                            : '#EF4444',
-                        },
-                      ]}
-                    >
-                      {isAvailable
-                        ? `🟢 ${st.availableCount}/${st.totalConnectors} Free Bays`
-                        : '🔴 In Use'}
-                    </Text>
-                  </View>
-
-                  {/* Distance & Travel Time */}
-                  <Text style={[styles.nearbyDistanceText, { color: theme.textMuted }]}>
-                    📍 {st.distanceKm} km • {estTimeMins} min away
-                  </Text>
-
-                  {/* Specs & Pricing Pill */}
-                  <View style={styles.nearbySpecsRow}>
-                    <View
-                      style={[
-                        styles.specTag,
-                        { backgroundColor: theme.inputBg },
-                      ]}
-                    >
-                      <Text style={[styles.specTagText, { color: theme.textSecondary }]}>
-                        {st.maxPowerKw >= 50 ? 'DC Fast' : 'AC Type-2'}
-                      </Text>
-                    </View>
-                    <View
-                      style={[
-                        styles.specTag,
-                        { backgroundColor: theme.inputBg },
-                      ]}
-                    >
-                      <Text style={[styles.specTagText, { color: theme.textSecondary }]}>
-                        {st.maxPowerKw} kW • CCS2
-                      </Text>
-                    </View>
-                  </View>
-
-                  {/* Price & CTA Button */}
-                  <View
-                    style={[
-                      styles.nearbyCardBottomRow,
-                      { borderTopColor: theme.border },
-                    ]}
-                  >
-                    <View>
-                      <Text style={[styles.nearbyTariffLabel, { color: theme.textMuted }]}>
-                        TARIFF
-                      </Text>
-                      <Text style={[styles.nearbyPriceText, { color: theme.primary }]}>
-                        ₹{st.tariffPerKwh}/kWh
-                      </Text>
-                    </View>
-
-                    <TouchableOpacity
-                      style={[styles.nearbyChargeCta, { backgroundColor: theme.primary }]}
-                      onPress={() =>
-                        navigation.navigate('StationDetail', { stationId: st.id })
-                      }
-                      activeOpacity={0.85}
-                    >
-                      <Text style={styles.nearbyChargeCtaText}>Start ⚡</Text>
-                    </TouchableOpacity>
-                  </View>
+              {/* Header Badge */}
+              <View style={styles.bestMatchBadgeRow}>
+                <View style={styles.bestMatchTag}>
+                  <Text style={styles.bestMatchTagText}>⭐ BEST MATCH FOR YOUR EV</Text>
                 </View>
-              );
-            })}
-          </ScrollView>
-        </View>
 
-        {/* 7. FastPay Banner */}
-        <TouchableOpacity
-          style={[
-            styles.paymentBannerCard,
-            {
-              backgroundColor: theme.isDark ? 'rgba(6, 26, 42, 0.95)' : '#ECFDF5',
-              borderColor: theme.isDark ? 'rgba(0, 208, 132, 0.35)' : '#A7F3D0',
-            },
-          ]}
-          activeOpacity={0.9}
-          onPress={() => navigation.navigate('Profile')}
-        >
-          <View style={styles.paymentBannerLeft}>
-            <View style={[styles.paymentBannerBadge, { backgroundColor: theme.primaryLight }]}>
-              <Text style={[styles.paymentBannerBadgeText, { color: theme.primary }]}>
-                FASTPAY ENABLED • ₹100 BONUS
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <Text style={styles.bestMatchDistance}>
+                    📍 {bestMatchStation.distanceKm.toFixed(1)} km (
+                    {Math.max(3, Math.round(bestMatchStation.distanceKm * 2.4))}m)
+                  </Text>
+                  <FavoriteButton stationId={bestMatchStation.id} size="sm" />
+                </View>
+              </View>
+
+              {/* Station Name & CPO */}
+              <Text style={styles.bestMatchTitle} numberOfLines={1}>
+                {bestMatchStation.name}
               </Text>
-            </View>
-            <Text style={[styles.paymentBannerTitle, { color: theme.textPrimary }]}>
-              Charge. Pay. Go Seamlessly.
-            </Text>
-            <Text style={[styles.paymentBannerSub, { color: theme.textSecondary }]}>
-              Use UPI, Fastag or Wallet and get instant digital GST tax invoices.
-            </Text>
-            {/* Visual Badges */}
-            <View style={styles.paymentMethodsRow}>
-              <View
-                style={[
-                  styles.payPill,
-                  { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.08)' : '#FFFFFF' },
-                ]}
-              >
-                <Text style={[styles.payPillText, { color: theme.textPrimary }]}>📲 UPI AutoDebit</Text>
-              </View>
-              <View
-                style={[
-                  styles.payPill,
-                  { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.08)' : '#FFFFFF' },
-                ]}
-              >
-                <Text style={[styles.payPillText, { color: theme.textPrimary }]}>🛣️ Fastag</Text>
-              </View>
-              <View
-                style={[
-                  styles.payPill,
-                  { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.08)' : '#FFFFFF' },
-                ]}
-              >
-                <Text style={[styles.payPillText, { color: theme.textPrimary }]}>🧾 GST Invoices</Text>
-              </View>
-            </View>
-          </View>
-          <View style={[styles.paymentArrowWrap, { backgroundColor: theme.primaryLight }]}>
-            <Text style={[styles.paymentArrowText, { color: theme.primary }]}>➔</Text>
-          </View>
-        </TouchableOpacity>
+              <Text style={styles.bestMatchSubtitle}>
+                {bestMatchStation.cpo.name} • {bestMatchStation.address}
+              </Text>
 
-        {/* 8. Matching Charging Hubs / Network Stations Section */}
-        <View style={styles.listHeaderRow}>
-          <View>
-            <Text style={[styles.sectionHeaderTitle, { color: theme.textPrimary }]}>
-              Matching Charging Hubs ({filteredStations.length})
-            </Text>
-            <Text style={[styles.sectionHeaderSubtitle, { color: theme.textSecondary }]}>
-              5,000+ Interoperable bays across Delhi-NCR &amp; India
-            </Text>
-          </View>
-        </View>
+              {/* Specs & Availability Grid */}
+              <View style={styles.bestMatchSpecsRow}>
+                <View style={styles.bestMatchSpecItem}>
+                  <Text style={styles.bestMatchSpecVal}>
+                    🟢 {bestMatchStation.availableCount} of {bestMatchStation.totalConnectors} Free
+                  </Text>
+                  <Text style={styles.bestMatchSpecLbl}>Live Availability</Text>
+                </View>
 
-        {/* Stations List or Empty State */}
-        {filteredStations.length > 0 ? (
-          filteredStations.map((station) => (
-            <StationCard
-              key={station.id}
-              station={station}
-              onPress={() =>
-                navigation.navigate('StationDetail', { stationId: station.id })
-              }
-            />
-          ))
-        ) : (
-          <View
-            style={[
-              styles.emptySearchBox,
-              {
-                backgroundColor: theme.cardBg,
-                borderColor: theme.cardBorder,
-              },
-            ]}
-          >
-            <Text style={styles.emptySearchIcon}>🔍</Text>
-            <Text style={[styles.emptySearchTitle, { color: theme.textPrimary }]}>
-              No Charging Hubs Found
-            </Text>
-            <Text style={[styles.emptySearchSub, { color: theme.textSecondary }]}>
-              No stations match "{searchQuery}". Try searching for another state, district, or city.
-            </Text>
-            <TouchableOpacity
-              style={[styles.emptyResetBtn, { backgroundColor: theme.primary }]}
-              onPress={() => {
-                setSearchQuery('');
-                setActiveFilter('all');
-              }}
-            >
-              <Text style={styles.emptyResetBtnText}>Clear Search &amp; Filters</Text>
-            </TouchableOpacity>
+                <View style={styles.bestMatchSpecDivider} />
+
+                <View style={styles.bestMatchSpecItem}>
+                  <Text style={styles.bestMatchSpecVal}>
+                    ⚡ {bestMatchStation.maxPowerKw} kW DC
+                  </Text>
+                  <Text style={styles.bestMatchSpecLbl}>Fast Charging</Text>
+                </View>
+
+                <View style={styles.bestMatchSpecDivider} />
+
+                <View style={styles.bestMatchSpecItem}>
+                  <Text style={[styles.bestMatchSpecVal, { color: '#00D084' }]}>
+                    ₹{bestMatchStation.tariffPerKwh.toFixed(1)}
+                  </Text>
+                  <Text style={styles.bestMatchSpecLbl}>per kWh</Text>
+                </View>
+              </View>
+
+              {/* Action Buttons */}
+              <View style={styles.bestMatchActionRow}>
+                <TouchableOpacity
+                  style={[styles.bestMatchPrimaryBtn, { backgroundColor: theme.primary }]}
+                  onPress={() =>
+                    navigation.navigate('StationDetail', { stationId: bestMatchStation.id })
+                  }
+                  activeOpacity={0.88}
+                >
+                  <Text style={styles.bestMatchPrimaryBtnText}>🗺️ View &amp; Charge ➔</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.bestMatchSecondaryBtn}
+                  onPress={() => navigation.navigate('Map')}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.bestMatchSecondaryBtnText}>Explore Map ›</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
           </View>
         )}
+
+        {/* 5. ⚡ Quick EV Services Navigation Section (Positioned Above Charging Hubs) */}
+        <View
+          style={[
+            styles.quickServicesCard,
+            {
+              backgroundColor: theme.surface,
+              borderColor: theme.border,
+              borderWidth: 1,
+            },
+          ]}
+        >
+          <Text style={[styles.quickServicesTitle, { color: theme.textPrimary }]}>
+            Quick EV Services
+          </Text>
+          <View style={styles.quickServicesGrid}>
+            <TouchableOpacity
+              style={styles.quickServiceItem}
+              onPress={() => navigation.navigate('MyVehicles')}
+              activeOpacity={0.8}
+            >
+              <View style={styles.serviceIconCircle}>
+                <ThreeDIcon name="vehicle" size={36} />
+              </View>
+              <Text style={[styles.serviceItemLabel, { color: theme.textPrimary }]}>
+                My Garage
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.quickServiceItem}
+              onPress={() => navigation.navigate('Activity')}
+              activeOpacity={0.8}
+            >
+              <View style={styles.serviceIconCircle}>
+                <ThreeDIcon name="history" size={36} />
+              </View>
+              <Text style={[styles.serviceItemLabel, { color: theme.textPrimary }]}>
+                Invoices
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.quickServiceItem}
+              onPress={() => navigation.navigate('Activity')}
+              activeOpacity={0.8}
+            >
+              <View style={styles.serviceIconCircle}>
+                <ThreeDIcon name="bookings" size={36} />
+              </View>
+              <Text style={[styles.serviceItemLabel, { color: theme.textPrimary }]}>
+                Reservations
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.quickServiceItem}
+              onPress={() => navigation.navigate('PaymentMethods')}
+              activeOpacity={0.8}
+            >
+              <View style={styles.serviceIconCircle}>
+                <ThreeDIcon name="wallet" size={36} />
+              </View>
+              <Text style={[styles.serviceItemLabel, { color: theme.textPrimary }]}>
+                Wallet &amp; FASTag
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* 6. Quick Filter Chips */}
+        <View style={styles.filterChipsRow}>
+          <TouchableOpacity
+            style={[
+              styles.chipButton,
+              {
+                backgroundColor: isDark ? 'rgba(255, 255, 255, 0.06)' : '#F1F5F9',
+                borderColor: theme.border,
+              },
+              activeFilter === 'available' && {
+                backgroundColor: theme.primaryLight,
+                borderColor: theme.primary,
+              },
+            ]}
+            onPress={() => setActiveFilter('available')}
+            activeOpacity={0.8}
+          >
+            <Text
+              style={[
+                styles.chipText,
+                { color: theme.textSecondary },
+                activeFilter === 'available' && { color: theme.primary, fontWeight: '800' },
+              ]}
+            >
+              🟢 Available Now
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.chipButton,
+              {
+                backgroundColor: isDark ? 'rgba(255, 255, 255, 0.06)' : '#F1F5F9',
+                borderColor: theme.border,
+              },
+              activeFilter === 'fast' && {
+                backgroundColor: theme.primaryLight,
+                borderColor: theme.primary,
+              },
+            ]}
+            onPress={() => setActiveFilter('fast')}
+            activeOpacity={0.8}
+          >
+            <Text
+              style={[
+                styles.chipText,
+                { color: theme.textSecondary },
+                activeFilter === 'fast' && { color: theme.primary, fontWeight: '800' },
+              ]}
+            >
+              🚀 Fast DC (50kW+)
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.chipButton,
+              {
+                backgroundColor: isDark ? 'rgba(255, 255, 255, 0.06)' : '#F1F5F9',
+                borderColor: theme.border,
+              },
+              activeFilter === 'ac' && {
+                backgroundColor: theme.primaryLight,
+                borderColor: theme.primary,
+              },
+            ]}
+            onPress={() => setActiveFilter('ac')}
+            activeOpacity={0.8}
+          >
+            <Text
+              style={[
+                styles.chipText,
+                { color: theme.textSecondary },
+                activeFilter === 'ac' && { color: theme.primary, fontWeight: '800' },
+              ]}
+            >
+              🔌 AC Type-2
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.chipButton,
+              {
+                backgroundColor: isDark ? 'rgba(255, 255, 255, 0.06)' : '#F1F5F9',
+                borderColor: theme.border,
+              },
+              activeFilter === 'all' && {
+                backgroundColor: theme.primaryLight,
+                borderColor: theme.primary,
+              },
+            ]}
+            onPress={() => setActiveFilter('all')}
+            activeOpacity={0.8}
+          >
+            <Text
+              style={[
+                styles.chipText,
+                { color: theme.textSecondary },
+                activeFilter === 'all' && { color: theme.primary, fontWeight: '800' },
+              ]}
+            >
+              All Chargers
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* 7. Section Header: Nearby Verified Charging Stations */}
+        <View style={styles.sectionHeaderRow}>
+          <View>
+            <Text style={[styles.sectionHeading, { color: theme.textPrimary }]}>
+              Verified Charging Hubs ({filteredStations.length})
+            </Text>
+            <Text style={[styles.sectionSub, { color: theme.textSecondary }]}>
+              Sorted by driving distance with real-time bay availability
+            </Text>
+          </View>
+
+          <TouchableOpacity onPress={() => navigation.navigate('Map')}>
+            <Text style={[styles.viewAllMapText, { color: theme.primary }]}>
+              View Map 🗺️
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* 8. Nearby Station Cards List */}
+        {nearbyList.map((station) => (
+          <StationCard
+            key={station.id}
+            station={station}
+            userVehicleName={vehicleName}
+            isCompatibleWithUserEv={true}
+            onPress={() => navigation.navigate('StationDetail', { stationId: station.id })}
+          />
+        ))}
       </ScrollView>
+
+      {/* Global Centered Auth Gate Modal */}
+      <AuthGateModal
+        visible={showAuthGate}
+        featureName={gateFeature}
+        onClose={() => setShowAuthGate(false)}
+        onLogin={() => {
+          setShowAuthGate(false);
+          navigation.navigate('Login');
+        }}
+        onRegister={() => {
+          setShowAuthGate(false);
+          navigation.navigate('Register');
+        }}
+      />
     </SafeAreaView>
   );
 };
@@ -786,40 +601,41 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: spacing.xxl + 20,
+    paddingBottom: 36,
   },
-  // 1. Header
+
+  // Top Header
   topHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingVertical: 12,
     borderBottomWidth: 1,
   },
   brandTitleWrap: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 8,
   },
   headerLogo: {
     width: 32,
     height: 32,
-    marginRight: 8,
   },
   brandTitle: {
-    fontSize: 17.5,
+    fontSize: 16.5,
     fontWeight: '900',
     letterSpacing: -0.3,
   },
   headerTagline: {
     fontSize: 10,
-    fontWeight: '600',
+    fontWeight: '700',
     letterSpacing: 0.2,
   },
   headerRightActions: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 8,
   },
   themeToggleBtn: {
     width: 34,
@@ -830,19 +646,19 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   themeToggleIcon: {
-    fontSize: 15,
+    fontSize: 14,
   },
   walletPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 10,
+    paddingHorizontal: 9,
     paddingVertical: 6,
     borderRadius: borderRadius.full,
     borderWidth: 1,
     gap: 4,
   },
   walletIcon: {
-    fontSize: 12,
+    fontSize: 11,
   },
   walletBalanceText: {
     fontSize: 12,
@@ -857,480 +673,271 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   profileAvatarText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '800',
   },
 
-  // 2. Greeting
+  // Greeting Section
   greetingSection: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: 16,
-    paddingTop: 14,
-    paddingBottom: 4,
+    paddingTop: 16,
+    paddingBottom: 10,
   },
   greetingTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '900',
-    letterSpacing: -0.4,
+    letterSpacing: -0.3,
   },
   greetingSubtitle: {
-    fontSize: 12.5,
+    fontSize: 12,
     fontWeight: '500',
     marginTop: 2,
   },
-
-  // 3. Search Card
-  searchCard: {
-    marginHorizontal: 16,
-    marginTop: 12,
-    borderRadius: borderRadius.xxl,
-    borderWidth: 1.2,
-    padding: 16,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-  },
-  searchCardHeader: {
-    marginBottom: 12,
-  },
-  searchTitleRow: {
+  evSelectorPill: {
     flexDirection: 'row',
     alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: borderRadius.full,
+    borderWidth: 1,
+    gap: 5,
+    maxWidth: 145,
   },
-  searchTitleIcon: {
-    fontSize: 17,
-    marginRight: 6,
+  evSelectorIcon: {
+    fontSize: 12,
   },
-  searchCardTitle: {
-    fontSize: 15.5,
-    fontWeight: '800',
-    letterSpacing: -0.2,
-  },
-  searchCardSubtitle: {
+  evSelectorText: {
     fontSize: 11.5,
-    marginTop: 2,
+    fontWeight: '700',
+    flexShrink: 1,
+  },
+  evSelectorChevron: {
+    fontSize: 10,
+    fontWeight: '900',
+  },
+
+  // Universal Search
+  searchSection: {
+    paddingHorizontal: 16,
+    marginBottom: 14,
   },
   searchInputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: borderRadius.lg,
-    paddingHorizontal: 12,
-    height: 44,
+    borderRadius: borderRadius.xl,
+    paddingLeft: 12,
+    paddingRight: 6,
+    height: 48,
     borderWidth: 1,
-    marginBottom: 12,
+    ...shadows.card,
   },
   inputSearchIcon: {
-    fontSize: 14,
+    fontSize: 15,
     marginRight: 6,
   },
   searchInputField: {
     flex: 1,
     fontSize: 13,
-    fontWeight: '500',
+    fontWeight: '600',
   },
   clearSearchIcon: {
-    fontSize: 13,
-    padding: 4,
+    fontSize: 14,
+    fontWeight: '800',
+    marginRight: 6,
   },
+  scanQuickBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: borderRadius.lg,
+  },
+  scanQuickBtnText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '800',
+  },
+
+  // Best Match Hero Card
+  bestMatchSection: {
+    paddingHorizontal: 16,
+    marginBottom: 14,
+  },
+  bestMatchCard: {
+    borderRadius: borderRadius.xxl,
+    padding: 16,
+    borderWidth: 1.5,
+    ...shadows.card,
+  },
+  bestMatchBadgeRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  bestMatchTag: {
+    backgroundColor: '#00D084',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: borderRadius.sm,
+  },
+  bestMatchTagText: {
+    color: '#0B192C',
+    fontSize: 10,
+    fontWeight: '900',
+    letterSpacing: 0.4,
+  },
+  bestMatchDistance: {
+    color: 'rgba(255, 255, 255, 0.8)',
+    fontSize: 11.5,
+    fontWeight: '700',
+  },
+  bestMatchTitle: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '900',
+    marginBottom: 2,
+    letterSpacing: -0.2,
+  },
+  bestMatchSubtitle: {
+    color: 'rgba(255, 255, 255, 0.65)',
+    fontSize: 11.5,
+    marginBottom: 12,
+  },
+  bestMatchSpecsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    borderRadius: borderRadius.lg,
+    paddingVertical: 9,
+    paddingHorizontal: 8,
+    marginBottom: 14,
+  },
+  bestMatchSpecItem: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  bestMatchSpecVal: {
+    color: '#FFFFFF',
+    fontSize: 12.5,
+    fontWeight: '800',
+  },
+  bestMatchSpecLbl: {
+    color: 'rgba(255, 255, 255, 0.6)',
+    fontSize: 10,
+    marginTop: 2,
+    fontWeight: '600',
+  },
+  bestMatchSpecDivider: {
+    width: 1,
+    height: 24,
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+  },
+  bestMatchActionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  bestMatchPrimaryBtn: {
+    flex: 1.5,
+    height: 42,
+    borderRadius: borderRadius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  bestMatchPrimaryBtnText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '900',
+  },
+  bestMatchSecondaryBtn: {
+    flex: 1,
+    height: 42,
+    borderRadius: borderRadius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.25)',
+  },
+  bestMatchSecondaryBtnText: {
+    color: '#FFFFFF',
+    fontSize: 12.5,
+    fontWeight: '700',
+  },
+
+  // Filter Chips Row
   filterChipsRow: {
     flexDirection: 'row',
-    gap: 6,
+    gap: 8,
+    paddingHorizontal: 16,
     marginBottom: 14,
-    flexWrap: 'wrap',
   },
   chipButton: {
-    paddingHorizontal: 10,
+    paddingHorizontal: 11,
     paddingVertical: 6,
     borderRadius: borderRadius.full,
     borderWidth: 1,
   },
   chipText: {
-    fontSize: 11,
-    fontWeight: '700',
-  },
-  ctaButtonsRow: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  primaryCtaBtn: {
-    flex: 1.4,
-    paddingVertical: 12,
-    borderRadius: borderRadius.lg,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  primaryCtaText: {
-    color: '#031726',
-    fontSize: 12.5,
-    fontWeight: '900',
-    letterSpacing: 0.2,
-  },
-  secondaryCtaBtn: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: borderRadius.lg,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-  },
-  secondaryCtaText: {
-    fontSize: 12,
-    fontWeight: '700',
-  },
-
-  // 4. Quick Actions Grid
-  quickActionsSection: {
-    marginTop: spacing.lg,
-    paddingHorizontal: spacing.lg,
-  },
-  quickActionsGrid: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginTop: spacing.sm + 2,
-  },
-  quickActionItem: {
-    width: (width - 32) / 5,
-    alignItems: 'center',
-  },
-  actionIconContainer: {
-    marginBottom: 6,
-  },
-  quickActionLabel: {
-    fontSize: 10.5,
-    fontWeight: '700',
-    textAlign: 'center',
-    lineHeight: 13,
-  },
-
-  // 5. EV Telemetry Card
-  evStatusCard: {
-    marginHorizontal: spacing.lg,
-    marginTop: spacing.lg,
-    borderRadius: borderRadius.xxl,
-    borderWidth: 1,
-    padding: spacing.lg,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-  },
-  evCardTopRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 12,
-  },
-  evVehicleInfo: {
-    flex: 1,
-  },
-  evTagLabel: {
-    fontSize: 9.5,
-    fontWeight: '800',
-    letterSpacing: 0.8,
-  },
-  evModelTitle: {
-    fontSize: 15,
-    fontWeight: '900',
-    marginTop: 2,
-  },
-  evConnectedPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: borderRadius.full,
-    gap: 4,
-  },
-  connectedDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-  },
-  connectedText: {
-    fontSize: 10.5,
-    fontWeight: '800',
-  },
-  evTelemetryGrid: {
-    flexDirection: 'row',
-    borderRadius: borderRadius.xl,
-    padding: 12,
-    alignItems: 'center',
-  },
-  telemetryStatBox: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  telemetryValueLarge: {
-    fontSize: 22,
-    fontWeight: '900',
-  },
-  telemetryLabel: {
-    fontSize: 10.5,
+    fontSize: 11.5,
     fontWeight: '600',
-    marginTop: 2,
-  },
-  batteryBarBg: {
-    width: '80%',
-    height: 6,
-    borderRadius: 3,
-    marginTop: 6,
-    overflow: 'hidden',
-  },
-  batteryBarFill: {
-    height: '100%',
-    borderRadius: 3,
-  },
-  telemetryDivider: {
-    width: 1,
-    height: 38,
-  },
-  telemetryEfficiency: {
-    fontSize: 9.5,
-    fontWeight: '700',
-    marginTop: 4,
-  },
-  evCardFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 10,
-    paddingTop: 8,
-  },
-  lastUpdatedText: {
-    fontSize: 10.5,
-    fontWeight: '500',
-  },
-  refreshIconButton: {
-    padding: 4,
-  },
-  refreshIconEmoji: {
-    fontSize: 14,
   },
 
-  // 6. Nearby Stations
-  nearbySection: {
-    marginTop: spacing.lg,
-  },
+  // Section Header
   sectionHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-end',
-    paddingHorizontal: spacing.lg,
-    marginBottom: spacing.sm + 2,
+    paddingHorizontal: 16,
+    marginBottom: 10,
   },
-  sectionHeaderTitle: {
-    fontSize: 15.5,
-    fontWeight: '900',
-    letterSpacing: -0.3,
+  sectionHeading: {
+    fontSize: 14,
+    fontWeight: '800',
+    letterSpacing: -0.2,
   },
-  sectionHeaderSubtitle: {
+  sectionSub: {
     fontSize: 11,
-    fontWeight: '500',
     marginTop: 2,
   },
-  viewAllText: {
+  viewAllMapText: {
     fontSize: 12,
     fontWeight: '800',
   },
-  nearbyCardsScroll: {
-    paddingHorizontal: spacing.lg,
-    gap: spacing.md,
-  },
-  nearbyStationCard: {
-    width: 260,
-    borderRadius: borderRadius.xxl,
-    borderWidth: 1.2,
-    padding: 14,
-  },
-  nearbyCardTop: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  cpoBadge: {
-    backgroundColor: '#0D9488',
-    paddingHorizontal: 7,
-    paddingVertical: 3,
-    borderRadius: borderRadius.sm,
-  },
-  cpoBadgeText: {
-    color: '#FFFFFF',
-    fontSize: 9.5,
-    fontWeight: '800',
-  },
-  favIcon: {
-    fontSize: 14,
-  },
-  nearbyStationName: {
-    fontSize: 13.5,
-    fontWeight: '800',
-    marginBottom: 4,
-  },
-  nearbyAvailabilityRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 4,
-    gap: 4,
-  },
-  availDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-  },
-  availText: {
-    fontSize: 10.5,
-    fontWeight: '700',
-  },
-  nearbyDistanceText: {
-    fontSize: 10.5,
-    fontWeight: '600',
-    marginBottom: 8,
-  },
-  nearbySpecsRow: {
-    flexDirection: 'row',
-    gap: 6,
-    marginBottom: 10,
-  },
-  specTag: {
-    paddingHorizontal: 7,
-    paddingVertical: 3,
-    borderRadius: borderRadius.sm,
-  },
-  specTagText: {
-    fontSize: 10,
-    fontWeight: '700',
-  },
-  nearbyCardBottomRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingTop: 8,
-    borderTopWidth: 1,
-  },
-  nearbyTariffLabel: {
-    fontSize: 9,
-    fontWeight: '800',
-  },
-  nearbyPriceText: {
-    fontSize: 13,
-    fontWeight: '900',
-  },
-  nearbyChargeCta: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: borderRadius.md,
-  },
-  nearbyChargeCtaText: {
-    color: '#031726',
-    fontSize: 11,
-    fontWeight: '900',
-  },
 
-  // 7. Payment Banner
-  paymentBannerCard: {
+  // Quick Services Grid
+  quickServicesCard: {
     marginHorizontal: 16,
-    marginTop: 18,
-    borderRadius: borderRadius.xxl,
-    borderWidth: 1.2,
-    padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  paymentBannerLeft: {
-    flex: 1,
-    marginRight: 10,
-  },
-  paymentBannerBadge: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: borderRadius.sm,
-    marginBottom: 6,
-  },
-  paymentBannerBadgeText: {
-    fontSize: 9.5,
-    fontWeight: '900',
-    letterSpacing: 0.5,
-  },
-  paymentBannerTitle: {
-    fontSize: 14.5,
-    fontWeight: '900',
-  },
-  paymentBannerSub: {
-    fontSize: 11,
-    marginTop: 3,
-  },
-  paymentMethodsRow: {
-    flexDirection: 'row',
-    gap: 6,
-    marginTop: 8,
-    flexWrap: 'wrap',
-  },
-  payPill: {
-    paddingHorizontal: 7,
-    paddingVertical: 3,
-    borderRadius: borderRadius.sm,
-  },
-  payPillText: {
-    fontSize: 10,
-    fontWeight: '700',
-  },
-  paymentArrowWrap: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  paymentArrowText: {
-    fontSize: 14,
-    fontWeight: '900',
-  },
-
-  // 8. List Header
-  listHeaderRow: {
-    paddingHorizontal: 16,
-    marginTop: 20,
-    marginBottom: 10,
-  },
-
-  // Empty Search Box
-  emptySearchBox: {
-    marginHorizontal: 16,
-    marginTop: 8,
-    padding: 24,
-    borderRadius: borderRadius.xxl,
-    borderWidth: 1.2,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  emptySearchIcon: {
-    fontSize: 32,
-    marginBottom: 8,
-  },
-  emptySearchTitle: {
-    fontSize: 15,
-    fontWeight: '800',
-    marginBottom: 4,
-  },
-  emptySearchSub: {
-    fontSize: 11.5,
-    textAlign: 'center',
+    marginTop: 4,
     marginBottom: 14,
+    padding: 16,
+    borderRadius: borderRadius.xxl,
   },
-  emptyResetBtn: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: borderRadius.md,
-  },
-  emptyResetBtnText: {
-    color: '#FFFFFF',
-    fontSize: 12,
+  quickServicesTitle: {
+    fontSize: 13,
     fontWeight: '800',
+    marginBottom: 12,
+  },
+  quickServicesGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  quickServiceItem: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  serviceIconCircle: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 4,
+  },
+  serviceItemLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    textAlign: 'center',
   },
 });

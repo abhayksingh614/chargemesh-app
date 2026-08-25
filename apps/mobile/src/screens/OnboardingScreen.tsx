@@ -17,7 +17,7 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { spacing, borderRadius } from '../theme';
-import { useAuth } from '../context';
+import { useAuth, useLanguage } from '../context';
 
 const { width, height } = Dimensions.get('window');
 
@@ -47,65 +47,64 @@ interface OnboardingSlide {
   ctaText: string;
 }
 
-const slides: OnboardingSlide[] = [
-  {
-    id: '1',
-    badgeIcon: '⚡',
-    badgeText: 'ALL-IN-ONE EV CHARGING',
-    titleWhitePart1: 'Charge Your EV.\n',
-    titleGreenPart: 'Anywhere.',
-    titleWhitePart2: ' Anytime.',
-    description: 'Find, pay for, and manage EV charging from one simple app.',
-    backgroundImage: require('../assets/obscreens/evob_1.png'),
-    benefits: [
-      'Find nearby charging stations',
-      'Pay seamlessly with UPI & Fastag',
-      'Get instant digital invoices',
-    ],
-    ctaText: 'Get Started ⚡ →',
-  },
-  {
-    id: '2',
-    badgeIcon: '🌐',
-    badgeText: 'ALL-INDIA CHARGING NETWORK',
-    titleWhitePart1: '5,000+ EV Chargers.\n',
-    titleGreenPart: 'One App.',
-    titleWhitePart2: '',
-    description:
-      'Discover and access charging stations across multiple networks without switching between apps.',
-    backgroundImage: require('../assets/obscreens/evob_3.png'),
-    benefits: [
-      '5,000+ verified charging bays',
-      'Live availability & charging status',
-      'Smart route planning with GPS',
-    ],
-    ctaText: 'Continue →',
-  },
-  {
-    id: '3',
-    badgeIcon: '📊',
-    badgeText: 'LIVE TELEMETRY & SMART CHARGING',
-    titleWhitePart1: 'Charge Smarter.\n',
-    titleGreenPart: 'Stay in Control.',
-    titleWhitePart2: '',
-    description:
-      'Monitor your charging session, power, battery level, and cost in real time.',
-    backgroundImage: require('../assets/obscreens/evob_2.png'),
-    benefits: [
-      'Live charging speed & power',
-      'Battery SoC monitoring',
-      'Real-time kWh & cost tracking',
-    ],
-    ctaText: 'Start Charging ⚡ →',
-  },
-];
-
 export const OnboardingScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const [currentIndex, setCurrentIndex] = useState(0);
   const flatListRef = useRef<FlatList>(null);
   const scrollX = useRef(new Animated.Value(0)).current;
   const { completeOnboarding } = useAuth();
+  const { t } = useLanguage();
+
+  const slides: OnboardingSlide[] = [
+    {
+      id: '1',
+      badgeIcon: '⚡',
+      badgeText: t('onboarding.slide1Badge'),
+      titleWhitePart1: t('onboarding.slide1Title1'),
+      titleGreenPart: t('onboarding.slide1TitleGreen'),
+      titleWhitePart2: t('onboarding.slide1Title2'),
+      description: t('onboarding.slide1Desc'),
+      backgroundImage: require('../assets/obscreens/evob_1.png'),
+      benefits: [
+        t('onboarding.slide1Benefit1'),
+        t('onboarding.slide1Benefit2'),
+        t('onboarding.slide1Benefit3'),
+      ],
+      ctaText: t('onboarding.slide1Cta'),
+    },
+    {
+      id: '2',
+      badgeIcon: '🌐',
+      badgeText: t('onboarding.slide2Badge'),
+      titleWhitePart1: t('onboarding.slide2Title1'),
+      titleGreenPart: t('onboarding.slide2TitleGreen'),
+      titleWhitePart2: t('onboarding.slide2Title2'),
+      description: t('onboarding.slide2Desc'),
+      backgroundImage: require('../assets/obscreens/evob_3.png'),
+      benefits: [
+        t('onboarding.slide2Benefit1'),
+        t('onboarding.slide2Benefit2'),
+        t('onboarding.slide2Benefit3'),
+      ],
+      ctaText: t('onboarding.slide2Cta'),
+    },
+    {
+      id: '3',
+      badgeIcon: '📊',
+      badgeText: t('onboarding.slide3Badge'),
+      titleWhitePart1: t('onboarding.slide3Title1'),
+      titleGreenPart: t('onboarding.slide3TitleGreen'),
+      titleWhitePart2: t('onboarding.slide3Title2'),
+      description: t('onboarding.slide3Desc'),
+      backgroundImage: require('../assets/obscreens/evob_2.png'),
+      benefits: [
+        t('onboarding.slide3Benefit1'),
+        t('onboarding.slide3Benefit2'),
+        t('onboarding.slide3Benefit3'),
+      ],
+      ctaText: t('onboarding.slide3Cta'),
+    },
+  ];
 
   const handleNext = async () => {
     if (currentIndex < slides.length - 1) {
@@ -282,7 +281,7 @@ export const OnboardingScreen: React.FC = () => {
             hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
             activeOpacity={0.8}
           >
-            <Text style={styles.skipText}>Skip →</Text>
+            <Text style={styles.skipText}>{t('common.skip')} →</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -340,9 +339,9 @@ export const OnboardingScreen: React.FC = () => {
 
           {/* Login Link */}
           <View style={styles.signInPromptRow}>
-            <Text style={styles.promptText}>Already registered with ChargeMesh? </Text>
+            <Text style={styles.promptText}>{t('onboarding.alreadyHaveAccount')}</Text>
             <TouchableOpacity onPress={handleSignIn} activeOpacity={0.8}>
-              <Text style={styles.signInLink}>Sign In</Text>
+              <Text style={styles.signInLink}>{t('onboarding.signIn')}</Text>
             </TouchableOpacity>
           </View>
         </View>

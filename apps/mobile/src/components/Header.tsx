@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { colors, typography } from '../theme';
+import { typography } from '../theme';
+import { useTheme } from '../context';
 
 interface HeaderProps {
   title: string;
@@ -15,24 +16,41 @@ export const Header: React.FC<HeaderProps> = ({
   onBack,
   rightAction,
 }) => {
+  const { theme } = useTheme();
+
   return (
-    <View style={styles.header}>
+    <View
+      style={[
+        styles.header,
+        {
+          backgroundColor: theme.surface,
+          borderBottomColor: theme.border,
+        },
+      ]}
+    >
       <View style={styles.leftContainer}>
         {onBack && (
           <TouchableOpacity
             activeOpacity={0.7}
             onPress={onBack}
             style={styles.backButton}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
-            <Text style={styles.backText}>←</Text>
+            <Text style={[styles.backText, { color: theme.textPrimary }]}>←</Text>
           </TouchableOpacity>
         )}
-        <View>
-          <Text style={styles.title}>{title}</Text>
-          {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
+        <View style={{ flex: 1 }}>
+          <Text style={[styles.title, { color: theme.textPrimary }]} numberOfLines={1}>
+            {title}
+          </Text>
+          {subtitle && (
+            <Text style={[styles.subtitle, { color: theme.textSecondary }]} numberOfLines={1}>
+              {subtitle}
+            </Text>
+          )}
         </View>
       </View>
-      {rightAction && <View style={styles.rightContainer}>{rightAction}</View>}
+      {rightAction ? <View style={styles.rightContainer}>{rightAction}</View> : null}
     </View>
   );
 };
@@ -44,9 +62,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 20,
     paddingVertical: 14,
-    backgroundColor: colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: colors.borderLight,
   },
   leftContainer: {
     flexDirection: 'row',
@@ -59,16 +75,13 @@ const styles = StyleSheet.create({
   },
   backText: {
     fontSize: 22,
-    color: colors.textPrimary,
     fontWeight: '600',
   },
   title: {
     ...typography.h3,
-    color: colors.textPrimary,
   },
   subtitle: {
     ...typography.caption,
-    color: colors.textSecondary,
     marginTop: 2,
   },
   rightContainer: {

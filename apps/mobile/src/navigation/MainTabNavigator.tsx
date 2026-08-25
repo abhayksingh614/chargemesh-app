@@ -9,12 +9,13 @@ import {
   ProfileScreen,
 } from '../screens';
 import { ThreeDIcon } from '../components';
-import { useTheme } from '../context';
+import { useTheme, useLanguage } from '../context';
 
 const Tab = createBottomTabNavigator();
 
 export const MainTabNavigator: React.FC = () => {
   const { theme } = useTheme();
+  const { isHindi } = useLanguage();
 
   return (
     <Tab.Navigator
@@ -65,13 +66,21 @@ export const MainTabNavigator: React.FC = () => {
         },
       })}
     >
-      <Tab.Screen name="Home" component={HomeScreen} options={{ tabBarLabel: 'Home' }} />
-      <Tab.Screen name="Map" component={MapScreen} options={{ tabBarLabel: 'Map' }} />
+      <Tab.Screen
+        name="Home"
+        component={HomeScreen}
+        options={{ tabBarLabel: isHindi ? 'होम' : 'Home' }}
+      />
+      <Tab.Screen
+        name="Map"
+        component={MapScreen}
+        options={{ tabBarLabel: isHindi ? 'मैप' : 'Map' }}
+      />
       <Tab.Screen
         name="Charge"
         component={QRScannerScreen}
         options={{
-          tabBarLabel: 'Scan & Charge',
+          tabBarLabel: isHindi ? 'स्कैन व चार्ज' : 'Scan & Charge',
           tabBarLabelStyle: {
             fontSize: 10,
             fontWeight: '800',
@@ -80,8 +89,16 @@ export const MainTabNavigator: React.FC = () => {
           },
         }}
       />
-      <Tab.Screen name="Activity" component={ActivityScreen} options={{ tabBarLabel: 'Bookings' }} />
-      <Tab.Screen name="Profile" component={ProfileScreen} options={{ tabBarLabel: 'Profile' }} />
+      <Tab.Screen
+        name="Activity"
+        component={ActivityScreen}
+        options={{ tabBarLabel: isHindi ? 'बुकिंग्स' : 'Bookings' }}
+      />
+      <Tab.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{ tabBarLabel: isHindi ? 'प्रोफ़ाइल' : 'Profile' }}
+      />
     </Tab.Navigator>
   );
 };

@@ -10,33 +10,46 @@ import {
 import {
   Header,
   AuthGateModal,
-  PaymentModal,
   ConfirmationModal,
   StatusModal,
   FormInputModal,
+  LanguageToggle,
+  PrivacyPolicyModal,
+  DataPrivacyModal,
+  ReleaseUpdatesModal,
+  LegalDocsModal,
+  LegalDocType,
 } from '../components';
-import { colors, spacing, borderRadius, shadows } from '../theme';
-import { useAuth } from '../context';
+import { spacing, borderRadius, shadows } from '../theme';
+import { useAuth, useLanguage, useTheme } from '../context';
 
 interface ProfileScreenProps {
   navigation: any;
 }
 
 export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
-  const { user, isGuest, activeVehicle, logout, topUpWallet } = useAuth();
+  const { user, vehicles, isGuest, activeVehicle, logout } = useAuth();
+  const { t, language, toggleLanguage } = useLanguage();
+  const { theme, mode } = useTheme();
+  const isDark = mode === 'dark';
   const [showAuthGate, setShowAuthGate] = useState(false);
   const [gateFeature, setGateFeature] = useState('');
 
   // Modals state
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showSupportModal, setShowSupportModal] = useState(false);
   const [showEcoModal, setShowEcoModal] = useState(false);
-  const [showComplianceModal, setShowComplianceModal] = useState(false);
   const [showPaymentMethodsModal, setShowPaymentMethodsModal] = useState(false);
   const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+
+  // New Legal, Privacy, and Release Modals
+  const [showPrivacyPolicyModal, setShowPrivacyPolicyModal] = useState(false);
+  const [showDataPrivacyModal, setShowDataPrivacyModal] = useState(false);
+  const [showReleaseUpdatesModal, setShowReleaseUpdatesModal] = useState(false);
+  const [legalDocType, setLegalDocType] = useState<LegalDocType>('terms');
+  const [showLegalDocModal, setShowLegalDocModal] = useState(false);
 
   const triggerAuthGate = (feature: string) => {
     setGateFeature(feature);
@@ -45,79 +58,143 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
 
   const handleWalletTopup = () => {
     if (isGuest) {
-      triggerAuthGate('Wallet & Payment Methods');
+      triggerAuthGate(t('profile.walletTitle'));
       return;
     }
-    setShowPaymentModal(true);
+    navigation.navigate('AddMoney');
   };
 
-  const handlePaymentSuccess = (amountRupees: number) => {
-    topUpWallet(amountRupees * 100);
-    setSuccessMessage(`₹${amountRupees.toFixed(2)} added to your Fast Wallet successfully!`);
-    setShowSuccessModal(true);
+  const openLegalDoc = (type: LegalDocType) => {
+    setLegalDocType(type);
+    setShowLegalDocModal(true);
   };
 
-  const menuItems = [
+  // Group 1: Account & Connected Vehicles
+  const accountItems = [
+    {
+      icon: '👤',
+      title: t('account.pageTitle'),
+      subtitle: 'Personal info, phone, email & preferences',
+      onPress: () => {
+        if (isGuest) {
+          triggerAuthGate('My Account');
+        } else {
+          navigation.navigate('MyAccount');
+        }
+      },
+    },
     {
       icon: '🚗',
-      title: 'My Electric Vehicle',
+      title: 'My Vehicles',
       subtitle: !isGuest && activeVehicle
-        ? `${activeVehicle.make} ${activeVehicle.model} (${activeVehicle.batteryCapacityKwh} kWh)`
+        ? `Primary: ${activeVehicle.make} ${activeVehicle.model} • ${vehicles.length} in garage`
         : isGuest
         ? 'Sign in to add and sync your EV profile'
-        : 'Configure your EV profile',
+        : 'Manage your connected EVs and primary car',
       onPress: () => {
         if (isGuest) {
           triggerAuthGate('Vehicle Management');
         } else {
-          navigation.navigate('Vehicle');
+          navigation.navigate('MyVehicles');
         }
       },
     },
     {
       icon: '💳',
-      title: 'Payment Methods & Fastag',
-      subtitle: isGuest
-        ? 'Sign in to link UPI, Credit/Debit Cards & Fastag'
-        : 'Razorpay UPI & Tokenized Cards linked',
+      title: 'Payment Methods & FASTag',
+      subtitle: 'UPI autopay, cards & expressway FASTag balance',
       onPress: () => {
         if (isGuest) {
           triggerAuthGate('Payment Methods');
         } else {
-          setShowPaymentMethodsModal(true);
+          navigation.navigate('PaymentMethods');
         }
       },
     },
     {
       icon: '⭐',
-      title: 'Favorite Charging Stations',
-      subtitle: 'Bookmarked hubs & fast filters',
-      onPress: () => navigation.navigate('MainTabs', { screen: 'Map' }),
+      title: 'Favorite Stations',
+      subtitle: 'Saved charging stations for 1-tap quick access',
+      onPress: () => navigation.navigate('Favorites'),
+    },
+  ];
+
+  // Group 2: Charging Activity & Sustainability
+  const activityItems = [
+    {
+      icon: '⚡',
+      title: 'Charging Activity',
+      subtitle: 'Charging sessions, energy delivered & GST invoices',
+      onPress: () => navigation.navigate('MainTabs', { screen: 'Activity' }),
     },
     {
       icon: '🌱',
-      title: 'Sustainability & Green Miles',
-      subtitle: isGuest
-        ? 'Sign in to track lifetime CO₂ emissions prevented'
-        : `${user.co2SavedKg.toFixed(1)} kg CO₂ avoided to date`,
+      title: 'Eco & Sustainability',
+      subtitle: !isGuest && user?.co2SavedKg
+        ? `${user.co2SavedKg.toFixed(0)} kg CO₂ prevented • Verified green impact`
+        : '351 kg CO₂ prevented • Verified green impact',
       onPress: () => {
         if (isGuest) {
           triggerAuthGate('Eco Impact Metrics');
         } else {
-          setShowEcoModal(true);
+          navigation.navigate('EcoSustainability');
         }
       },
     },
+  ];
+
+  // Group 3: Release Updates / What's New
+  const updateItems = [
     {
-      icon: '⚡',
-      title: 'App Onboarding & Feature Tour',
-      subtitle: 'View 3-screen animated intro & perks',
-      onPress: () => navigation.navigate('Onboarding'),
+      icon: '✨',
+      title: 'Release Updates',
+      subtitle: 'v1.2.5 • See what’s new, fixes & features',
+      badge: 'v1.2.5',
+      onPress: () => setShowReleaseUpdatesModal(true),
+    },
+  ];
+
+  // Group 4: Legal & Privacy Section
+  const legalItems = [
+    {
+      icon: '🛡️',
+      title: 'Privacy Policy',
+      subtitle: 'DPDP Act 2023 compliance, data collection & usage',
+      onPress: () => setShowPrivacyPolicyModal(true),
+    },
+    {
+      icon: '🔒',
+      title: 'Permissions & Privacy',
+      subtitle: 'Review device permissions & data controls',
+      onPress: () => setShowDataPrivacyModal(true),
+    },
+    {
+      icon: '📜',
+      title: 'Terms & Conditions',
+      subtitle: 'Driver service agreement & charging protocol rules',
+      onPress: () => openLegalDoc('terms'),
+    },
+    {
+      icon: '💳',
+      title: 'Payment & Refund Policy',
+      subtitle: 'Session billing, automatic refunds & wallet terms',
+      onPress: () => openLegalDoc('refund'),
+    },
+  ];
+
+  // Group 5: Preferences & Support
+  const preferenceItems = [
+    {
+      icon: '🌐',
+      title: t('profile.menuLanguage'),
+      subtitle: language === 'hi' ? 'वर्तमान भाषा: हिन्दी (बदलने के लिए टैप करें)' : 'Current Language: English (Tap to switch)',
+      onPress: () => toggleLanguage(),
+      isLanguageItem: true,
     },
     {
       icon: '🔑',
-      title: 'Security & Change Password',
-      subtitle: isGuest ? 'Sign in to manage security settings' : 'Update credentials & 2FA',
+      title: t('profile.menuSecurity'),
+      subtitle: t('profile.menuSecuritySub'),
       onPress: () => {
         if (isGuest) {
           triggerAuthGate('Account Security');
@@ -128,55 +205,55 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
     },
     {
       icon: '💬',
-      title: '24x7 Driver Support & Helpline',
-      subtitle: 'Instant charging assistance • 1800-123-MESH',
+      title: t('profile.menuHelp'),
+      subtitle: t('profile.menuHelpSub'),
       onPress: () => setShowSupportModal(true),
     },
-    {
-      icon: '🔒',
-      title: 'Legal, Privacy & Compliance',
-      subtitle: 'DPDP Act 2023 & RBI Payment compliant',
-      onPress: () => setShowComplianceModal(true),
-    },
-    ...(!isGuest
-      ? [
-          {
-            icon: '🚪',
-            title: 'Sign Out',
-            subtitle: 'Log out of current driver session',
-            onPress: () => setShowLogoutConfirm(true),
-          },
-        ]
-      : []),
   ];
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <Header title="Driver Account 👤" subtitle="Settings & charging wallet" />
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]}>
+      <Header
+        title={t('profile.title')}
+        subtitle={t('common.appName') + ' Profile & Settings'}
+      />
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {/* Guest Banner vs Profile Card */}
         {isGuest ? (
-          <View style={styles.guestBanner}>
+          <View
+            style={[
+              styles.guestBanner,
+              {
+                backgroundColor: isDark ? '#071826' : '#ECFDF5',
+                borderColor: isDark ? 'rgba(0, 208, 132, 0.3)' : '#A7F3D0',
+              },
+            ]}
+          >
             <View style={styles.guestBannerHeader}>
               <View style={styles.guestAvatar}>
                 <Text style={styles.guestAvatarEmoji}>👤</Text>
               </View>
               <View style={styles.guestBannerTexts}>
-                <Text style={styles.guestTitle}>Guest Explorer</Text>
-                <Text style={styles.guestSub}>Browsing nearby stations without login</Text>
+                <Text style={[styles.guestTitle, { color: theme.textPrimary }]}>Guest Explorer</Text>
+                <Text style={[styles.guestSub, { color: theme.textSecondary }]}>Browsing nearby stations without login</Text>
               </View>
             </View>
 
-            <View style={styles.guestBenefitBox}>
-              <Text style={styles.guestBenefitTitle}>Member Privileges</Text>
-              <Text style={styles.guestBenefitItem}>• ₹500 welcome charging credit</Text>
-              <Text style={styles.guestBenefitItem}>• Remote start & stop across 10+ CPOs</Text>
-              <Text style={styles.guestBenefitItem}>• Automated GST invoices & tax receipts</Text>
+            <View
+              style={[
+                styles.guestBenefitBox,
+                { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#FFFFFF' },
+              ]}
+            >
+              <Text style={[styles.guestBenefitTitle, { color: theme.primary }]}>Member Privileges</Text>
+              <Text style={[styles.guestBenefitItem, { color: theme.textSecondary }]}>• ₹100 welcome charging credit</Text>
+              <Text style={[styles.guestBenefitItem, { color: theme.textSecondary }]}>• Remote start &amp; stop across 10+ CPOs</Text>
+              <Text style={[styles.guestBenefitItem, { color: theme.textSecondary }]}>• Automated GST invoices &amp; tax receipts</Text>
             </View>
 
             <TouchableOpacity
-              style={styles.signInButton}
+              style={[styles.signInButton, { backgroundColor: theme.primary }]}
               activeOpacity={0.88}
               onPress={() => navigation.navigate('Login')}
             >
@@ -184,22 +261,53 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
             </TouchableOpacity>
           </View>
         ) : (
-          <View style={styles.profileCard}>
-            <View style={styles.avatar}>
-              <Text style={styles.avatarText}>{user.name.charAt(0)}</Text>
+          <TouchableOpacity
+            style={[
+              styles.profileCard,
+              {
+                backgroundColor: theme.surface,
+                borderColor: theme.border,
+              },
+            ]}
+            onPress={() => navigation.navigate('MyAccount')}
+            activeOpacity={0.85}
+          >
+            <View style={[styles.avatar, { backgroundColor: theme.primary }]}>
+              <Text style={styles.avatarText}>{user?.avatarUrl || user?.name?.charAt(0) || '👤'}</Text>
             </View>
             <View style={styles.profileInfo}>
-              <Text style={styles.userName}>{user.name}</Text>
-              <Text style={styles.userPhone}>{user.phoneNumber || user.email}</Text>
-              <View style={styles.verifiedBadge}>
-                <Text style={styles.verifiedText}>✓ Verified Driver</Text>
+              <Text style={[styles.userName, { color: theme.textPrimary }]}>{user.name}</Text>
+              <Text style={[styles.userPhone, { color: theme.textSecondary }]}>{user.phoneNumber || user.email}</Text>
+              <View
+                style={[
+                  styles.verifiedBadge,
+                  {
+                    backgroundColor: isDark ? 'rgba(0, 208, 132, 0.15)' : '#ECFDF5',
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.verifiedText,
+                    { color: isDark ? '#00D084' : '#064E3B' },
+                  ]}
+                >
+                  ✓ Verified Driver • View Profile ➔
+                </Text>
               </View>
             </View>
-          </View>
+          </TouchableOpacity>
         )}
 
         {/* Wallet Balance Card */}
-        <View style={styles.walletCard}>
+        <View
+          style={[
+            styles.walletCard,
+            {
+              backgroundColor: isDark ? '#0F172A' : '#064E3B',
+            },
+          ]}
+        >
           <View style={styles.walletHeader}>
             <View>
               <Text style={styles.walletLabel}>FAST WALLET BALANCE</Text>
@@ -208,11 +316,11 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
               </Text>
             </View>
             <TouchableOpacity
-              style={styles.topUpButton}
+              style={[styles.topUpButton, { backgroundColor: theme.primary }]}
               activeOpacity={0.85}
               onPress={handleWalletTopup}
             >
-              <Text style={styles.topUpText}>＋ Top Up</Text>
+              <Text style={styles.topUpText}>{t('profile.topUpBtn')}</Text>
             </TouchableOpacity>
           </View>
 
@@ -221,42 +329,281 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
           <View style={styles.walletFooter}>
             <View style={styles.statItem}>
               <Text style={styles.statVal}>{user.totalSessions}</Text>
-              <Text style={styles.statLbl}>Sessions</Text>
+              <Text style={styles.statLbl}>{t('profile.statsSessions')}</Text>
             </View>
             <View style={styles.statItem}>
               <Text style={styles.statVal}>{user.totalKwhCharged.toFixed(0)} kWh</Text>
-              <Text style={styles.statLbl}>Charged</Text>
+              <Text style={styles.statLbl}>{t('liveCharging.energyDelivered')}</Text>
             </View>
             <View style={styles.statItem}>
               <Text style={styles.statVal}>{user.co2SavedKg.toFixed(0)} kg</Text>
-              <Text style={styles.statLbl}>CO₂ Saved 🌱</Text>
+              <Text style={styles.statLbl}>{t('profile.statsCo2')} 🌱</Text>
             </View>
           </View>
         </View>
 
-        {/* Menu Options */}
-        <View style={styles.menuContainer}>
-          {menuItems.map((item, index) => (
+        {/* 1. Account & Vehicles Group */}
+        <Text style={[styles.groupHeading, { color: theme.textSecondary }]}>ACCOUNT &amp; VEHICLES</Text>
+        <View
+          style={[
+            styles.menuContainer,
+            {
+              backgroundColor: theme.surface,
+              borderColor: theme.border,
+            },
+          ]}
+        >
+          {accountItems.map((item, index) => (
             <TouchableOpacity
               key={index}
-              style={[styles.menuItem, index < menuItems.length - 1 && styles.menuItemBorder]}
+              style={[
+                styles.menuItem,
+                index < accountItems.length - 1 && {
+                  borderBottomWidth: 1,
+                  borderBottomColor: theme.border,
+                },
+              ]}
               onPress={item.onPress}
               activeOpacity={0.7}
             >
-              <View style={styles.menuIconContainer}>
+              <View
+                style={[
+                  styles.menuIconContainer,
+                  {
+                    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : theme.surfaceSecondary,
+                  },
+                ]}
+              >
                 <Text style={styles.menuIcon}>{item.icon}</Text>
               </View>
               <View style={styles.menuTexts}>
-                <Text style={styles.menuTitle}>{item.title}</Text>
-                <Text style={styles.menuSubtitle}>{item.subtitle}</Text>
+                <Text style={[styles.menuTitle, { color: theme.textPrimary }]}>
+                  {item.title}
+                </Text>
+                <Text style={[styles.menuSubtitle, { color: theme.textSecondary }]} numberOfLines={1}>
+                  {item.subtitle}
+                </Text>
               </View>
-              <Text style={styles.menuArrow}>›</Text>
+              <Text style={[styles.menuArrow, { color: theme.textSecondary }]}>›</Text>
             </TouchableOpacity>
           ))}
         </View>
 
-        <Text style={styles.versionFooter}>
-          ChargeMesh Driver App • V1.1.0 (Production Build)
+        {/* 2. Activity & Sustainability Group */}
+        <Text style={[styles.groupHeading, { color: theme.textSecondary }]}>ACTIVITY &amp; SUSTAINABILITY</Text>
+        <View
+          style={[
+            styles.menuContainer,
+            {
+              backgroundColor: theme.surface,
+              borderColor: theme.border,
+            },
+          ]}
+        >
+          {activityItems.map((item, index) => (
+            <TouchableOpacity
+              key={index}
+              style={[
+                styles.menuItem,
+                index < activityItems.length - 1 && {
+                  borderBottomWidth: 1,
+                  borderBottomColor: theme.border,
+                },
+              ]}
+              onPress={item.onPress}
+              activeOpacity={0.7}
+            >
+              <View
+                style={[
+                  styles.menuIconContainer,
+                  {
+                    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : theme.surfaceSecondary,
+                  },
+                ]}
+              >
+                <Text style={styles.menuIcon}>{item.icon}</Text>
+              </View>
+              <View style={styles.menuTexts}>
+                <Text style={[styles.menuTitle, { color: theme.textPrimary }]}>
+                  {item.title}
+                </Text>
+                <Text style={[styles.menuSubtitle, { color: theme.textSecondary }]} numberOfLines={1}>
+                  {item.subtitle}
+                </Text>
+              </View>
+              <Text style={[styles.menuArrow, { color: theme.textSecondary }]}>›</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {/* 3. Product Updates & What's New Group */}
+        <Text style={[styles.groupHeading, { color: theme.textSecondary }]}>PRODUCT UPDATES</Text>
+        <View
+          style={[
+            styles.menuContainer,
+            {
+              backgroundColor: theme.surface,
+              borderColor: theme.border,
+            },
+          ]}
+        >
+          {updateItems.map((item, index) => (
+            <TouchableOpacity
+              key={index}
+              style={styles.menuItem}
+              onPress={item.onPress}
+              activeOpacity={0.7}
+            >
+              <View
+                style={[
+                  styles.menuIconContainer,
+                  {
+                    backgroundColor: isDark ? 'rgba(0, 208, 132, 0.15)' : '#DCFCE7',
+                  },
+                ]}
+              >
+                <Text style={styles.menuIcon}>{item.icon}</Text>
+              </View>
+              <View style={styles.menuTexts}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Text style={[styles.menuTitle, { color: theme.textPrimary }]}>
+                    {item.title}
+                  </Text>
+                  {item.badge && (
+                    <View style={styles.updateBadge}>
+                      <Text style={styles.updateBadgeText}>{item.badge}</Text>
+                    </View>
+                  )}
+                </View>
+                <Text style={[styles.menuSubtitle, { color: theme.textSecondary }]} numberOfLines={1}>
+                  {item.subtitle}
+                </Text>
+              </View>
+              <Text style={[styles.menuArrow, { color: theme.textSecondary }]}>›</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {/* 4. Legal & Privacy Group */}
+        <Text style={[styles.groupHeading, { color: theme.textSecondary }]}>LEGAL &amp; PRIVACY</Text>
+        <View
+          style={[
+            styles.menuContainer,
+            {
+              backgroundColor: theme.surface,
+              borderColor: theme.border,
+            },
+          ]}
+        >
+          {legalItems.map((item, index) => (
+            <TouchableOpacity
+              key={index}
+              style={[
+                styles.menuItem,
+                index < legalItems.length - 1 && {
+                  borderBottomWidth: 1,
+                  borderBottomColor: theme.border,
+                },
+              ]}
+              onPress={item.onPress}
+              activeOpacity={0.7}
+            >
+              <View
+                style={[
+                  styles.menuIconContainer,
+                  {
+                    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : theme.surfaceSecondary,
+                  },
+                ]}
+              >
+                <Text style={styles.menuIcon}>{item.icon}</Text>
+              </View>
+              <View style={styles.menuTexts}>
+                <Text style={[styles.menuTitle, { color: theme.textPrimary }]}>
+                  {item.title}
+                </Text>
+                <Text style={[styles.menuSubtitle, { color: theme.textSecondary }]} numberOfLines={1}>
+                  {item.subtitle}
+                </Text>
+              </View>
+              <Text style={[styles.menuArrow, { color: theme.textSecondary }]}>›</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {/* 5. Preferences & Support Group */}
+        <Text style={[styles.groupHeading, { color: theme.textSecondary }]}>PREFERENCES &amp; SUPPORT</Text>
+        <View
+          style={[
+            styles.menuContainer,
+            {
+              backgroundColor: theme.surface,
+              borderColor: theme.border,
+            },
+          ]}
+        >
+          {preferenceItems.map((item, index) => (
+            <TouchableOpacity
+              key={index}
+              style={[
+                styles.menuItem,
+                index < preferenceItems.length - 1 && {
+                  borderBottomWidth: 1,
+                  borderBottomColor: theme.border,
+                },
+              ]}
+              onPress={item.onPress}
+              activeOpacity={0.7}
+            >
+              <View
+                style={[
+                  styles.menuIconContainer,
+                  {
+                    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : theme.surfaceSecondary,
+                  },
+                ]}
+              >
+                <Text style={styles.menuIcon}>{item.icon}</Text>
+              </View>
+              <View style={styles.menuTexts}>
+                <Text style={[styles.menuTitle, { color: theme.textPrimary }]}>
+                  {item.title}
+                </Text>
+                <Text style={[styles.menuSubtitle, { color: theme.textSecondary }]} numberOfLines={1}>
+                  {item.subtitle}
+                </Text>
+              </View>
+              {item.isLanguageItem ? (
+                <LanguageToggle />
+              ) : (
+                <Text style={[styles.menuArrow, { color: theme.textSecondary }]}>›</Text>
+              )}
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {/* 6. Prominent Full-Width Red Log Out Button at the Bottom */}
+        {!isGuest && (
+          <View style={styles.logoutSection}>
+            <TouchableOpacity
+              style={[
+                styles.largeLogoutBtn,
+                {
+                  backgroundColor: isDark ? 'rgba(239, 68, 68, 0.12)' : '#FEF2F2',
+                  borderColor: isDark ? 'rgba(239, 68, 68, 0.35)' : '#FECDD3',
+                },
+              ]}
+              onPress={() => setShowLogoutConfirm(true)}
+              activeOpacity={0.82}
+            >
+              <Text style={styles.logoutBtnIcon}>🔴</Text>
+              <Text style={styles.logoutBtnText}>Log Out</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        <Text style={[styles.versionFooter, { color: theme.textMuted }]}>
+          {t('profile.appVersion')} • ChargeMesh Universal EV Network
         </Text>
       </ScrollView>
 
@@ -269,19 +616,11 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
         onRegister={() => navigation.navigate('Register')}
       />
 
-      {/* 2. Fast Wallet Payment Modal */}
-      <PaymentModal
-        visible={showPaymentModal}
-        currentBalancePaise={user.walletBalancePaise}
-        onClose={() => setShowPaymentModal(false)}
-        onSuccess={handlePaymentSuccess}
-      />
-
-      {/* 3. Sign Out Confirmation Modal */}
+      {/* 2. Dedicated Logout Confirmation Modal */}
       <ConfirmationModal
         visible={showLogoutConfirm}
-        title="Sign Out of ChargeMesh"
-        message="Are you sure you want to end your driver session? You can sign back in anytime."
+        title="Log Out?"
+        message="Are you sure you want to log out of your ChargeMesh account?"
         confirmLabel="Log Out"
         cancelLabel="Cancel"
         isDestructive={true}
@@ -302,7 +641,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
         message="We are here to ensure uninterrupted EV charging across all networks."
         details={[
           { icon: '📞', title: 'Toll-Free Helpline', value: '1800-123-6374' },
-          { icon: '✉️', title: 'Support Email', value: 'support@chargemesh.in' },
+          { icon: '✉️', title: 'Support Email', value: 'support@chargemesh.com' },
           { icon: '⚡', title: 'On-Site CPO Escalation', description: 'Real-time connector reset & technician dispatch' },
         ]}
         buttonLabel="Close"
@@ -343,24 +682,42 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
         onClose={() => setShowPaymentMethodsModal(false)}
       />
 
-      {/* 7. Legal & DPDP Compliance Modal */}
-      <StatusModal
-        visible={showComplianceModal}
-        type="info"
-        badge="DPDP Act 2023"
-        iconEmoji="🔒"
-        title="Data Privacy & Compliance"
-        message="ChargeMesh strictly adheres to the Digital Personal Data Protection (DPDP) Act 2023."
-        details={[
-          { icon: '🛡️', title: 'Purpose Limitation', description: 'Your GPS and telemetry are only used during active sessions' },
-          { icon: '🗑️', title: 'Right to Erasure', description: 'You can delete your account and personal history anytime' },
-          { icon: '🇮🇳', title: 'Data Localization', description: 'All records are hosted securely within Indian data centers' },
-        ]}
-        buttonLabel="I Understand"
-        onClose={() => setShowComplianceModal(false)}
+      {/* 7. Detailed Privacy Policy Modal */}
+      <PrivacyPolicyModal
+        visible={showPrivacyPolicyModal}
+        onClose={() => setShowPrivacyPolicyModal(false)}
       />
 
-      {/* 8. Change Password Form Modal */}
+      {/* 8. Data Privacy & Permissions Modal */}
+      <DataPrivacyModal
+        visible={showDataPrivacyModal}
+        onClose={() => setShowDataPrivacyModal(false)}
+        onRequestDataExport={() => {
+          setShowDataPrivacyModal(false);
+          setSuccessMessage('Your data export archive has been generated and queued for email delivery.');
+          setShowSuccessModal(true);
+        }}
+        onRequestDataDeletion={() => {
+          setShowDataPrivacyModal(false);
+          setSuccessMessage('Your data deletion request has been submitted to the Grievance Officer.');
+          setShowSuccessModal(true);
+        }}
+      />
+
+      {/* 9. Release Updates / What's New Modal */}
+      <ReleaseUpdatesModal
+        visible={showReleaseUpdatesModal}
+        onClose={() => setShowReleaseUpdatesModal(false)}
+      />
+
+      {/* 10. Legal Documents Modal (Terms, Refund, Open Source) */}
+      <LegalDocsModal
+        visible={showLegalDocModal}
+        docType={legalDocType}
+        onClose={() => setShowLegalDocModal(false)}
+      />
+
+      {/* 11. Change Password Form Modal */}
       <FormInputModal
         visible={showChangePasswordModal}
         badge="Account Security"
@@ -381,7 +738,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
         }}
       />
 
-      {/* 9. General Success Status Modal */}
+      {/* 12. General Success Status Modal */}
       <StatusModal
         visible={showSuccessModal}
         type="success"
@@ -397,19 +754,17 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   content: {
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.xxl,
   },
   guestBanner: {
-    backgroundColor: colors.surfaceSecondary,
     borderRadius: borderRadius.xxl,
     padding: spacing.lg,
+    marginTop: spacing.md,
     marginBottom: spacing.lg,
     borderWidth: 1,
-    borderColor: colors.borderLight,
     ...shadows.card,
   },
   guestBannerHeader: {
@@ -421,12 +776,12 @@ const styles = StyleSheet.create({
     width: 46,
     height: 46,
     borderRadius: 23,
-    backgroundColor: colors.surface,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: spacing.md,
     borderWidth: 1,
-    borderColor: colors.borderLight,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
   },
   guestAvatarEmoji: {
     fontSize: 22,
@@ -437,100 +792,88 @@ const styles = StyleSheet.create({
   guestTitle: {
     fontSize: 16,
     fontWeight: '800',
-    color: colors.textPrimary,
   },
   guestSub: {
     fontSize: 12,
-    color: colors.textSecondary,
     marginTop: 2,
   },
   guestBenefitBox: {
-    backgroundColor: colors.surface,
     borderRadius: borderRadius.lg,
     padding: spacing.md,
     marginBottom: spacing.md,
     borderWidth: 1,
-    borderColor: colors.borderLight,
+    borderColor: 'rgba(0, 208, 132, 0.2)',
   },
   guestBenefitTitle: {
     fontSize: 12,
-    fontWeight: '700',
-    color: colors.primaryDark,
+    fontWeight: '800',
     marginBottom: 4,
   },
   guestBenefitItem: {
-    fontSize: 12,
-    color: colors.textSecondary,
-    marginVertical: 2,
+    fontSize: 11.5,
+    marginTop: 2,
   },
   signInButton: {
-    backgroundColor: colors.primary,
-    paddingVertical: 12,
+    height: 44,
     borderRadius: borderRadius.lg,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   signInButtonText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: colors.textInverse,
+    color: '#FFFFFF',
+    fontSize: 13.5,
+    fontWeight: '800',
   },
   profileCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surface,
     borderRadius: borderRadius.xxl,
     padding: spacing.lg,
-    marginBottom: spacing.lg,
+    marginBottom: spacing.md,
     borderWidth: 1,
-    borderColor: colors.borderLight,
     ...shadows.card,
   },
   avatar: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: colors.primary,
+    width: 54,
+    height: 54,
+    borderRadius: 27,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: spacing.md,
   },
   avatarText: {
     fontSize: 22,
-    fontWeight: '900',
-    color: colors.textInverse,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
   },
   profileInfo: {
     flex: 1,
   },
   userName: {
-    fontSize: 17,
+    fontSize: 16.5,
     fontWeight: '800',
-    color: colors.textPrimary,
+    letterSpacing: -0.2,
   },
   userPhone: {
-    fontSize: 13,
-    color: colors.textSecondary,
+    fontSize: 12,
     marginTop: 1,
   },
   verifiedBadge: {
     alignSelf: 'flex-start',
-    backgroundColor: colors.ecoLight,
     paddingHorizontal: 8,
-    paddingVertical: 2,
+    paddingVertical: 3,
     borderRadius: borderRadius.full,
-    marginTop: 4,
+    marginTop: 5,
   },
   verifiedText: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: colors.primaryDark,
+    fontSize: 10.5,
+    fontWeight: '800',
   },
   walletCard: {
-    backgroundColor: colors.primaryDark,
     borderRadius: borderRadius.xxl,
     padding: spacing.lg,
-    marginBottom: spacing.lg,
-    ...shadows.elevated,
+    marginBottom: spacing.md,
+    ...shadows.card,
   },
   walletHeader: {
     flexDirection: 'row',
@@ -538,27 +881,27 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   walletLabel: {
+    color: 'rgba(255, 255, 255, 0.7)',
     fontSize: 10,
-    fontWeight: '700',
-    color: colors.primaryLight,
-    letterSpacing: 0.5,
+    fontWeight: '800',
+    letterSpacing: 0.8,
   },
   walletBalance: {
-    fontSize: 26,
+    color: '#FFFFFF',
+    fontSize: 22,
     fontWeight: '900',
-    color: colors.textInverse,
     marginTop: 2,
+    letterSpacing: -0.3,
   },
   topUpButton: {
-    backgroundColor: colors.primary,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs + 3,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
     borderRadius: borderRadius.full,
   },
   topUpText: {
+    color: '#FFFFFF',
     fontSize: 12,
-    fontWeight: '700',
-    color: colors.textInverse,
+    fontWeight: '800',
   },
   walletDivider: {
     height: 1,
@@ -571,70 +914,104 @@ const styles = StyleSheet.create({
   },
   statItem: {
     alignItems: 'center',
+    flex: 1,
   },
   statVal: {
-    fontSize: 15,
+    color: '#FFFFFF',
+    fontSize: 14,
     fontWeight: '800',
-    color: colors.textInverse,
   },
   statLbl: {
-    fontSize: 11,
     color: 'rgba(255, 255, 255, 0.7)',
+    fontSize: 10,
     marginTop: 2,
+    fontWeight: '600',
+  },
+  groupHeading: {
+    fontSize: 10.5,
+    fontWeight: '800',
+    letterSpacing: 0.8,
+    marginTop: 16,
+    marginBottom: 8,
+    marginLeft: 4,
   },
   menuContainer: {
-    backgroundColor: colors.surface,
     borderRadius: borderRadius.xxl,
-    paddingVertical: spacing.xs,
     borderWidth: 1,
-    borderColor: colors.borderLight,
+    overflow: 'hidden',
     ...shadows.card,
   },
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
-  },
-  menuItemBorder: {
-    borderBottomWidth: 1,
-    borderBottomColor: colors.borderLight,
+    paddingHorizontal: 14,
+    paddingVertical: 13,
   },
   menuIconContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: colors.surfaceSecondary,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: spacing.md,
+    marginRight: 12,
   },
   menuIcon: {
-    fontSize: 16,
+    fontSize: 15,
   },
   menuTexts: {
     flex: 1,
   },
   menuTitle: {
-    fontSize: 14,
+    fontSize: 13.5,
     fontWeight: '700',
-    color: colors.textPrimary,
   },
   menuSubtitle: {
     fontSize: 11,
-    color: colors.textSecondary,
     marginTop: 1,
   },
+  updateBadge: {
+    backgroundColor: '#DCFCE7',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: borderRadius.sm,
+  },
+  updateBadgeText: {
+    color: '#16A34A',
+    fontSize: 10,
+    fontWeight: '800',
+  },
   menuArrow: {
-    fontSize: 18,
-    color: colors.textMuted,
+    fontSize: 16,
     fontWeight: '600',
+  },
+  logoutSection: {
+    marginTop: 22,
+    marginBottom: 4,
+  },
+  largeLogoutBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    borderRadius: borderRadius.xl,
+    borderWidth: 1.2,
+    gap: 8,
+  },
+  logoutBtnIcon: {
+    fontSize: 14,
+  },
+  logoutBtnText: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#EF4444',
   },
   versionFooter: {
     textAlign: 'center',
     fontSize: 11,
-    color: colors.textMuted,
     marginTop: spacing.xl,
     fontWeight: '500',
   },
 });
+
+
+

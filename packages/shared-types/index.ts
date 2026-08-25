@@ -213,6 +213,7 @@ export interface Vehicle {
   make: string;
   model: string;
   variant?: string;
+  registrationPlate?: string;
   connectorTypes: ConnectorType[];
   maxAcPowerKw?: number;
   maxDcPowerKw?: number;
@@ -220,6 +221,71 @@ export interface Vehicle {
   isDefault: boolean;
   createdAt: string;
   updatedAt: string;
+}
+
+export enum UserGender {
+  MALE = 'MALE',
+  FEMALE = 'FEMALE',
+  OTHER = 'OTHER',
+  PREFER_NOT_TO_SAY = 'PREFER_NOT_TO_SAY',
+}
+
+export interface ChargingPreferences {
+  autoFilterIncompatible: boolean;
+  preferredSpeed: 'ULTRA_FAST' | 'FAST' | 'AC_FAST' | 'ALL';
+  preferredConnector: ConnectorType | 'ALL';
+  preferredNetworks: string[];
+  searchRadiusKm: number;
+}
+
+export interface NotificationPreferences {
+  sessionAlerts: boolean;
+  completionAlerts: boolean;
+  stationAvailabilityAlerts: boolean;
+  emailInvoices: boolean;
+  promotionalOffers: boolean;
+}
+
+export interface UserProfile {
+  id: string;
+  name: string;
+  firstName?: string;
+  lastName?: string;
+  phoneNumber: string;
+  email: string;
+  avatarUrl?: string;
+  dob?: string;
+  gender?: UserGender;
+  
+  // Location Details
+  state?: string;
+  district?: string;
+  city?: string;
+  pincode?: string;
+  address?: string;
+  
+  // Account & Membership
+  userCode?: string;
+  membershipTier?: string;
+  memberSince?: string;
+  isPhoneVerified?: boolean;
+  isEmailVerified?: boolean;
+  profileCompletionPercentage?: number;
+
+  // ₹100 Joining Bonus
+  joiningBonusStatus?: 'CREDITED' | 'PENDING' | 'USED';
+  joiningBonusAmountPaise?: number;
+
+  // Financial & Stats
+  walletBalancePaise: number;
+  totalKwhCharged: number;
+  co2SavedKg: number;
+  totalSessions: number;
+  authProvider?: 'phone' | 'email' | 'google' | 'guest';
+
+  // Preferences
+  chargingPreferences?: ChargingPreferences;
+  notificationPreferences?: NotificationPreferences;
 }
 
 // ─── API Response Wrappers ────────────────────────────────────────────────────

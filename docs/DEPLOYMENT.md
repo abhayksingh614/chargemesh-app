@@ -1,5 +1,8 @@
 # ChargeMesh — Local & Production Deployment Guide
 
+> **Status:** ⚠️ PLANNED — Production deployment (AWS, Docker, CI/CD) is not yet active.
+> For current local development and device testing, see [`BUILD_AND_TESTING.md`](BUILD_AND_TESTING.md).
+
 ## 1. Local Development Environment Setup
 
 ### Prerequisites

@@ -1,5 +1,8 @@
 # ChargeMesh — Application & Charging Workflows
 
+> **Status:** ⚠️ PLANNED — This describes the intended OCPP-connected charging flow.
+> The current mobile app uses a simulated local mock flow. See [`SCREENS_AND_NAVIGATION.md`](SCREENS_AND_NAVIGATION.md) for the current implemented flow.
+
 ## 1. End-to-End Driver Charging Workflow
 
 ```text

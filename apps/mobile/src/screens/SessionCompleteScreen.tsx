@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { PrimaryButton, StatusModal } from '../components';
 import { colors, spacing, borderRadius, shadows } from '../theme';
-import { useCharging } from '../context';
+import { useCharging, useLanguage } from '../context';
 
 interface SessionCompleteScreenProps {
   navigation: any;
@@ -18,6 +18,7 @@ interface SessionCompleteScreenProps {
 
 export const SessionCompleteScreen: React.FC<SessionCompleteScreenProps> = ({ navigation }) => {
   const { lastCompletedSession, clearCompletedSession } = useCharging();
+  const { t } = useLanguage();
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
 
   const session = lastCompletedSession;
@@ -54,19 +55,19 @@ export const SessionCompleteScreen: React.FC<SessionCompleteScreenProps> = ({ na
           <View style={styles.iconCircle}>
             <Text style={styles.successEmoji}>⚡</Text>
           </View>
-          <Text style={styles.title}>Charging Complete!</Text>
+          <Text style={styles.title}>{t('sessionComplete.completedBadge')}</Text>
           <Text style={styles.subtitle}>
-            Your battery has reached the configured charge target safely.
+            {t('sessionComplete.ecoImpactMsg')}
           </Text>
         </View>
 
         {/* Receipt & Bill Summary Card */}
         <View style={styles.receiptCard}>
           <View style={styles.totalAmountSection}>
-            <Text style={styles.totalLabel}>TOTAL AMOUNT BILLED</Text>
+            <Text style={styles.totalLabel}>{t('sessionComplete.totalBilled')}</Text>
             <Text style={styles.totalValue}>₹{finalAmountRupees}</Text>
             <View style={styles.reconciledPill}>
-              <Text style={styles.reconciledText}>✓ Paid via Fast Wallet</Text>
+              <Text style={styles.reconciledText}>✓ {t('sessionComplete.reconciled')}</Text>
             </View>
           </View>
 
@@ -75,7 +76,7 @@ export const SessionCompleteScreen: React.FC<SessionCompleteScreenProps> = ({ na
           {/* Session Metrics Breakdown */}
           <View style={styles.detailsGrid}>
             <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Station Hub</Text>
+              <Text style={styles.detailLabel}>{t('sessionComplete.station')}</Text>
               <Text style={styles.detailVal} numberOfLines={1}>
                 {stationName}
               </Text>
@@ -87,17 +88,17 @@ export const SessionCompleteScreen: React.FC<SessionCompleteScreenProps> = ({ na
             </View>
 
             <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Energy Delivered</Text>
+              <Text style={styles.detailLabel}>{t('sessionComplete.energyCharged')}</Text>
               <Text style={styles.detailVal}>{energyDeliveredKwh.toFixed(2)} kWh</Text>
             </View>
 
             <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Duration</Text>
+              <Text style={styles.detailLabel}>{t('sessionComplete.timeElapsed')}</Text>
               <Text style={styles.detailVal}>{formatDuration(durationSeconds)}</Text>
             </View>
 
             <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Average Tariff</Text>
+              <Text style={styles.detailLabel}>{t('stationDetail.tariffRate')}</Text>
               <Text style={styles.detailVal}>₹{tariffPerKwh}/kWh</Text>
             </View>
           </View>
@@ -108,9 +109,9 @@ export const SessionCompleteScreen: React.FC<SessionCompleteScreenProps> = ({ na
           <View style={styles.ecoImpactRow}>
             <Text style={styles.ecoEmoji}>🌱</Text>
             <View style={styles.ecoTextWrap}>
-              <Text style={styles.ecoTitle}>{co2SavedKg} kg CO₂ Prevented</Text>
+              <Text style={styles.ecoTitle}>{co2SavedKg} kg {t('sessionComplete.co2Saved')}</Text>
               <Text style={styles.ecoSub}>
-                Thank you for driving electric and reducing urban emissions.
+                {t('sessionComplete.ecoImpactMsg')}
               </Text>
             </View>
           </View>
@@ -121,14 +122,14 @@ export const SessionCompleteScreen: React.FC<SessionCompleteScreenProps> = ({ na
             onPress={handleDownloadInvoice}
             activeOpacity={0.8}
           >
-            <Text style={styles.invoiceButtonText}>📄 View Tax Invoice Details</Text>
+            <Text style={styles.invoiceButtonText}>{t('sessionComplete.downloadInvoice')}</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
 
       {/* Done / Continue CTA */}
       <View style={styles.bottomBar}>
-        <PrimaryButton title="Done & Return Home" onPress={handleDone} />
+        <PrimaryButton title={t('sessionComplete.doneBtn')} onPress={handleDone} />
       </View>
 
       {/* Invoice Download Status Modal */}

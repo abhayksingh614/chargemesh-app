@@ -10,8 +10,6 @@ import {
   FreshnessState,
   Vehicle,
   ChargingSession,
-  SessionStatus,
-  ChargeTarget,
 } from '@chargemesh/shared-types';
 
 export const mockCpos: Record<string, Cpo> = {
@@ -1187,78 +1185,12 @@ export const mockStations: StationWithDetails[] = [
   },
 ];
 
-export const mockDefaultVehicle: Vehicle = {
-  id: 'veh-1',
-  userId: 'user-default',
-  make: 'Tata',
-  model: 'Nexon EV',
-  variant: 'Max Empowered+',
-  connectorTypes: [ConnectorType.CCS2, ConnectorType.TYPE2],
-  maxAcPowerKw: 7.2,
-  maxDcPowerKw: 50,
-  batteryCapacityKwh: 40.5,
-  isDefault: true,
-  createdAt: new Date().toISOString(),
-  updatedAt: new Date().toISOString(),
-};
+import {
+  DEMO_PRIMARY_VEHICLE,
+  DEMO_VEHICLES,
+  DEMO_CHARGING_SESSIONS,
+} from './demoUserData';
 
-export const mockVehicles: Vehicle[] = [
-  mockDefaultVehicle,
-  {
-    id: 'veh-2',
-    userId: 'user-default',
-    make: 'MG',
-    model: 'ZS EV',
-    variant: 'Exclusive Pro',
-    connectorTypes: [ConnectorType.CCS2, ConnectorType.TYPE2],
-    maxAcPowerKw: 7.4,
-    maxDcPowerKw: 75,
-    batteryCapacityKwh: 50.3,
-    isDefault: false,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-];
-
-export const mockRecentSessions: ChargingSession[] = [
-  {
-    id: 'sess-101',
-    userId: 'user-default',
-    cpoId: 'cpo-tata',
-    locationId: 'tp-del-01',
-    evseId: 'evse-tp-1',
-    connectorId: 'tp-1-c1',
-    cpoSessionId: 'TP-SESS-987123',
-    status: SessionStatus.COMPLETED,
-    chargeTarget: ChargeTarget.AMOUNT,
-    chargeTargetValue: 500,
-    startTime: new Date(Date.now() - 86400 * 1000 * 2).toISOString(),
-    endTime: new Date(Date.now() - 86400 * 1000 * 2 + 35 * 60 * 1000).toISOString(),
-    energyKwh: 24.8,
-    durationSeconds: 2100,
-    finalAmountPaise: 45880,
-    idempotencyKey: 'idem-sess-101',
-    createdAt: new Date(Date.now() - 86400 * 1000 * 2).toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: 'sess-102',
-    userId: 'user-default',
-    cpoId: 'cpo-jiobp',
-    locationId: 'jb-aero-01',
-    evseId: 'evse-jb-1',
-    connectorId: 'jb-1-c1',
-    cpoSessionId: 'JB-SESS-441209',
-    status: SessionStatus.COMPLETED,
-    chargeTarget: ChargeTarget.ENERGY,
-    chargeTargetValue: 20,
-    startTime: new Date(Date.now() - 86400 * 1000 * 5).toISOString(),
-    endTime: new Date(Date.now() - 86400 * 1000 * 5 + 28 * 60 * 1000).toISOString(),
-    energyKwh: 20.1,
-    durationSeconds: 1680,
-    finalAmountPaise: 35175,
-    idempotencyKey: 'idem-sess-102',
-    createdAt: new Date(Date.now() - 86400 * 1000 * 5).toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-];
+export const mockDefaultVehicle: Vehicle = DEMO_PRIMARY_VEHICLE;
+export const mockVehicles: Vehicle[] = DEMO_VEHICLES;
+export const mockRecentSessions: ChargingSession[] = DEMO_CHARGING_SESSIONS;

@@ -26,8 +26,8 @@ export class AuthService {
     const defaultUser: UserEntity = {
       id: 'usr-default-01',
       phoneNumber: '+919876543210',
-      name: 'Alex Driver',
-      email: 'alex.driver@chargemesh.in',
+      name: 'Rahul',
+      email: 'rahul@gmail.com',
       vehicle: {
         make: 'Tata',
         model: 'Nexon EV Max',

@@ -1,6 +1,7 @@
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet } from 'react-native';
-import { colors, typography, borderRadius } from '../theme';
+import { typography, borderRadius } from '../theme';
+import { useTheme } from '../context';
 
 interface FilterChipProps {
   label: string;
@@ -15,19 +16,37 @@ export const FilterChip: React.FC<FilterChipProps> = ({
   onPress,
   icon,
 }) => {
+  const { theme, mode } = useTheme();
+  const isDark = mode === 'dark';
+
   return (
     <TouchableOpacity
       activeOpacity={0.8}
       onPress={onPress}
       style={[
         styles.chip,
-        selected ? styles.chipSelected : styles.chipUnselected,
+        {
+          backgroundColor: selected
+            ? theme.primary
+            : isDark
+            ? 'rgba(255, 255, 255, 0.06)'
+            : theme.surface,
+          borderColor: selected
+            ? theme.primary
+            : isDark
+            ? 'rgba(255, 255, 255, 0.16)'
+            : theme.borderDark,
+        },
       ]}
     >
       <Text
         style={[
           styles.label,
-          selected ? styles.labelSelected : styles.labelUnselected,
+          {
+            color: selected
+              ? '#FFFFFF'
+              : theme.textPrimary,
+          },
         ]}
       >
         {icon ? `${icon} ` : ''}{label}
@@ -41,27 +60,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: borderRadius.full,
-    borderWidth: 1,
+    borderWidth: 1.2,
     marginRight: 8,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  chipSelected: {
-    backgroundColor: colors.darkGreen,
-    borderColor: colors.darkGreen,
-  },
-  chipUnselected: {
-    backgroundColor: colors.surface,
-    borderColor: colors.border,
-  },
   label: {
     ...typography.captionBold,
     fontSize: 13,
-  },
-  labelSelected: {
-    color: colors.textInverse,
-  },
-  labelUnselected: {
-    color: colors.textPrimary,
   },
 });

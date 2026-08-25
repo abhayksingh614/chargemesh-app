@@ -12,25 +12,35 @@ import {
   Image,
   Animated,
 } from 'react-native';
-import { colors, spacing, borderRadius, shadows } from '../theme';
+import { spacing, borderRadius, shadows } from '../theme';
+import { useTheme } from '../context';
+import { WELCOME_BONUS_AMOUNT_RUPEES } from '../constants/appConstants';
 
 const { height } = Dimensions.get('window');
 
 interface AuthGateModalProps {
   visible: boolean;
   featureName?: string;
+  title?: string;
+  subtitle?: string;
   onClose: () => void;
   onLogin: () => void;
   onRegister: () => void;
+  onContinueExploring?: () => void;
 }
 
 export const AuthGateModal: React.FC<AuthGateModalProps> = ({
   visible,
   featureName = 'this feature',
+  title,
+  subtitle,
   onClose,
   onLogin,
   onRegister,
+  onContinueExploring,
 }) => {
+  const { theme, mode } = useTheme();
+  const isDark = mode === 'dark';
   const animValue = React.useRef(new Animated.Value(0)).current;
 
   React.useEffect(() => {
@@ -43,7 +53,7 @@ export const AuthGateModal: React.FC<AuthGateModalProps> = ({
     } else {
       animValue.setValue(0);
     }
-  }, [visible]);
+  }, [visible, animValue]);
 
   const backdropOpacity = animValue.interpolate({
     inputRange: [0, 1],
@@ -52,18 +62,19 @@ export const AuthGateModal: React.FC<AuthGateModalProps> = ({
 
   const cardScale = animValue.interpolate({
     inputRange: [0, 1],
-    outputRange: [0.92, 1],
-  });
-
-  const cardTranslateY = animValue.interpolate({
-    inputRange: [0, 1],
-    outputRange: [24, 0],
+    outputRange: [0.94, 1],
   });
 
   const cardOpacity = animValue.interpolate({
     inputRange: [0, 0.4, 1],
     outputRange: [0, 0.85, 1],
   });
+
+  const displayTitle =
+    title || (featureName ? `Sign in to access ${featureName}` : 'Login Required 🔐');
+  const displaySubtitle =
+    subtitle ||
+    `Join ChargeMesh to unlock fast EV charging across India, live telemetry, and ₹${WELCOME_BONUS_AMOUNT_RUPEES} welcome bonus.`;
 
   return (
     <Modal
@@ -83,22 +94,30 @@ export const AuthGateModal: React.FC<AuthGateModalProps> = ({
           style={[
             styles.card,
             {
+              backgroundColor: theme.surface,
+              borderColor: isDark ? 'rgba(255, 255, 255, 0.12)' : '#E2E8F0',
               opacity: cardOpacity,
-              transform: [{ scale: cardScale }, { translateY: cardTranslateY }],
+              transform: [{ scale: cardScale }],
             },
           ]}
           pointerEvents="auto"
         >
           {/* Top-Right Absolute Close Cross Button */}
           <TouchableOpacity
-            style={styles.closeBtn}
+            style={[
+              styles.closeBtn,
+              {
+                backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#F1F5F9',
+                borderColor: theme.border,
+              },
+            ]}
             onPress={onClose}
             hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
             activeOpacity={0.7}
             accessibilityLabel="Close dialog"
             accessibilityRole="button"
           >
-            <Text style={styles.closeIcon}>✕</Text>
+            <Text style={[styles.closeIcon, { color: theme.textSecondary }]}>✕</Text>
           </TouchableOpacity>
 
           <ScrollView
@@ -108,12 +127,30 @@ export const AuthGateModal: React.FC<AuthGateModalProps> = ({
             bounces={false}
           >
             {/* Top Badge */}
-            <View style={styles.badgePill}>
-              <Text style={styles.badgeText}>🔒 Member Feature</Text>
+            <View
+              style={[
+                styles.badgePill,
+                {
+                  backgroundColor: isDark ? 'rgba(0, 208, 132, 0.12)' : '#ECFDF5',
+                  borderColor: isDark ? 'rgba(0, 208, 132, 0.3)' : '#A7F3D0',
+                },
+              ]}
+            >
+              <Text style={[styles.badgeText, { color: theme.primary }]}>
+                🔐 Login Required
+              </Text>
             </View>
 
             {/* Glowing Circular Favicon Hero Logo */}
-            <View style={styles.logoGlowRing}>
+            <View
+              style={[
+                styles.logoGlowRing,
+                {
+                  backgroundColor: isDark ? 'rgba(0, 208, 132, 0.12)' : '#ECFDF5',
+                  borderColor: isDark ? 'rgba(0, 208, 132, 0.35)' : '#BBF7D0',
+                },
+              ]}
+            >
               <Image
                 source={require('../assets/logo/cm_fevicon_logo_trans.png')}
                 style={styles.logoImage}
@@ -122,70 +159,112 @@ export const AuthGateModal: React.FC<AuthGateModalProps> = ({
             </View>
 
             {/* Title & Subtitle */}
-            <Text style={styles.title}>Sign in to access {featureName}</Text>
-            <Text style={styles.subtitle}>
-              Unlock fast charging across India, 1-click Fastag payments, live battery telemetry, and instant GST invoices.
+            <Text style={[styles.title, { color: theme.textPrimary }]}>{displayTitle}</Text>
+            <Text style={[styles.subtitle, { color: theme.textSecondary }]}>
+              {displaySubtitle}
             </Text>
 
             {/* Benefits List */}
-            <View style={styles.perksContainer}>
+            <View
+              style={[
+                styles.perksContainer,
+                {
+                  backgroundColor: isDark ? 'rgba(255, 255, 255, 0.04)' : '#F8FAFC',
+                  borderColor: theme.border,
+                },
+              ]}
+            >
               <View style={styles.perkRow}>
-                <View style={styles.perkIconBadge}>
+                <View
+                  style={[
+                    styles.perkIconBadge,
+                    {
+                      backgroundColor: theme.surface,
+                      borderColor: theme.border,
+                    },
+                  ]}
+                >
                   <Text style={styles.perkEmoji}>⚡</Text>
                 </View>
                 <View style={styles.perkTextWrap}>
-                  <Text style={styles.perkHeading}>Multi-CPO Fast Charging</Text>
-                  <Text style={styles.perkSub}>
-                    One-tap remote start across Tata Power, Jio-bp, Statiq & Zeon
+                  <Text style={[styles.perkHeading, { color: theme.textPrimary }]}>
+                    Multi-CPO Fast Charging
+                  </Text>
+                  <Text style={[styles.perkSub, { color: theme.textSecondary }]}>
+                    One-tap remote start across Tata Power, Jio-bp, Statiq & Kazam
                   </Text>
                 </View>
               </View>
 
-              <View style={styles.perkDivider} />
+              <View style={[styles.perkDivider, { backgroundColor: theme.border }]} />
 
               <View style={styles.perkRow}>
-                <View style={styles.perkIconBadge}>
+                <View
+                  style={[
+                    styles.perkIconBadge,
+                    {
+                      backgroundColor: theme.surface,
+                      borderColor: theme.border,
+                    },
+                  ]}
+                >
                   <Text style={styles.perkEmoji}>🎁</Text>
                 </View>
                 <View style={styles.perkTextWrap}>
-                  <Text style={styles.perkHeading}>₹500 Welcome Charging Credit</Text>
-                  <Text style={styles.perkSub}>
-                    Instantly added to your Fast Wallet upon mobile verification
+                  <Text style={[styles.perkHeading, { color: theme.textPrimary }]}>
+                    ₹{WELCOME_BONUS_AMOUNT_RUPEES} Welcome Bonus
+                  </Text>
+                  <Text style={[styles.perkSub, { color: theme.textSecondary }]}>
+                    Instantly credited to your Fast Wallet upon registration
                   </Text>
                 </View>
               </View>
             </View>
 
-            {/* Action Buttons */}
+            {/* Primary Action Button: Log In */}
             <TouchableOpacity
-              style={styles.loginBtn}
+              style={[styles.loginBtn, { backgroundColor: theme.primary }]}
               activeOpacity={0.88}
               onPress={() => {
                 onClose();
                 onLogin();
               }}
             >
-              <Text style={styles.loginBtnText}>Sign In with Mobile ➔</Text>
+              <Text style={styles.loginBtnText}>Log In ➔</Text>
             </TouchableOpacity>
 
+            {/* Secondary Action Button: Sign Up */}
             <TouchableOpacity
-              style={styles.registerBtn}
+              style={[
+                styles.registerBtn,
+                {
+                  backgroundColor: isDark ? 'rgba(0, 208, 132, 0.08)' : '#F0FDF4',
+                  borderColor: theme.primary,
+                },
+              ]}
               activeOpacity={0.85}
               onPress={() => {
                 onClose();
                 onRegister();
               }}
             >
-              <Text style={styles.registerBtnText}>Create New Account (Get ₹500)</Text>
+              <Text style={[styles.registerBtnText, { color: theme.primary }]}>
+                Sign Up (Get ₹{WELCOME_BONUS_AMOUNT_RUPEES} Bonus)
+              </Text>
             </TouchableOpacity>
 
-            {/* Skip / Continue as Guest */}
+            {/* Tertiary / Continue Exploring */}
             <TouchableOpacity
               style={styles.continueGuestBtn}
               activeOpacity={0.7}
-              onPress={onClose}
+              onPress={() => {
+                onClose();
+                if (onContinueExploring) onContinueExploring();
+              }}
             >
-              <Text style={styles.continueGuestText}>Continue exploring as Guest</Text>
+              <Text style={[styles.continueGuestText, { color: theme.textMuted }]}>
+                Continue Exploring
+              </Text>
             </TouchableOpacity>
           </ScrollView>
         </Animated.View>
@@ -204,16 +283,14 @@ const styles = StyleSheet.create({
   },
   card: {
     position: 'relative',
-    width: '90%',
-    maxWidth: 380,
-    backgroundColor: colors.surface,
+    width: '92%',
+    maxWidth: 360,
     borderRadius: 24,
-    paddingHorizontal: 18,
+    paddingHorizontal: 20,
     paddingTop: 22,
     paddingBottom: 16,
     ...shadows.elevated,
-    borderWidth: 1,
-    borderColor: colors.borderLight,
+    borderWidth: 1.5,
     alignSelf: 'center',
   },
   scrollView: {
@@ -229,21 +306,14 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: colors.surfaceSecondary,
     borderWidth: 1,
-    borderColor: colors.borderDark,
     alignItems: 'center',
     justifyContent: 'center',
     elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
   },
   closeIcon: {
     fontSize: 14,
     fontWeight: '800',
-    color: colors.textPrimary,
     textAlign: 'center',
     lineHeight: Platform.OS === 'android' ? 18 : 14,
     includeFontPadding: false,
@@ -254,50 +324,39 @@ const styles = StyleSheet.create({
     paddingBottom: 2,
   },
   badgePill: {
-    backgroundColor: colors.ecoLight,
     paddingHorizontal: spacing.md,
-    paddingVertical: 3,
+    paddingVertical: 4,
     borderRadius: borderRadius.full,
     borderWidth: 1,
-    borderColor: '#A7F3D0',
     marginBottom: spacing.xs,
   },
   badgeText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: colors.primaryDark,
+    fontSize: 11.5,
+    fontWeight: '800',
+    letterSpacing: 0.4,
   },
   logoGlowRing: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: colors.ecoLight,
-    borderWidth: 2,
-    borderColor: '#A7F3D0',
+    width: 58,
+    height: 58,
+    borderRadius: 29,
+    borderWidth: 1.5,
     alignItems: 'center',
     justifyContent: 'center',
     marginVertical: spacing.xs + 2,
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 3,
   },
   logoImage: {
-    width: 40,
-    height: 40,
+    width: 38,
+    height: 38,
   },
   title: {
     fontSize: 18,
     fontWeight: '800',
-    color: colors.textPrimary,
     textAlign: 'center',
     letterSpacing: -0.3,
     paddingHorizontal: spacing.xs,
   },
   subtitle: {
     fontSize: 12.5,
-    color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 17,
     marginTop: spacing.xs,
@@ -306,12 +365,10 @@ const styles = StyleSheet.create({
   },
   perksContainer: {
     width: '100%',
-    backgroundColor: colors.surfaceSecondary,
     borderRadius: borderRadius.xl,
     padding: spacing.md,
     marginBottom: spacing.md,
     borderWidth: 1,
-    borderColor: colors.borderLight,
   },
   perkRow: {
     flexDirection: 'row',
@@ -321,12 +378,10 @@ const styles = StyleSheet.create({
     width: 30,
     height: 30,
     borderRadius: 15,
-    backgroundColor: colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: spacing.sm,
     borderWidth: 1,
-    borderColor: colors.borderLight,
   },
   perkEmoji: {
     fontSize: 14,
@@ -337,51 +392,39 @@ const styles = StyleSheet.create({
   perkHeading: {
     fontSize: 12,
     fontWeight: '700',
-    color: colors.textPrimary,
   },
   perkSub: {
     fontSize: 10.5,
-    color: colors.textSecondary,
     marginTop: 1,
   },
   perkDivider: {
     height: 1,
-    backgroundColor: colors.border,
     marginVertical: spacing.xs + 2,
   },
   loginBtn: {
     width: '100%',
-    backgroundColor: colors.primary,
-    paddingVertical: 12,
+    paddingVertical: 13,
     borderRadius: borderRadius.lg,
     alignItems: 'center',
     marginTop: spacing.xs,
     marginBottom: spacing.xs,
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
-    elevation: 3,
   },
   loginBtnText: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: colors.textInverse,
+    fontSize: 14.5,
+    fontWeight: '800',
+    color: '#FFFFFF',
   },
   registerBtn: {
     width: '100%',
-    backgroundColor: colors.surface,
-    paddingVertical: 11,
+    paddingVertical: 12,
     borderRadius: borderRadius.lg,
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.borderDark,
+    borderWidth: 1.5,
     marginBottom: spacing.xs,
   },
   registerBtnText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colors.textPrimary,
+    fontSize: 13.5,
+    fontWeight: '800',
   },
   continueGuestBtn: {
     paddingVertical: spacing.xs,
@@ -390,6 +433,5 @@ const styles = StyleSheet.create({
   continueGuestText: {
     fontSize: 12,
     fontWeight: '600',
-    color: colors.textMuted,
   },
 });

@@ -7,7 +7,8 @@ import {
   ViewStyle,
   TextStyle
 } from 'react-native';
-import { colors, typography, borderRadius } from '../theme';
+import { typography, borderRadius } from '../theme';
+import { useTheme } from '../context';
 
 interface PrimaryButtonProps {
   title: string;
@@ -30,25 +31,29 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
   textStyle,
   icon,
 }) => {
+  const { theme, mode } = useTheme();
+  const isDark = mode === 'dark';
+
   const getBackgroundColor = () => {
-    if (disabled) return colors.border;
+    if (disabled) return isDark ? 'rgba(255, 255, 255, 0.08)' : theme.border;
     switch (variant) {
       case 'secondary':
-        return colors.darkGreen;
+        return isDark ? 'rgba(255, 255, 255, 0.08)' : theme.surfaceSecondary;
       case 'danger':
-        return colors.status.unavailable;
+        return '#EF4444';
       case 'outline':
         return 'transparent';
       case 'primary':
       default:
-        return colors.primary;
+        return theme.primary;
     }
   };
 
   const getTextColor = () => {
-    if (disabled) return colors.textMuted;
-    if (variant === 'outline') return colors.primary;
-    return colors.textInverse;
+    if (disabled) return theme.textMuted;
+    if (variant === 'outline') return theme.primary;
+    if (variant === 'secondary') return theme.textPrimary;
+    return '#FFFFFF';
   };
 
   return (
@@ -59,7 +64,8 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
       style={[
         styles.button,
         { backgroundColor: getBackgroundColor() },
-        variant === 'outline' && { borderWidth: 1.5, borderColor: colors.primary },
+        variant === 'outline' && { borderWidth: 1.5, borderColor: theme.primary },
+        variant === 'secondary' && { borderWidth: 1, borderColor: theme.border },
         style,
       ]}
     >

@@ -1,9 +1,10 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Connector, ConnectorStatus } from '@chargemesh/shared-types';
-import { colors, typography, borderRadius, shadows } from '../theme';
+import { typography, borderRadius, shadows } from '../theme';
 import { StatusBadge } from './StatusBadge';
 import { FreshnessIndicator } from './FreshnessIndicator';
+import { useTheme } from '../context';
 
 interface ConnectorCardProps {
   connector: Connector;
@@ -20,6 +21,8 @@ export const ConnectorCard: React.FC<ConnectorCardProps> = ({
   onSelect,
   selected = false,
 }) => {
+  const { theme, mode } = useTheme();
+  const isDark = mode === 'dark';
   const isAvailable = connector.status === ConnectorStatus.AVAILABLE;
   const isUnknown = connector.status === ConnectorStatus.UNKNOWN;
 
@@ -30,26 +33,32 @@ export const ConnectorCard: React.FC<ConnectorCardProps> = ({
       disabled={!isAvailable && !isUnknown}
       style={[
         styles.card,
-        selected && styles.cardSelected,
-        !isAvailable && !isUnknown && styles.cardDisabled,
+        {
+          backgroundColor: theme.surface,
+          borderColor: selected ? theme.primary : theme.border,
+        },
+        selected && {
+          backgroundColor: isDark ? 'rgba(0, 208, 132, 0.08)' : theme.primaryLight,
+        },
+        !isAvailable && !isUnknown && { opacity: 0.65, backgroundColor: isDark ? 'rgba(255, 255, 255, 0.03)' : '#F9FAFB' },
       ]}
     >
       <View style={styles.headerRow}>
         <View style={styles.typeInfo}>
-          <Text style={styles.connectorType}>{connector.type}</Text>
-          <Text style={styles.powerType}>
+          <Text style={[styles.connectorType, { color: theme.textPrimary }]}>{connector.type}</Text>
+          <Text style={[styles.powerType, { color: theme.textSecondary }]}>
             {connector.powerType === 'DC' ? '⚡ DC Fast' : '🔌 AC'} • {connector.maxPower} kW
           </Text>
         </View>
         <StatusBadge status={connector.status} />
       </View>
 
-      <View style={styles.divider} />
+      <View style={[styles.divider, { backgroundColor: theme.border }]} />
 
       <View style={styles.footerRow}>
         <View>
-          <Text style={styles.priceLabel}>Tariff</Text>
-          <Text style={styles.priceValue}>₹{tariffPerKwh.toFixed(1)}/kWh</Text>
+          <Text style={[styles.priceLabel, { color: theme.textSecondary }]}>Tariff</Text>
+          <Text style={[styles.priceValue, { color: theme.primary }]}>₹{tariffPerKwh.toFixed(1)}/kWh</Text>
         </View>
 
         <View style={styles.rightFooter}>
@@ -58,8 +67,18 @@ export const ConnectorCard: React.FC<ConnectorCardProps> = ({
             dataAgeSeconds={connector.dataAgeSeconds}
           />
           {isVehicleCompatible && (
-            <View style={styles.compatBadge}>
-              <Text style={styles.compatText}>✓ Compatible</Text>
+            <View
+              style={[
+                styles.compatBadge,
+                {
+                  backgroundColor: isDark ? 'rgba(0, 208, 132, 0.15)' : '#DCFCE7',
+                  borderColor: isDark ? 'rgba(0, 208, 132, 0.3)' : '#86EFAC',
+                },
+              ]}
+            >
+              <Text style={[styles.compatText, { color: isDark ? '#00D084' : '#15803D' }]}>
+                ✓ Compatible
+              </Text>
             </View>
           )}
         </View>
@@ -70,21 +89,11 @@ export const ConnectorCard: React.FC<ConnectorCardProps> = ({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.surface,
     borderRadius: borderRadius.lg,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1.5,
-    borderColor: colors.border,
     ...shadows.card,
-  },
-  cardSelected: {
-    borderColor: colors.primary,
-    backgroundColor: colors.ecoLight,
-  },
-  cardDisabled: {
-    opacity: 0.65,
-    backgroundColor: '#F9FAFB',
   },
   headerRow: {
     flexDirection: 'row',
@@ -96,16 +105,14 @@ const styles = StyleSheet.create({
   },
   connectorType: {
     ...typography.h3,
-    color: colors.textPrimary,
   },
   powerType: {
-    ...typography.captionBold,
-    color: colors.textSecondary,
+    fontSize: 12.5,
     marginTop: 2,
+    fontWeight: '600',
   },
   divider: {
     height: 1,
-    backgroundColor: colors.divider,
     marginVertical: 12,
   },
   footerRow: {
@@ -113,27 +120,26 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  priceLabel: {
-    ...typography.caption,
-    color: colors.textSecondary,
-  },
-  priceValue: {
-    ...typography.subtitle,
-    color: colors.primary,
-  },
   rightFooter: {
     alignItems: 'flex-end',
-    gap: 4,
+    gap: 6,
+  },
+  priceLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  priceValue: {
+    fontSize: 15,
+    fontWeight: '800',
   },
   compatBadge: {
-    backgroundColor: colors.status.availableBg,
-    paddingHorizontal: 8,
+    paddingHorizontal: 7,
     paddingVertical: 2,
-    borderRadius: borderRadius.sm,
+    borderRadius: 4,
+    borderWidth: 1,
   },
   compatText: {
-    ...typography.captionBold,
-    color: colors.status.available,
-    fontSize: 11,
+    fontSize: 10.5,
+    fontWeight: '800',
   },
 });

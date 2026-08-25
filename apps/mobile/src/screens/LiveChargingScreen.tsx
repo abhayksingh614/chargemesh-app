@@ -16,7 +16,7 @@ import {
   ConfirmationModal,
 } from '../components';
 import { colors, spacing, borderRadius } from '../theme';
-import { useCharging } from '../context';
+import { useCharging, useLanguage } from '../context';
 
 interface LiveChargingScreenProps {
   navigation: any;
@@ -24,6 +24,7 @@ interface LiveChargingScreenProps {
 
 export const LiveChargingScreen: React.FC<LiveChargingScreenProps> = ({ navigation }) => {
   const { activeSession, lastCompletedSession, isCharging, stopSession } = useCharging();
+  const { t } = useLanguage();
   const [showStopModal, setShowStopModal] = useState(false);
   const [isStopping, setIsStopping] = useState(false);
 
@@ -73,14 +74,14 @@ export const LiveChargingScreen: React.FC<LiveChargingScreenProps> = ({ navigati
     <SafeAreaView style={styles.safeArea}>
       {/* Top Header with Minimize Option */}
       <Header
-        title="Live Charging ⚡"
+        title={t('liveCharging.title')}
         subtitle={`${activeSession.station.name}`}
         rightAction={
           <TouchableOpacity
             style={styles.minimizeBtn}
             onPress={() => navigation.navigate('MainTabs')}
           >
-            <Text style={styles.minimizeText}>Minimize ✕</Text>
+            <Text style={styles.minimizeText}>{t('common.minimize')} ✕</Text>
           </TouchableOpacity>
         }
       />
@@ -95,7 +96,7 @@ export const LiveChargingScreen: React.FC<LiveChargingScreenProps> = ({ navigati
           </View>
           <View style={styles.liveIndicator}>
             <Text style={styles.liveDot}>●</Text>
-            <Text style={styles.liveText}>TELEMETRY LIVE</Text>
+            <Text style={styles.liveText}>{t('liveCharging.telemetryLive')}</Text>
           </View>
         </View>
 
@@ -109,7 +110,7 @@ export const LiveChargingScreen: React.FC<LiveChargingScreenProps> = ({ navigati
         {/* Target Milestone Progress */}
         <View style={styles.targetProgressCard}>
           <View style={styles.targetRow}>
-            <Text style={styles.targetLabel}>Target Milestone</Text>
+            <Text style={styles.targetLabel}>{t('liveCharging.targetMilestone')}</Text>
             <Text style={styles.targetValue}>
               {activeSession.targetType === 'BATTERY'
                 ? `${activeSession.targetValue}% Battery`
@@ -135,7 +136,7 @@ export const LiveChargingScreen: React.FC<LiveChargingScreenProps> = ({ navigati
           <View style={styles.metricRow}>
             <MetricCard
               icon="⚡"
-              label="Charging Power"
+              label={t('liveCharging.powerDelivered')}
               value={activeSession.currentPowerKw.toFixed(1)}
               unit="kW"
               subtitle="DC High Speed"
@@ -143,7 +144,7 @@ export const LiveChargingScreen: React.FC<LiveChargingScreenProps> = ({ navigati
             />
             <MetricCard
               icon="🔋"
-              label="Energy Delivered"
+              label={t('liveCharging.energyDelivered')}
               value={activeSession.energyDeliveredKwh.toFixed(2)}
               unit="kWh"
               subtitle={`Rate: ₹${activeSession.tariffPerKwh}/kWh`}
@@ -154,14 +155,14 @@ export const LiveChargingScreen: React.FC<LiveChargingScreenProps> = ({ navigati
           <View style={styles.metricRow}>
             <MetricCard
               icon="⏱️"
-              label="Session Time"
+              label={t('liveCharging.sessionDuration')}
               value={formatDuration(activeSession.elapsedSeconds)}
               subtitle={`~${activeSession.estimatedRemainingMinutes}m remaining`}
               color={colors.textPrimary}
             />
             <MetricCard
               icon="💰"
-              label="Accrued Cost"
+              label={t('liveCharging.currentCost')}
               value={`₹${currentCostRupees}`}
               subtitle="Pre-authorized"
               color={colors.primary}
@@ -183,7 +184,7 @@ export const LiveChargingScreen: React.FC<LiveChargingScreenProps> = ({ navigati
       {/* Stop Charging Button */}
       <View style={styles.bottomBar}>
         <PrimaryButton
-          title={isStopping ? 'Stopping Session...' : '🛑 Stop Charging'}
+          title={isStopping ? t('liveCharging.sessionStopping') : t('liveCharging.stopSessionBtn')}
           variant="danger"
           onPress={() => setShowStopModal(true)}
           disabled={isStopping}
@@ -193,10 +194,10 @@ export const LiveChargingScreen: React.FC<LiveChargingScreenProps> = ({ navigati
       {/* Safety Confirmation Modal */}
       <ConfirmationModal
         visible={showStopModal}
-        title="Stop Charging Session?"
-        message="Are you sure you want to end charging? The session will complete and a final receipt will be generated based on energy delivered."
-        confirmLabel="Confirm & Stop"
-        cancelLabel="Keep Charging"
+        title={t('liveCharging.confirmStopTitle')}
+        message={t('liveCharging.confirmStopMsg')}
+        confirmLabel={t('liveCharging.confirmStopAction')}
+        cancelLabel={t('liveCharging.cancelStopAction')}
         isDestructive={true}
         onConfirm={handleConfirmStop}
         onCancel={() => setShowStopModal(false)}

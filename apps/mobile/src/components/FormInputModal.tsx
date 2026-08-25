@@ -6,7 +6,8 @@ import {
   TextInput,
 } from 'react-native';
 import { AppModal } from './AppModal';
-import { colors, spacing, borderRadius } from '../theme';
+import { spacing, borderRadius } from '../theme';
+import { useTheme } from '../context';
 
 export interface FormInputField {
   key: string;
@@ -42,6 +43,9 @@ export const FormInputModal: React.FC<FormInputModalProps> = ({
   onClose,
   onSubmit,
 }) => {
+  const { theme, mode } = useTheme();
+  const isDark = mode === 'dark';
+
   const [formValues, setFormValues] = useState<Record<string, string>>(() => {
     const initial: Record<string, string> = {};
     fields.forEach((f) => {
@@ -81,14 +85,22 @@ export const FormInputModal: React.FC<FormInputModalProps> = ({
       <View style={styles.formContainer}>
         {fields.map((field) => (
           <View key={field.key} style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>
+            <Text style={[styles.inputLabel, { color: theme.textSecondary }]}>
               {field.label.toUpperCase()}
               {field.required && <Text style={styles.requiredStar}> *</Text>}
             </Text>
             <TextInput
-              style={[styles.input, field.multiline && styles.multilineInput]}
+              style={[
+                styles.input,
+                {
+                  backgroundColor: isDark ? 'rgba(255, 255, 255, 0.06)' : theme.surfaceSecondary,
+                  borderColor: theme.border,
+                  color: theme.textPrimary,
+                },
+                field.multiline && styles.multilineInput,
+              ]}
               placeholder={field.placeholder}
-              placeholderTextColor={colors.textMuted}
+              placeholderTextColor={theme.textMuted}
               value={formValues[field.key] || ''}
               onChangeText={(val) => handleChange(field.key, val)}
               secureTextEntry={field.secureTextEntry}
@@ -114,22 +126,18 @@ const styles = StyleSheet.create({
   inputLabel: {
     fontSize: 11,
     fontWeight: '700',
-    color: colors.textSecondary,
     letterSpacing: 0.5,
     marginBottom: 4,
   },
   requiredStar: {
-    color: colors.danger,
+    color: '#EF4444',
   },
   input: {
-    backgroundColor: colors.surfaceSecondary,
     borderRadius: borderRadius.md,
     paddingHorizontal: spacing.md,
     paddingVertical: 10,
     fontSize: 14,
-    color: colors.textPrimary,
     borderWidth: 1,
-    borderColor: colors.borderLight,
   },
   multilineInput: {
     height: 72,

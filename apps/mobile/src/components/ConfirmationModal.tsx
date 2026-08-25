@@ -8,8 +8,9 @@ import {
   TouchableWithoutFeedback,
   Animated,
 } from 'react-native';
-import { colors, spacing, borderRadius, shadows } from '../theme';
+import { spacing, borderRadius, shadows } from '../theme';
 import { PrimaryButton } from './PrimaryButton';
+import { useTheme } from '../context';
 
 interface ConfirmationModalProps {
   visible: boolean;
@@ -32,6 +33,8 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   onConfirm,
   onCancel,
 }) => {
+  const { theme, mode } = useTheme();
+  const isDark = mode === 'dark';
   const animValue = React.useRef(new Animated.Value(0)).current;
 
   React.useEffect(() => {
@@ -84,6 +87,8 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
           style={[
             styles.card,
             {
+              backgroundColor: theme.surface,
+              borderColor: theme.border,
               opacity: cardOpacity,
               transform: [{ scale: cardScale }, { translateY: cardTranslateY }],
             },
@@ -92,30 +97,42 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
         >
           {/* Top-Right Absolute Close Cross Button */}
           <TouchableOpacity
-            style={styles.closeBtn}
+            style={[
+              styles.closeBtn,
+              {
+                backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : theme.surfaceSecondary,
+                borderColor: theme.border,
+              },
+            ]}
             onPress={onCancel}
             hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
             activeOpacity={0.7}
             accessibilityLabel="Close dialog"
             accessibilityRole="button"
           >
-            <Text style={styles.closeIcon}>✕</Text>
+            <Text style={[styles.closeIcon, { color: theme.textSecondary }]}>✕</Text>
           </TouchableOpacity>
 
           <View style={[styles.iconCircle, isDestructive && styles.iconCircleDanger]}>
             <Text style={styles.iconEmoji}>{isDestructive ? '⚠️' : '⚡'}</Text>
           </View>
 
-          <Text style={styles.title}>{title}</Text>
-          <Text style={styles.message}>{message}</Text>
+          <Text style={[styles.title, { color: theme.textPrimary }]}>{title}</Text>
+          <Text style={[styles.message, { color: theme.textSecondary }]}>{message}</Text>
 
           <View style={styles.buttonContainer}>
             <TouchableOpacity
-              style={styles.cancelButton}
+              style={[
+                styles.cancelButton,
+                {
+                  backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : theme.surfaceSecondary,
+                  borderColor: theme.border,
+                },
+              ]}
               onPress={onCancel}
               activeOpacity={0.7}
             >
-              <Text style={styles.cancelText}>{cancelLabel}</Text>
+              <Text style={[styles.cancelText, { color: theme.textPrimary }]}>{cancelLabel}</Text>
             </TouchableOpacity>
 
             <View style={styles.confirmWrapper}>
@@ -143,12 +160,10 @@ const styles = StyleSheet.create({
   card: {
     width: '100%',
     maxWidth: 380,
-    backgroundColor: colors.surface,
     borderRadius: borderRadius.xxl,
     padding: spacing.lg,
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.borderLight,
+    borderWidth: 1.2,
     position: 'relative',
     ...shadows.elevated,
   },
@@ -159,23 +174,20 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: colors.surfaceSecondary,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: colors.borderLight,
     zIndex: 10,
   },
   closeIcon: {
     fontSize: 13,
-    color: colors.textSecondary,
     fontWeight: '700',
   },
   iconCircle: {
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: colors.ecoLight,
+    backgroundColor: 'rgba(0, 208, 132, 0.15)',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: spacing.md,
@@ -193,18 +205,15 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: '800',
-    color: colors.textPrimary,
     textAlign: 'center',
     marginBottom: spacing.xs,
     letterSpacing: -0.2,
   },
   message: {
-    fontSize: 14,
-    color: colors.textSecondary,
+    fontSize: 13.5,
     textAlign: 'center',
     lineHeight: 20,
     marginBottom: spacing.lg,
-    paddingHorizontal: spacing.sm,
   },
   buttonContainer: {
     flexDirection: 'row',
@@ -214,18 +223,15 @@ const styles = StyleSheet.create({
   },
   cancelButton: {
     flex: 1,
-    paddingVertical: 13,
-    borderRadius: borderRadius.lg,
-    alignItems: 'center',
+    height: 48,
+    borderRadius: borderRadius.md,
     justifyContent: 'center',
-    backgroundColor: colors.surfaceSecondary,
+    alignItems: 'center',
     borderWidth: 1,
-    borderColor: colors.border,
   },
   cancelText: {
     fontSize: 14,
     fontWeight: '700',
-    color: colors.textSecondary,
   },
   confirmWrapper: {
     flex: 1,

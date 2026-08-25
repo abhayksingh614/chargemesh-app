@@ -1,6 +1,6 @@
 {
   "name": "@chargemesh/mobile",
-  "version": "1.1.0",
+  "version": "1.2.5",
   "private": true,
   "description": "ChargeMesh Cross-Platform Driver Application (Android & iOS)",
   "main": "index.js",

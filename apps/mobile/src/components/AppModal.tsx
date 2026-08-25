@@ -13,7 +13,8 @@ import {
   KeyboardAvoidingView,
   Animated,
 } from 'react-native';
-import { colors, spacing, borderRadius, shadows } from '../theme';
+import { spacing, borderRadius, shadows } from '../theme';
+import { useTheme } from '../context';
 
 const { height } = Dimensions.get('window');
 
@@ -74,6 +75,8 @@ export const AppModal: React.FC<AppModalProps> = ({
   showCloseButton = true,
   children,
 }) => {
+  const { theme, mode } = useTheme();
+  const isDark = mode === 'dark';
   const animValue = React.useRef(new Animated.Value(0)).current;
 
   React.useEffect(() => {
@@ -113,93 +116,93 @@ export const AppModal: React.FC<AppModalProps> = ({
       case 'success':
         return {
           emoji: iconEmoji || '✅',
-          ringBg: '#DCFCE7',
-          ringBorder: '#86EFAC',
+          ringBg: isDark ? 'rgba(0, 208, 132, 0.16)' : '#DCFCE7',
+          ringBorder: isDark ? '#00D084' : '#86EFAC',
           badgeText: badge || 'Success',
-          badgeBg: colors.ecoLight,
-          badgeColor: colors.primaryDark,
-          primaryBtnBg: colors.primary,
+          badgeBg: isDark ? 'rgba(0, 208, 132, 0.15)' : '#DCFCE7',
+          badgeColor: isDark ? '#00D084' : '#15803D',
+          primaryBtnBg: theme.primary,
         };
       case 'error':
         return {
           emoji: iconEmoji || '⚠️',
-          ringBg: '#FEE2E2',
-          ringBorder: '#FCA5A5',
+          ringBg: isDark ? 'rgba(239, 68, 68, 0.16)' : '#FEE2E2',
+          ringBorder: isDark ? '#EF4444' : '#FCA5A5',
           badgeText: badge || 'Action Required',
-          badgeBg: '#FEE2E2',
-          badgeColor: '#991B1B',
-          primaryBtnBg: colors.danger,
+          badgeBg: isDark ? 'rgba(239, 68, 68, 0.15)' : '#FEE2E2',
+          badgeColor: isDark ? '#FCA5A5' : '#991B1B',
+          primaryBtnBg: '#EF4444',
         };
       case 'warning':
         return {
           emoji: iconEmoji || '⚡',
-          ringBg: '#FEF3C7',
-          ringBorder: '#FCD34D',
+          ringBg: isDark ? 'rgba(245, 158, 11, 0.16)' : '#FEF3C7',
+          ringBorder: isDark ? '#F59E0B' : '#FCD34D',
           badgeText: badge || 'Notice',
-          badgeBg: '#FEF3C7',
-          badgeColor: '#92400E',
-          primaryBtnBg: colors.warning,
+          badgeBg: isDark ? 'rgba(245, 158, 11, 0.15)' : '#FEF3C7',
+          badgeColor: isDark ? '#FDE68A' : '#92400E',
+          primaryBtnBg: '#F59E0B',
         };
       case 'delete':
         return {
           emoji: iconEmoji || '🗑️',
-          ringBg: '#FEE2E2',
-          ringBorder: '#FCA5A5',
+          ringBg: isDark ? 'rgba(239, 68, 68, 0.16)' : '#FEE2E2',
+          ringBorder: isDark ? '#EF4444' : '#FCA5A5',
           badgeText: badge || 'Confirm Removal',
-          badgeBg: '#FEE2E2',
-          badgeColor: '#991B1B',
-          primaryBtnBg: colors.danger,
+          badgeBg: isDark ? 'rgba(239, 68, 68, 0.15)' : '#FEE2E2',
+          badgeColor: isDark ? '#FCA5A5' : '#991B1B',
+          primaryBtnBg: '#EF4444',
         };
       case 'payment':
         return {
           emoji: iconEmoji || '💳',
-          ringBg: '#EFF6FF',
-          ringBorder: '#93C5FD',
+          ringBg: isDark ? 'rgba(59, 130, 246, 0.16)' : '#EFF6FF',
+          ringBorder: isDark ? '#3B82F6' : '#93C5FD',
           badgeText: badge || 'Payment & Billing',
-          badgeBg: '#EFF6FF',
-          badgeColor: '#1E40AF',
-          primaryBtnBg: colors.primary,
+          badgeBg: isDark ? 'rgba(59, 130, 246, 0.15)' : '#EFF6FF',
+          badgeColor: isDark ? '#93C5FD' : '#1E40AF',
+          primaryBtnBg: theme.primary,
         };
       case 'booking':
         return {
-          emoji: iconEmoji || '📅',
-          ringBg: '#F5F3FF',
-          ringBorder: '#C4B5FD',
-          badgeText: badge || 'Reservation',
-          badgeBg: '#F5F3FF',
-          badgeColor: '#5B21B6',
-          primaryBtnBg: colors.primary,
+          emoji: iconEmoji || '🔌',
+          ringBg: isDark ? 'rgba(0, 208, 132, 0.16)' : '#DCFCE7',
+          ringBorder: isDark ? '#00D084' : '#86EFAC',
+          badgeText: badge || 'Slot Reservation',
+          badgeBg: isDark ? 'rgba(0, 208, 132, 0.15)' : '#DCFCE7',
+          badgeColor: isDark ? '#00D084' : '#15803D',
+          primaryBtnBg: theme.primary,
         };
       case 'confirmation':
         return {
-          emoji: iconEmoji || '❓',
-          ringBg: '#F1F5F9',
-          ringBorder: '#CBD5E1',
-          badgeText: badge || 'Confirmation',
-          badgeBg: '#F1F5F9',
-          badgeColor: '#334155',
-          primaryBtnBg: colors.primary,
+          emoji: iconEmoji || '🛡️',
+          ringBg: isDark ? 'rgba(255, 255, 255, 0.08)' : '#F1F5F9',
+          ringBorder: isDark ? 'rgba(255, 255, 255, 0.2)' : '#CBD5E1',
+          badgeText: badge || 'Confirm Action',
+          badgeBg: isDark ? 'rgba(255, 255, 255, 0.08)' : '#F1F5F9',
+          badgeColor: theme.textPrimary,
+          primaryBtnBg: theme.primary,
         };
       case 'input':
         return {
           emoji: iconEmoji || '✏️',
-          ringBg: '#F0FDF4',
-          ringBorder: '#BBF7D0',
+          ringBg: isDark ? 'rgba(0, 208, 132, 0.16)' : '#F0FDF4',
+          ringBorder: isDark ? '#00D084' : '#BBF7D0',
           badgeText: badge || 'Form',
-          badgeBg: '#F0FDF4',
-          badgeColor: '#166534',
-          primaryBtnBg: colors.primary,
+          badgeBg: isDark ? 'rgba(0, 208, 132, 0.15)' : '#F0FDF4',
+          badgeColor: isDark ? '#00D084' : '#166534',
+          primaryBtnBg: theme.primary,
         };
       case 'info':
       default:
         return {
           emoji: iconEmoji || '⚡',
-          ringBg: colors.ecoLight,
-          ringBorder: '#A7F3D0',
+          ringBg: isDark ? 'rgba(0, 208, 132, 0.16)' : '#DCFCE7',
+          ringBorder: isDark ? '#00D084' : '#A7F3D0',
           badgeText: badge || 'ChargeMesh',
-          badgeBg: colors.ecoLight,
-          badgeColor: colors.primaryDark,
-          primaryBtnBg: colors.primary,
+          badgeBg: isDark ? 'rgba(0, 208, 132, 0.15)' : '#DCFCE7',
+          badgeColor: isDark ? '#00D084' : '#064E3B',
+          primaryBtnBg: theme.primary,
         };
     }
   };
@@ -229,6 +232,8 @@ export const AppModal: React.FC<AppModalProps> = ({
             style={[
               styles.card,
               {
+                backgroundColor: theme.surface,
+                borderColor: theme.border,
                 opacity: cardOpacity,
                 transform: [{ scale: cardScale }, { translateY: cardTranslateY }],
               },
@@ -238,14 +243,20 @@ export const AppModal: React.FC<AppModalProps> = ({
             {/* Top-Right Absolute Close Cross Button */}
             {showCloseButton && (
               <TouchableOpacity
-                style={styles.closeBtn}
+                style={[
+                  styles.closeBtn,
+                  {
+                    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : theme.surfaceSecondary,
+                    borderColor: theme.border,
+                  },
+                ]}
                 onPress={onClose}
                 hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
                 activeOpacity={0.7}
                 accessibilityLabel="Close dialog"
                 accessibilityRole="button"
               >
-                <Text style={styles.closeIcon}>✕</Text>
+                <Text style={[styles.closeIcon, { color: theme.textPrimary }]}>✕</Text>
               </TouchableOpacity>
             )}
 
@@ -279,32 +290,59 @@ export const AppModal: React.FC<AppModalProps> = ({
               </View>
 
               {/* Title & Subtitle */}
-              <Text style={styles.title}>{title}</Text>
-              {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
+              <Text style={[styles.title, { color: theme.textPrimary }]}>{title}</Text>
+              {subtitle && (
+                <Text style={[styles.subtitle, { color: theme.textSecondary }]}>
+                  {subtitle}
+                </Text>
+              )}
 
               {/* Custom Children (e.g. form inputs, preset selectors) */}
               {children}
 
               {/* Itemized Details / Perks List */}
               {details && details.length > 0 && (
-                <View style={styles.detailsContainer}>
+                <View
+                  style={[
+                    styles.detailsContainer,
+                    {
+                      backgroundColor: isDark ? 'rgba(255, 255, 255, 0.04)' : theme.surfaceSecondary,
+                      borderColor: theme.border,
+                    },
+                  ]}
+                >
                   {details.map((item, index) => (
                     <View key={index}>
                       <View style={styles.detailRow}>
                         {item.icon && (
-                          <View style={styles.detailIconBadge}>
+                          <View
+                            style={[
+                              styles.detailIconBadge,
+                              { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#FFFFFF' },
+                            ]}
+                          >
                             <Text style={styles.detailEmoji}>{item.icon}</Text>
                           </View>
                         )}
                         <View style={styles.detailTextWrap}>
-                          <Text style={styles.detailTitle}>{item.title}</Text>
+                          <Text style={[styles.detailTitle, { color: theme.textPrimary }]}>
+                            {item.title}
+                          </Text>
                           {item.description && (
-                            <Text style={styles.detailDescription}>{item.description}</Text>
+                            <Text style={[styles.detailDescription, { color: theme.textSecondary }]}>
+                              {item.description}
+                            </Text>
                           )}
                         </View>
-                        {item.value && <Text style={styles.detailValue}>{item.value}</Text>}
+                        {item.value && (
+                          <Text style={[styles.detailValue, { color: theme.primary }]}>
+                            {item.value}
+                          </Text>
+                        )}
                       </View>
-                      {index < details.length - 1 && <View style={styles.detailDivider} />}
+                      {index < details.length - 1 && (
+                        <View style={[styles.detailDivider, { backgroundColor: theme.border }]} />
+                      )}
                     </View>
                   ))}
                 </View>
@@ -315,8 +353,12 @@ export const AppModal: React.FC<AppModalProps> = ({
                 <TouchableOpacity
                   style={[
                     styles.primaryButton,
-                    primaryAction.variant === 'danger' && styles.btnDanger,
-                    primaryAction.variant === 'secondary' && styles.btnSecondary,
+                    { backgroundColor: styleConfig.primaryBtnBg },
+                    primaryAction.variant === 'secondary' && {
+                      backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : theme.surfaceSecondary,
+                      borderColor: theme.border,
+                      borderWidth: 1,
+                    },
                     primaryAction.disabled && styles.btnDisabled,
                   ]}
                   activeOpacity={0.88}
@@ -324,12 +366,12 @@ export const AppModal: React.FC<AppModalProps> = ({
                   disabled={primaryAction.loading || primaryAction.disabled}
                 >
                   {primaryAction.loading ? (
-                    <ActivityIndicator color={colors.textInverse} />
+                    <ActivityIndicator color="#FFFFFF" />
                   ) : (
                     <Text
                       style={[
                         styles.primaryButtonText,
-                        primaryAction.variant === 'secondary' && styles.btnSecondaryText,
+                        primaryAction.variant === 'secondary' && { color: theme.textPrimary },
                       ]}
                     >
                       {primaryAction.label}
@@ -341,15 +383,23 @@ export const AppModal: React.FC<AppModalProps> = ({
               {/* Secondary Action Button */}
               {secondaryAction && (
                 <TouchableOpacity
-                  style={styles.secondaryButton}
+                  style={[
+                    styles.secondaryButton,
+                    {
+                      backgroundColor: isDark ? 'rgba(255, 255, 255, 0.06)' : theme.surfaceSecondary,
+                      borderColor: theme.border,
+                    },
+                  ]}
                   activeOpacity={0.85}
                   onPress={secondaryAction.onPress}
                   disabled={secondaryAction.loading || secondaryAction.disabled}
                 >
                   {secondaryAction.loading ? (
-                    <ActivityIndicator color={colors.textPrimary} />
+                    <ActivityIndicator color={theme.textPrimary} />
                   ) : (
-                    <Text style={styles.secondaryButtonText}>{secondaryAction.label}</Text>
+                    <Text style={[styles.secondaryButtonText, { color: theme.textPrimary }]}>
+                      {secondaryAction.label}
+                    </Text>
                   )}
                 </TouchableOpacity>
               )}
@@ -361,7 +411,9 @@ export const AppModal: React.FC<AppModalProps> = ({
                   activeOpacity={0.7}
                   onPress={onClose}
                 >
-                  <Text style={styles.dismissText}>{dismissLabel}</Text>
+                  <Text style={[styles.dismissText, { color: theme.textSecondary }]}>
+                    {dismissLabel}
+                  </Text>
                 </TouchableOpacity>
               )}
             </ScrollView>
@@ -389,14 +441,14 @@ const styles = StyleSheet.create({
     position: 'relative',
     width: '90%',
     maxWidth: 380,
-    backgroundColor: colors.surface,
+    backgroundColor: '#FFFFFF',
     borderRadius: 24,
     paddingHorizontal: 18,
     paddingTop: 22,
     paddingBottom: 16,
     ...shadows.elevated,
     borderWidth: 1,
-    borderColor: colors.borderLight,
+    borderColor: '#E2E8F0',
     alignSelf: 'center',
   },
   scrollView: {
@@ -412,9 +464,9 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: colors.surfaceSecondary,
+    backgroundColor: '#F1F5F9',
     borderWidth: 1,
-    borderColor: colors.borderDark,
+    borderColor: '#CBD5E1',
     alignItems: 'center',
     justifyContent: 'center',
     elevation: 3,
@@ -426,7 +478,7 @@ const styles = StyleSheet.create({
   closeIcon: {
     fontSize: 14,
     fontWeight: '800',
-    color: colors.textPrimary,
+    color: '#0F172A',
     textAlign: 'center',
     lineHeight: Platform.OS === 'android' ? 18 : 14,
     includeFontPadding: false,
@@ -468,14 +520,14 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: '800',
-    color: colors.textPrimary,
+    color: '#0F172A',
     textAlign: 'center',
     letterSpacing: -0.3,
     paddingHorizontal: spacing.xs,
   },
   subtitle: {
     fontSize: 12.5,
-    color: colors.textSecondary,
+    color: '#475569',
     textAlign: 'center',
     lineHeight: 17,
     marginTop: spacing.xs,
@@ -484,12 +536,12 @@ const styles = StyleSheet.create({
   },
   detailsContainer: {
     width: '100%',
-    backgroundColor: colors.surfaceSecondary,
+    backgroundColor: '#F1F5F9',
     borderRadius: borderRadius.xl,
     padding: spacing.md,
     marginBottom: spacing.md,
     borderWidth: 1,
-    borderColor: colors.borderLight,
+    borderColor: '#E2E8F0',
   },
   detailRow: {
     flexDirection: 'row',
@@ -499,12 +551,12 @@ const styles = StyleSheet.create({
     width: 30,
     height: 30,
     borderRadius: 15,
-    backgroundColor: colors.surface,
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: spacing.sm,
     borderWidth: 1,
-    borderColor: colors.borderLight,
+    borderColor: '#E2E8F0',
   },
   detailEmoji: {
     fontSize: 14,
@@ -515,46 +567,46 @@ const styles = StyleSheet.create({
   detailTitle: {
     fontSize: 12,
     fontWeight: '700',
-    color: colors.textPrimary,
+    color: '#0F172A',
   },
   detailDescription: {
     fontSize: 10.5,
-    color: colors.textSecondary,
+    color: '#475569',
     marginTop: 1,
   },
   detailValue: {
     fontSize: 12,
     fontWeight: '800',
-    color: colors.primaryDark,
+    color: '#064E3B',
     marginLeft: spacing.sm,
   },
   detailDivider: {
     height: 1,
-    backgroundColor: colors.border,
+    backgroundColor: '#E2E8F0',
     marginVertical: spacing.xs + 2,
   },
   primaryButton: {
     width: '100%',
-    backgroundColor: colors.primary,
+    backgroundColor: '#00D084',
     paddingVertical: 12,
     borderRadius: borderRadius.lg,
     alignItems: 'center',
     marginTop: spacing.xs,
     marginBottom: spacing.xs,
-    shadowColor: colors.primary,
+    shadowColor: '#00D084',
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.2,
     shadowRadius: 6,
     elevation: 3,
   },
   btnDanger: {
-    backgroundColor: colors.danger,
-    shadowColor: colors.danger,
+    backgroundColor: '#EF4444',
+    shadowColor: '#EF4444',
   },
   btnSecondary: {
-    backgroundColor: colors.surfaceSecondary,
+    backgroundColor: '#F1F5F9',
     borderWidth: 1,
-    borderColor: colors.borderDark,
+    borderColor: '#CBD5E1',
     shadowOpacity: 0,
     elevation: 0,
   },
@@ -564,25 +616,25 @@ const styles = StyleSheet.create({
   primaryButtonText: {
     fontSize: 14,
     fontWeight: '700',
-    color: colors.textInverse,
+    color: '#FFFFFF',
   },
   btnSecondaryText: {
-    color: colors.textPrimary,
+    color: '#0F172A',
   },
   secondaryButton: {
     width: '100%',
-    backgroundColor: colors.surface,
+    backgroundColor: '#FFFFFF',
     paddingVertical: 11,
     borderRadius: borderRadius.lg,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: colors.borderDark,
+    borderColor: '#CBD5E1',
     marginBottom: spacing.xs,
   },
   secondaryButtonText: {
     fontSize: 13,
     fontWeight: '600',
-    color: colors.textPrimary,
+    color: '#0F172A',
   },
   dismissBtn: {
     paddingVertical: spacing.xs,
@@ -591,6 +643,7 @@ const styles = StyleSheet.create({
   dismissText: {
     fontSize: 12,
     fontWeight: '600',
-    color: colors.textMuted,
+    color: '#94A3B8',
   },
 });
+

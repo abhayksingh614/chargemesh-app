@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { FreshnessState } from '@chargemesh/shared-types';
+import { STATUS_STALE_THRESHOLD_SECONDS } from '@chargemesh/shared-constants';
 import { colors, typography } from '../theme';
 
 interface FreshnessIndicatorProps {
@@ -30,7 +31,7 @@ export const FreshnessIndicator: React.FC<FreshnessIndicatorProps> = ({
     );
   }
 
-  if (freshnessState === FreshnessState.DELAYED || dataAgeSeconds >= 300) {
+  if (freshnessState === FreshnessState.DELAYED || dataAgeSeconds >= STATUS_STALE_THRESHOLD_SECONDS) {
     return (
       <View style={styles.row}>
         <Text style={[styles.text, { color: colors.status.stale }]}>

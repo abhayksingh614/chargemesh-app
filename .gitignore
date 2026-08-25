@@ -42,9 +42,15 @@ out/
 .next/
 .turbo/
 
+# ─── Shared Packages (compiled output) ───────────────────────────────────────
+packages/*/dist/
+packages/*/build/
+packages/*/out/
+
 # ─── React Native ─────────────────────────────────────────────────────────────
 # Android
 apps/mobile/android/local.properties
+apps/mobile/android/keystore.properties
 apps/mobile/android/.gradle/
 apps/mobile/android/app/build/
 apps/mobile/android/build/

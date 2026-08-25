@@ -1,37 +1,48 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { useCharging } from '../context';
-import { colors, spacing } from '../theme';
+import { useCharging, useTheme } from '../context';
+import { spacing } from '../theme';
 
 export const ActiveSessionBanner: React.FC = () => {
   const navigation = useNavigation<any>();
   const { activeSession, isCharging } = useCharging();
+  const { theme } = useTheme();
 
   if (!isCharging || !activeSession) return null;
 
   return (
     <TouchableOpacity
       activeOpacity={0.9}
-      style={styles.container}
+      style={[
+        styles.container,
+        {
+          backgroundColor: theme.surface,
+          borderTopColor: theme.primary,
+        },
+      ]}
       onPress={() => navigation.navigate('LiveCharging')}
     >
       <View style={styles.leftCol}>
         <View style={styles.badge}>
-          <Text style={styles.pulseDot}>⚡</Text>
-          <Text style={styles.badgeText}>LIVE CHARGE</Text>
+          <Text style={[styles.pulseDot, { color: theme.primary }]}>⚡</Text>
+          <Text style={[styles.badgeText, { color: theme.primary }]}>LIVE CHARGE</Text>
         </View>
-        <Text style={styles.stationTitle} numberOfLines={1}>
+        <Text style={[styles.stationTitle, { color: theme.textPrimary }]} numberOfLines={1}>
           {activeSession.station.name}
         </Text>
       </View>
 
       <View style={styles.rightCol}>
         <View style={styles.metricItem}>
-          <Text style={styles.socValue}>{Math.round(activeSession.currentSoc)}%</Text>
-          <Text style={styles.metricLabel}>{activeSession.currentPowerKw.toFixed(0)} kW</Text>
+          <Text style={[styles.socValue, { color: theme.primary }]}>
+            {Math.round(activeSession.currentSoc)}%
+          </Text>
+          <Text style={[styles.metricLabel, { color: theme.textSecondary }]}>
+            {activeSession.currentPowerKw.toFixed(0)} kW
+          </Text>
         </View>
-        <Text style={styles.arrowIcon}>→</Text>
+        <Text style={[styles.arrowIcon, { color: theme.textSecondary }]}>→</Text>
       </View>
     </TouchableOpacity>
   );
@@ -39,15 +50,14 @@ export const ActiveSessionBanner: React.FC = () => {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: colors.surface,
     borderTopWidth: 2,
-    borderTopColor: colors.primary,
+    borderTopColor: '#00D084',
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    shadowColor: colors.primary,
+    shadowColor: '#00D084',
     shadowOffset: { width: 0, height: -3 },
     shadowOpacity: 0.12,
     shadowRadius: 8,
@@ -65,18 +75,17 @@ const styles = StyleSheet.create({
   pulseDot: {
     fontSize: 12,
     marginRight: 4,
-    color: colors.primary,
+    color: '#00D084',
   },
   badgeText: {
     fontSize: 10,
     fontWeight: '800',
-    color: colors.primary,
+    color: '#00D084',
     letterSpacing: 0.8,
   },
   stationTitle: {
     fontSize: 13,
     fontWeight: '600',
-    color: colors.textPrimary,
   },
   rightCol: {
     flexDirection: 'row',
@@ -89,16 +98,15 @@ const styles = StyleSheet.create({
   socValue: {
     fontSize: 18,
     fontWeight: '800',
-    color: colors.primary,
+    color: '#00D084',
   },
   metricLabel: {
     fontSize: 11,
     fontWeight: '600',
-    color: colors.textSecondary,
   },
   arrowIcon: {
     fontSize: 18,
     fontWeight: '700',
-    color: colors.primary,
   },
 });
+

@@ -1,5 +1,8 @@
 # ChargeMesh — Requirements Specification
 
+> **Status:** ⚠️ HISTORICAL — This is a pre-development requirements document from the planning phase.
+> For the current implemented feature status, see [`PRODUCT_FEATURES.md`](PRODUCT_FEATURES.md).
+
 ## 1. Functional Requirements (FR)
 
 ### FR-01: Station Discovery & Navigation

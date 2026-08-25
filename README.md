@@ -2,61 +2,55 @@
 
 > **One app. Multiple networks. Verified chargers. One charging experience.**
 
-ChargeMesh is a unified EV charging interoperability platform for India. It aggregates participating Charge Point Operator (CPO) networks into a single cross-platform mobile experience for drivers, backed by a web-only admin portal for operations.
+ChargeMesh is a unified EV charging interoperability platform for India. It aggregates participating Charge Point Operator (CPO) networks into a single cross‑platform mobile experience for drivers, backed by a web‑only admin portal for operations.
 
-**Tagline:** Charge Green. Drive Smart.
+## Tagline
+**Charge Green. Drive Smart.**
 
 ---
 
 ## Monorepo Structure
-
 ```
 chargemesh-app/
-├── apps/
-│   ├── mobile/          # React Native — Android + iOS customer app
-│   ├── admin/           # Next.js — Web-only admin portal
-│   └── backend/         # NestJS — Core API + CPO Integration Hub
-├── packages/
-│   ├── shared-types/    # Shared TypeScript types (API contracts, models)
-│   ├── shared-constants/# Shared constants (status enums, connector types)
-│   └── tsconfig/        # Shared TypeScript config base
-├── .docs/               # Project documentation (source + generated)
-├── .github/             # CI/CD workflows and issue templates
-└── src/
-    └── logo/            # Brand assets
+├─ apps/
+│  ├─ mobile/   # React Native – Android + iOS driver app (fully implemented)
+│  ├─ admin/    # Next.js – admin portal (scaffolded, not yet functional)
+│  └─ backend/  # NestJS – API & CPO integration hub (scaffolded, not yet connected to mobile)
+├─ packages/
+│  ├─ shared-types/      # TypeScript types used across packages
+│  ├─ shared-constants/  # Business rule constants
+│  └─ tsconfig/          # Shared TS config
+├─ docs/                 # Canonical project documentation (18 files)
+└─ .docs/                # Historical planning docs & archive
 ```
 
 ---
 
 ## Tech Stack
-
 | Layer | Technology |
-|-------|-----------|
-| Mobile | React Native (TypeScript) — Android + iOS |
+|-------|------------|
+| Mobile | React Native (TypeScript) – Android + iOS |
 | Admin Web | Next.js (React + TypeScript) |
 | Backend API | NestJS (Node.js + TypeScript) |
 | Database | PostgreSQL + PostGIS |
 | Cache | Redis |
 | Cloud | AWS |
 | Maps | MapLibre |
-| Payments | Razorpay |
-| Push Notifications | Firebase (FCM for Android + APNs for iOS) |
-| CPO Protocol | OCPI 2.3.0 + Proprietary Adapters |
+| Payments | Razorpay (tokenized) |
+| Push Notifications | Firebase (FCM / APNs) |
+| CPO Protocol | OCPI 2.3.0 + proprietary adapters |
 
 ---
 
 ## Quick Start
-
 ### Prerequisites
-
 - Node.js >= 20.x
 - npm >= 10.x (or pnpm >= 9.x)
-- React Native environment (Android Studio / Xcode)
-- Docker (for local PostgreSQL + Redis)
-- AWS CLI configured
+- React Native dev environment (Android Studio / Xcode)
+- Docker (local PostgreSQL & Redis)
+- AWS CLI configured (for production secrets)
 
 ### 1. Clone & Install
-
 ```bash
 git clone https://github.com/abhayksingh614/chargemesh-app.git
 cd chargemesh-app
@@ -64,113 +58,74 @@ npm install
 ```
 
 ### 2. Environment Setup
-
 ```bash
-# Copy root env template
+# Root env (shared variables)
 cp .env.example .env
-
-# Copy app-specific env templates
+# App‑specific env files
 cp apps/backend/.env.example    apps/backend/.env
 cp apps/admin/.env.example      apps/admin/.env
 cp apps/mobile/.env.example     apps/mobile/.env
 ```
+> **Never commit `.env` files.** All secrets should be stored in AWS Secrets Manager for production.
 
-Fill in the required values — see [Environment Variables](#environment-variables) below.
-
-### 3. Start Local Services (Docker)
-
+### 3. Start Local Services
 ```bash
-docker-compose up -d
+docker-compose up -d   # PostgreSQL + Redis
 ```
 
-This starts:
-- PostgreSQL (port 5432)
-- Redis (port 6379)
-
-### 4. Run Apps
-
+### 4. Run the Applications
 ```bash
 # Backend API
 npm run dev --workspace=apps/backend
 
-# Admin Portal
+# Admin portal
 npm run dev --workspace=apps/admin
 
 # Mobile (Metro bundler)
 npm run start --workspace=apps/mobile
-
-# Mobile — Android
+# Android
 npm run android --workspace=apps/mobile
-
-# Mobile — iOS
+# iOS
 npm run ios --workspace=apps/mobile
 ```
 
 ---
 
-## Environment Variables
-
-See:
-- [`.env.example`](.env.example) — root shared variables
-- [`apps/backend/.env.example`](apps/backend/.env.example) — backend-specific
-- [`apps/admin/.env.example`](apps/admin/.env.example) — admin-specific
-- [`apps/mobile/.env.example`](apps/mobile/.env.example) — mobile-specific
-
-> ⚠️ **Never commit `.env` files. All secrets must go through AWS Secrets Manager in production.**
-
----
-
 ## Documentation & Guidelines
+All canonical project specifications live under [`docs/`](docs/):
+- `PROJECT_OVERVIEW.md` – Product vision & core architecture
+- `SCREENS_AND_NAVIGATION.md` – Detailed screen catalog and navigation flow
+- `PRODUCT_FEATURES.md` – Implemented vs planned feature matrix
+- `BUILD_AND_TESTING.md` – Build, install, and device‑testing procedures
+- `ARCHITECTURE.md` – Current local‑first architecture diagram
+- `TECHNOLOGY_STACK.md` – Full stack with version numbers
+- `DESIGN_SYSTEM.md` – UI tokens, dark/light mode, micro‑interactions
+- `VEHICLE_DATABASE.md` – EV catalog data model
+- `CPO_AND_STATIONS.md` – Station & CPO data model
+- `SECURITY.md` – Security practices and dev‑only credentials handling
+- `LEGAL_PRIVACY.md` – Legal & privacy notice for end‑users
 
-All canonical project specifications and architectural documentation live in [`docs/`](docs/) and [`.docs/`](.docs/):
-
-| Document | Description |
-|----------|-------------|
-| [Technology Stack](docs/TECHNOLOGY_STACK.md) | Authoritative stack specification & version matrix |
-| [Development Rules](DEVELOPMENT_RULES.md) | Local-first development rules & git workflow gates |
-| [Design System](DESIGN_SYSTEM.md) | ChargeMesh UI/UX Design System, tokens, modal architecture & design guidelines |
-| [Project Overview](docs/PROJECT_OVERVIEW.md) | Product vision, value proposition & core architecture |
-| [Requirements](docs/REQUIREMENTS.md) | Functional & non-functional requirements specification |
-| [System Architecture](docs/ARCHITECTURE.md) | Subsystem architecture & data flow diagrams |
-| [Application Workflows](docs/WORKFLOW.md) | Driver journey & OCPP sequence diagrams |
-| [API Documentation](docs/API_DOCUMENTATION.md) | REST & WebSocket telemetry API specs |
-| [Database Schema](docs/DATABASE_SCHEMA.md) | Relational & time-series data models |
-| [Deployment Guide](docs/DEPLOYMENT.md) | Local container setup & service port matrix |
-| [Deep Project Specs](.docs/ChargeMesh_Project_Documentation.md) | Extended product requirements & business model |
+> **NOTE:** Demo credentials (phone numbers and OTP `123456`) are included for development/testing only and must be removed or replaced before any production release.
 
 ---
 
-## Key Features & Recent Updates
-
-| Feature / Update | Description |
-|---|---|
-| ☀️ **Dynamic Time-Based Greeting** | Homepage dynamically greets the driver based on local device time: *Good Morning* (5 AM – 12 PM), *Good Afternoon* (12 PM – 5 PM), or *Good Evening* (5 PM – 5 AM). |
-| 🗺️ **State & District Search Engine** | Comprehensive master dataset of **36 Indian States & Union Territories** and **700+ verified districts** integrated into interactive Map bottom sheets with instant search & filter. |
-| 🎁 **₹100 Joining Bonus** | New driver registrations automatically receive an initial **₹100 joining bonus** credited to their in-app charging wallet. |
-| 📱 **Portrait-Only Lock** | Android screen orientation locked strictly to vertical portrait mode for consistent layout rendering and zero distortion. |
-| 🔐 **Clean Background Authentication** | Streamlined production login & registration screens. Demo driver profiles (*Rahul Sharma* `9412602135` & *Abhay Kumar Singh* `6399414330`, OTP `123456`) operate in the background layer without cluttering the UI. |
-| 🧼 **Streamlined Dashboard** | Removed redundant "Offers for You" carousel from the homepage for a focused EV telemetry and station discovery experience. |
-| 🎨 **Standardized UI Spacing System** | Global tokenized design system (`spacing.*`, `borderRadius.*`, `CM_COLORS.*`) with dynamic safe-area insets across modals, sticky bottom bars, and cards. |
-| 🏗️ **Monorepo Workspaces** | Complete npm workspace support for `@chargemesh/mobile`, `@chargemesh/backend`, `@chargemesh/admin`, `@chargemesh/shared-types`, `@chargemesh/shared-constants`, and `@chargemesh/tsconfig`. |
-
----
-
-## Key Product Rules
-
-1. **UNKNOWN ≠ AVAILABLE** — Unknown/Stale charger status must never show as Available
-2. **Connector-first** — Always show connector-level status, not just station-level
-3. **Mobile never talks to CPO APIs directly** — All CPO traffic goes through the backend Integration Hub
-4. **No raw payment credentials in mobile** — Razorpay tokenization only
-5. **Every session needs reconciliation** — Session → CDR → Payment must all match
+## Key Features (as of v1.3.0)
+- **22 fully‑implemented screens** covering onboarding, live charging telemetry, wallet ledger, garage, profile, and eco metrics.
+- **Native QR Scanner** – Hardware-accelerated CameraX & Google ML Kit with real-time barcode decoding.
+- **Native Fingerprint App Lock** – Hardware Keystore protection via Android `BiometricPrompt` on app launch and resume.
+- **Dedicated Add Money & Wallet Ledger** – Full-screen multi-method payment flow (Card, UPI VPA, Net Banking) with persistent running ledger.
+- **Unified Demo Environment** – Single synchronized prototype persona (`Abhay`) with mathematically reconciled sessions, wallet transactions, and favorites.
+- **Bilingual UI** – English & Hindi with persistent language toggle.
+- **Dynamic Light/Dark Mode** – Powered by `ThemeContext` and semantic design tokens.
+- **MapLibre Integration** – Interactive map with state & district search (36 states, 700+ districts).
+- **EV Catalog & Garage** – Multi-vehicle compatibility filtering and garage management.
 
 ---
 
 ## Contributing
-
-See [CONTRIBUTING.md](.github/CONTRIBUTING.md)
+Please see [.github/CONTRIBUTING.md](.github/CONTRIBUTING.md) for the contribution workflow, coding standards, and PR guidelines.
 
 ---
 
 ## License
-
-Private & Confidential — ChargeMesh © 2026
+**Private & Confidential — ChargeMesh © 2026**

@@ -1,5 +1,9 @@
 # ChargeMesh — REST & Telemetry API Documentation
 
+> **Status:** ⚠️ PLANNED — Not yet implemented or connected to the mobile app.
+> The backend NestJS API is scaffolded only. The mobile app currently uses local mock data.
+> This document describes the intended future API. See [`ARCHITECTURE.md`](ARCHITECTURE.md) for current state.
+
 ## 1. Authentication Endpoints
 
 ### `POST /api/v1/auth/register`
@@ -8,7 +12,7 @@
   ```json
   {
     "phoneNumber": "+919876543210",
-    "name": "Alex Driver",
+    "name": "Rahul",
     "vehicle": {
       "make": "Tata",
       "model": "Nexon EV Max",

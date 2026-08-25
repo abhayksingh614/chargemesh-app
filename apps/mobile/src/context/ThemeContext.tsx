@@ -11,14 +11,21 @@ export interface ThemeColors {
   background: string;
   surface: string;
   surfaceSecondary: string;
+  surfaceElevated: string;
   cardBg: string;
   cardBorder: string;
   inputBg: string;
   textPrimary: string;
   textSecondary: string;
   textMuted: string;
+  textInverse: string;
   border: string;
   borderLight: string;
+  borderDark: string;
+  statusAvailableBg: string;
+  statusBusyBg: string;
+  statusUnavailableBg: string;
+  ecoLight: string;
   isDark: boolean;
 }
 
@@ -30,14 +37,21 @@ const darkTheme: ThemeColors = {
   background: '#06131D',
   surface: '#071826',
   surfaceSecondary: '#0B2236',
+  surfaceElevated: '#0F273D',
   cardBg: 'rgba(7, 24, 38, 0.92)',
   cardBorder: 'rgba(255, 255, 255, 0.14)',
   inputBg: 'rgba(2, 6, 23, 0.75)',
   textPrimary: '#FFFFFF',
   textSecondary: '#94A3B8',
   textMuted: '#64748B',
+  textInverse: '#0F172A',
   border: 'rgba(255, 255, 255, 0.12)',
   borderLight: 'rgba(255, 255, 255, 0.08)',
+  borderDark: 'rgba(255, 255, 255, 0.22)',
+  statusAvailableBg: 'rgba(0, 208, 132, 0.15)',
+  statusBusyBg: 'rgba(245, 158, 11, 0.15)',
+  statusUnavailableBg: 'rgba(239, 68, 68, 0.15)',
+  ecoLight: 'rgba(0, 208, 132, 0.12)',
   isDark: true,
 };
 
@@ -49,14 +63,21 @@ const lightTheme: ThemeColors = {
   background: '#F8FAFC',
   surface: '#FFFFFF',
   surfaceSecondary: '#F1F5F9',
+  surfaceElevated: '#FFFFFF',
   cardBg: '#FFFFFF',
   cardBorder: '#E2E8F0',
   inputBg: '#F1F5F9',
   textPrimary: '#0F172A',
-  textSecondary: '#64748B',
-  textMuted: '#94A3B8',
+  textSecondary: '#475569',
+  textMuted: '#64748B',
+  textInverse: '#FFFFFF',
   border: '#E2E8F0',
   borderLight: '#F1F5F9',
+  borderDark: '#CBD5E1',
+  statusAvailableBg: '#DCFCE7',
+  statusBusyBg: '#FEF3C7',
+  statusUnavailableBg: '#FEE2E2',
+  ecoLight: '#ECFDF5',
   isDark: false,
 };
 

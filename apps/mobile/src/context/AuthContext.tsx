@@ -1,20 +1,17 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Vehicle, ConnectorType } from '@chargemesh/shared-types';
+import {
+  Vehicle,
+  ConnectorType,
+  UserProfile,
+  UserGender,
+  ChargingPreferences,
+  NotificationPreferences,
+} from '@chargemesh/shared-types';
 import { mockVehicles } from '../services/mockData';
+import { WELCOME_BONUS_AMOUNT_PAISE } from '../constants/appConstants';
 
-export interface UserProfile {
-  id: string;
-  name: string;
-  phoneNumber: string;
-  email: string;
-  avatarUrl?: string;
-  walletBalancePaise: number;
-  totalKwhCharged: number;
-  co2SavedKg: number;
-  totalSessions: number;
-  authProvider?: 'phone' | 'email' | 'google' | 'guest';
-}
+export { UserProfile, UserGender, ChargingPreferences, NotificationPreferences };
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -28,7 +25,11 @@ interface AuthContextType {
   updateUserProfile: (updated: Partial<UserProfile>) => void;
   addVehicle: (vehicle: Omit<Vehicle, 'id' | 'userId' | 'createdAt' | 'updatedAt'>) => void;
   updateVehicle: (id: string, updated: Partial<Vehicle>) => void;
-  topUpWallet: (amountPaise: number) => void;
+  deleteVehicle: (id: string) => void;
+  topUpWallet: (
+    amountPaise: number,
+    referenceId?: string
+  ) => { success: boolean; isDuplicate: boolean; newBalancePaise: number };
   login: (emailOrPhone: string, password?: string) => Promise<boolean>;
   sendPhoneOtp: (phoneNumber: string) => Promise<boolean>;
   loginWithPhoneOtp: (phoneNumber: string, otp: string) => Promise<boolean>;
@@ -46,23 +47,36 @@ interface AuthContextType {
   resetOnboarding: () => Promise<void>;
 }
 
-
 // Build Version Identifier for Automatic Fresh-Launch Reset
-export const CURRENT_BUILD_ID = 'cm_build_2026_08_22_147';
+export const CURRENT_BUILD_ID = 'cm_build_2026_08_26_v126_unifiedmock';
 
 const STORAGE_KEYS = {
   USER_PROFILE: `@chargemesh:user_profile_${CURRENT_BUILD_ID}`,
   AUTH_TOKEN: `@chargemesh:auth_token_${CURRENT_BUILD_ID}`,
   ONBOARDING: `@chargemesh:onboarding_${CURRENT_BUILD_ID}`,
+  VEHICLES: `@chargemesh:vehicles_${CURRENT_BUILD_ID}`,
+  ACTIVE_VEHICLE: `@chargemesh:active_vehicle_${CURRENT_BUILD_ID}`,
   LAST_BUILD: '@chargemesh:last_installed_build',
 };
 
 export interface DemoUserCredentials {
   name: string;
+  firstName: string;
+  lastName: string;
   phoneNumber: string;
   email: string;
   password: string;
   otp: string;
+  dob: string;
+  gender: UserGender;
+  state: string;
+  district: string;
+  city: string;
+  pincode: string;
+  address: string;
+  userCode: string;
+  membershipTier: string;
+  memberSince: string;
   walletBalancePaise: number;
   totalKwhCharged: number;
   co2SavedKg: number;
@@ -73,36 +87,62 @@ export interface DemoUserCredentials {
 
 export const DEMO_USER_DATABASE: DemoUserCredentials[] = [
   {
-    name: 'Rahul Sharma',
-    phoneNumber: '9412602135',
-    email: 'rahul123@gmail.com',
+    name: 'Abhay',
+    firstName: 'Abhay',
+    lastName: 'Singh',
+    phoneNumber: '9876543210',
+    email: 'abhay@gmail.com',
     password: 'Hello@123',
     otp: '123456',
-    walletBalancePaise: 154000, // ₹1,540.00
+    dob: '1993-11-22',
+    gender: UserGender.MALE,
+    state: 'Uttar Pradesh',
+    district: 'Gautam Buddha Nagar',
+    city: 'Noida',
+    pincode: '201301',
+    address: 'Tower 4, Sector 62, Electronic City',
+    userCode: 'CM-DRV-6399',
+    membershipTier: 'ChargeMesh Elite Member',
+    memberSince: 'November 2023',
+    walletBalancePaise: 204000, // ₹2,040.00 (Authoritative reconciled balance)
     totalKwhCharged: 428.5,
     co2SavedKg: 351.4,
     totalSessions: 18,
-    vehicleModel: 'Tata Nexon EV Max',
+    vehicleModel: 'Tata Nexon EV Max Empowered+',
     vehiclePlate: 'DL 8C BC 2026',
   },
   {
-    name: 'Abhay Kumar Singh',
-    phoneNumber: '6399414330',
-    email: 'abhay123@gmail.com',
+    name: 'Rahul',
+    firstName: 'Rahul',
+    lastName: 'Sharma',
+    phoneNumber: '9412602135',
+    email: 'rahul@gmail.com',
     password: 'Hello@123',
     otp: '123456',
-    walletBalancePaise: 210000, // ₹2,100.00
-    totalKwhCharged: 612.0,
-    co2SavedKg: 501.8,
-    totalSessions: 26,
-    vehicleModel: 'MG ZS EV Exclusive Pro',
-    vehiclePlate: 'UP 16 DX 9941',
+    dob: '1995-06-14',
+    gender: UserGender.MALE,
+    state: 'Nct of Delhi',
+    district: 'New Delhi',
+    city: 'New Delhi',
+    pincode: '110001',
+    address: 'A-42, Barakhamba Road, Connaught Place',
+    userCode: 'CM-DRV-9412',
+    membershipTier: 'ChargeMesh Pro Driver',
+    memberSince: 'January 2024',
+    walletBalancePaise: 204000,
+    totalKwhCharged: 428.5,
+    co2SavedKg: 351.4,
+    totalSessions: 18,
+    vehicleModel: 'Tata Nexon EV Max Empowered+',
+    vehiclePlate: 'DL 8C BC 2026',
   },
 ];
 
 const guestUser: UserProfile = {
   id: 'usr-guest',
   name: 'Guest Driver',
+  firstName: 'Guest',
+  lastName: 'Driver',
   phoneNumber: '',
   email: '',
   walletBalancePaise: 0,
@@ -110,6 +150,9 @@ const guestUser: UserProfile = {
   co2SavedKg: 0,
   totalSessions: 0,
   authProvider: 'guest',
+  joiningBonusStatus: 'PENDING',
+  joiningBonusAmountPaise: 10000,
+  profileCompletionPercentage: 20,
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -144,11 +187,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           return;
         }
 
-        const [savedUser, savedToken, savedOnboarding] = await Promise.all([
+        const [savedUser, savedToken, savedOnboarding, savedVehicles, savedActiveVeh] = await Promise.all([
           AsyncStorage.getItem(STORAGE_KEYS.USER_PROFILE),
           AsyncStorage.getItem(STORAGE_KEYS.AUTH_TOKEN),
           AsyncStorage.getItem(STORAGE_KEYS.ONBOARDING),
+          AsyncStorage.getItem(STORAGE_KEYS.VEHICLES),
+          AsyncStorage.getItem(STORAGE_KEYS.ACTIVE_VEHICLE),
         ]);
+
+        if (savedVehicles) {
+          try {
+            const parsedVehicles = JSON.parse(savedVehicles);
+            if (Array.isArray(parsedVehicles) && parsedVehicles.length > 0) {
+              setVehicles(parsedVehicles);
+              if (savedActiveVeh) {
+                setActiveVehicleIdState(savedActiveVeh);
+              } else {
+                const def = parsedVehicles.find((v: Vehicle) => v.isDefault) || parsedVehicles[0];
+                setActiveVehicleIdState(def.id);
+              }
+            }
+          } catch {}
+        }
 
         if (savedUser && savedToken) {
           setUser(JSON.parse(savedUser));
@@ -210,24 +270,84 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         ? {
             id: `usr-${demoUser.phoneNumber}`,
             name: demoUser.name,
+            firstName: demoUser.firstName,
+            lastName: demoUser.lastName,
             phoneNumber: formattedPhone,
             email: demoUser.email,
+            dob: demoUser.dob,
+            gender: demoUser.gender,
+            state: demoUser.state,
+            district: demoUser.district,
+            city: demoUser.city,
+            pincode: demoUser.pincode,
+            address: demoUser.address,
+            userCode: demoUser.userCode,
+            membershipTier: demoUser.membershipTier,
+            memberSince: demoUser.memberSince,
+            isPhoneVerified: true,
+            isEmailVerified: true,
+            profileCompletionPercentage: 95,
+            joiningBonusStatus: 'CREDITED',
+            joiningBonusAmountPaise: 10000,
             walletBalancePaise: demoUser.walletBalancePaise,
             totalKwhCharged: demoUser.totalKwhCharged,
             co2SavedKg: demoUser.co2SavedKg,
             totalSessions: demoUser.totalSessions,
             authProvider: 'phone',
+            chargingPreferences: {
+              autoFilterIncompatible: true,
+              preferredSpeed: 'ULTRA_FAST',
+              preferredConnector: ConnectorType.CCS2,
+              preferredNetworks: ['Tata Power EZ Charge', 'Jio-bp pulse'],
+              searchRadiusKm: 25,
+            },
+            notificationPreferences: {
+              sessionAlerts: true,
+              completionAlerts: true,
+              stationAvailabilityAlerts: true,
+              emailInvoices: true,
+              promotionalOffers: false,
+            },
           }
         : {
             id: `usr-ph-${Date.now()}`,
             name: 'EV Driver',
+            firstName: 'EV',
+            lastName: 'Driver',
             phoneNumber: formattedPhone,
-            email: `${rawPhone || 'user'}@chargemesh.in`,
+            email: `${rawPhone || 'user'}@chargemesh.com`,
+            state: 'Nct of Delhi',
+            district: 'New Delhi',
+            city: 'New Delhi',
+            pincode: '110001',
+            address: 'Connaught Place, New Delhi',
+            userCode: `CM-DRV-${rawPhone.slice(-4)}`,
+            membershipTier: 'ChargeMesh Driver',
+            memberSince: 'August 2026',
+            isPhoneVerified: true,
+            isEmailVerified: false,
+            profileCompletionPercentage: 70,
+            joiningBonusStatus: 'CREDITED',
+            joiningBonusAmountPaise: 10000,
             walletBalancePaise: 154000,
             totalKwhCharged: 428.5,
             co2SavedKg: 351.4,
             totalSessions: 18,
             authProvider: 'phone',
+            chargingPreferences: {
+              autoFilterIncompatible: true,
+              preferredSpeed: 'ULTRA_FAST',
+              preferredConnector: ConnectorType.CCS2,
+              preferredNetworks: ['Tata Power EZ Charge'],
+              searchRadiusKm: 25,
+            },
+            notificationPreferences: {
+              sessionAlerts: true,
+              completionAlerts: true,
+              stationAvailabilityAlerts: true,
+              emailInvoices: true,
+              promotionalOffers: true,
+            },
           };
 
       setUser(loggedUser);
@@ -266,13 +386,44 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const loggedUser: UserProfile = {
           id: `usr-${demoUser.phoneNumber}`,
           name: demoUser.name,
+          firstName: demoUser.firstName,
+          lastName: demoUser.lastName,
           email: demoUser.email,
           phoneNumber: formattedPhone,
+          dob: demoUser.dob,
+          gender: demoUser.gender,
+          state: demoUser.state,
+          district: demoUser.district,
+          city: demoUser.city,
+          pincode: demoUser.pincode,
+          address: demoUser.address,
+          userCode: demoUser.userCode,
+          membershipTier: demoUser.membershipTier,
+          memberSince: demoUser.memberSince,
+          isPhoneVerified: true,
+          isEmailVerified: true,
+          profileCompletionPercentage: 95,
+          joiningBonusStatus: 'CREDITED',
+          joiningBonusAmountPaise: 10000,
           walletBalancePaise: demoUser.walletBalancePaise,
           totalKwhCharged: demoUser.totalKwhCharged,
           co2SavedKg: demoUser.co2SavedKg,
           totalSessions: demoUser.totalSessions,
           authProvider: input.includes('@') ? 'email' : 'phone',
+          chargingPreferences: {
+            autoFilterIncompatible: true,
+            preferredSpeed: 'ULTRA_FAST',
+            preferredConnector: ConnectorType.CCS2,
+            preferredNetworks: ['Tata Power EZ Charge', 'Jio-bp pulse'],
+            searchRadiusKm: 25,
+          },
+          notificationPreferences: {
+            sessionAlerts: true,
+            completionAlerts: true,
+            stationAvailabilityAlerts: true,
+            emailInvoices: true,
+            promotionalOffers: false,
+          },
         };
 
         setUser(loggedUser);
@@ -287,16 +438,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // General Email / Phone login fallback
       const isEmail = input.includes('@');
       const formattedPhone = isEmail
-        ? '+91 94126 02135'
+        ? ''
         : emailOrPhone.startsWith('+91')
         ? emailOrPhone
         : `+91 ${rawDigits.slice(0, 5)} ${rawDigits.slice(5)}`;
 
       const loggedUser: UserProfile = {
         id: `usr-${Date.now()}`,
-        email: isEmail ? emailOrPhone : 'rahul123@gmail.com',
+        email: isEmail ? emailOrPhone : (rawDigits ? `${rawDigits}@chargemesh.com` : ''),
         phoneNumber: formattedPhone,
-        name: isEmail ? emailOrPhone.split('@')[0].toUpperCase() : 'Rahul Sharma',
+        name: isEmail ? emailOrPhone.split('@')[0].toUpperCase() : 'EV Driver',
         walletBalancePaise: 154000,
         totalKwhCharged: 428.5,
         co2SavedKg: 351.4,
@@ -336,7 +487,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         name: name.trim() || 'EV Driver',
         email: email.trim(),
         phoneNumber: formattedPhone,
-        walletBalancePaise: 10000, // ₹100 welcome joining bonus credits
+        walletBalancePaise: WELCOME_BONUS_AMOUNT_PAISE, // ₹100 welcome joining bonus credits
         totalKwhCharged: 0,
         co2SavedKg: 0,
         totalSessions: 0,
@@ -381,9 +532,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const googleUser: UserProfile = {
         id: `usr-g-${Date.now()}`,
-        name: profile?.name || 'Alex Sharma',
-        email: profile?.email || 'alex.sharma@gmail.com',
-        phoneNumber: '+91 98765 43210',
+        name: profile?.name || 'EV Driver',
+        email: profile?.email || 'driver@chargemesh.com',
+        phoneNumber: '',
         walletBalancePaise: 154000,
         totalKwhCharged: 428.5,
         co2SavedKg: 351.4,
@@ -430,14 +581,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const saveVehiclesToStorage = (updatedVehicles: Vehicle[], activeId?: string) => {
+    AsyncStorage.setItem(STORAGE_KEYS.VEHICLES, JSON.stringify(updatedVehicles)).catch(() => {});
+    if (activeId) {
+      AsyncStorage.setItem(STORAGE_KEYS.ACTIVE_VEHICLE, activeId).catch(() => {});
+    }
+  };
+
   const setActiveVehicleId = (id: string) => {
     setActiveVehicleIdState(id);
-    setVehicles((prev) =>
-      prev.map((v) => ({
+    setVehicles((prev) => {
+      const updated = prev.map((v) => ({
         ...v,
         isDefault: v.id === id,
-      }))
-    );
+      }));
+      saveVehiclesToStorage(updated, id);
+      return updated;
+    });
   };
 
   const updateUserProfile = (updated: Partial<UserProfile>) => {
@@ -452,28 +612,91 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const created: Vehicle = {
       ...newVeh,
       id: `veh-${Date.now()}`,
-      userId: user.id,
+      userId: user.id || 'usr-default',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
-    setVehicles((prev) => [...prev, created]);
-    if (newVeh.isDefault) {
-      setActiveVehicleIdState(created.id);
-    }
+
+    setVehicles((prev) => {
+      let updated: Vehicle[];
+      if (newVeh.isDefault || prev.length === 0) {
+        created.isDefault = true;
+        updated = [...prev.map((v) => ({ ...v, isDefault: false })), created];
+        setActiveVehicleIdState(created.id);
+        saveVehiclesToStorage(updated, created.id);
+      } else {
+        updated = [...prev, created];
+        saveVehiclesToStorage(updated, activeVehicleId);
+      }
+      return updated;
+    });
   };
 
   const updateVehicle = (id: string, updated: Partial<Vehicle>) => {
-    setVehicles((prev) =>
-      prev.map((v) => (v.id === id ? { ...v, ...updated, updatedAt: new Date().toISOString() } : v))
-    );
+    setVehicles((prev) => {
+      const updatedList = prev.map((v) =>
+        v.id === id
+          ? {
+              ...v,
+              ...updated,
+              updatedAt: new Date().toISOString(),
+            }
+          : updated.isDefault
+          ? { ...v, isDefault: false }
+          : v
+      );
+      if (updated.isDefault) {
+        setActiveVehicleIdState(id);
+        saveVehiclesToStorage(updatedList, id);
+      } else {
+        saveVehiclesToStorage(updatedList, activeVehicleId);
+      }
+      return updatedList;
+    });
   };
 
-  const topUpWallet = (amountPaise: number) => {
+  const deleteVehicle = (id: string) => {
+    setVehicles((prev) => {
+      const filtered = prev.filter((v) => v.id !== id);
+      let newActiveId = activeVehicleId;
+      if (activeVehicleId === id) {
+        if (filtered.length > 0) {
+          filtered[0].isDefault = true;
+          newActiveId = filtered[0].id;
+        } else {
+          newActiveId = '';
+        }
+        setActiveVehicleIdState(newActiveId);
+      }
+      saveVehiclesToStorage(filtered, newActiveId);
+      return filtered;
+    });
+  };
+
+  // Set of processed idempotency keys
+  const processedRefIds = React.useRef<Set<string>>(new Set());
+
+  const topUpWallet = (
+    amountPaise: number,
+    referenceId?: string
+  ): { success: boolean; isDuplicate: boolean; newBalancePaise: number } => {
+    if (referenceId && processedRefIds.current.has(referenceId)) {
+      // Intercept duplicate payment callback and prevent double credits
+      return { success: true, isDuplicate: true, newBalancePaise: user.walletBalancePaise };
+    }
+
+    if (referenceId) {
+      processedRefIds.current.add(referenceId);
+    }
+
+    const calculatedNewBalance = (user.walletBalancePaise || 0) + amountPaise;
     setUser((prev) => {
-      const next = { ...prev, walletBalancePaise: prev.walletBalancePaise + amountPaise };
+      const next = { ...prev, walletBalancePaise: (prev.walletBalancePaise || 0) + amountPaise };
       AsyncStorage.setItem(STORAGE_KEYS.USER_PROFILE, JSON.stringify(next)).catch(() => {});
       return next;
     });
+
+    return { success: true, isDuplicate: false, newBalancePaise: calculatedNewBalance };
   };
 
   return (
@@ -485,11 +708,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isLoading,
         user,
         vehicles,
-        activeVehicle: vehicles.find((v) => v.id === activeVehicleId) || null,
+        activeVehicle: vehicles.find((v) => v.id === activeVehicleId) || vehicles[0] || null,
         setActiveVehicleId,
         updateUserProfile,
         addVehicle,
         updateVehicle,
+        deleteVehicle,
         topUpWallet,
         login,
         sendPhoneOtp,

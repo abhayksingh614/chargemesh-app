@@ -15,7 +15,7 @@ import {
   ImageBackground,
 } from 'react-native';
 import { spacing, borderRadius, shadows } from '../theme';
-import { useAuth } from '../context';
+import { useAuth, useLanguage } from '../context';
 import { StatusModal } from '../components';
 
 const CM_COLORS = {
@@ -45,6 +45,7 @@ const EV_MODELS = [
 
 export const RegisterScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const { register, loginWithGoogle, loginAsGuest, isLoading } = useAuth();
+  const { t } = useLanguage();
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
@@ -103,7 +104,7 @@ export const RegisterScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
     if (success) {
       showModal(
         'Welcome to ChargeMesh! ⚡',
-        'Your driver account is active. ₹500 welcome charging credit has been credited to your Fast Wallet.',
+        'Your driver account is active. ₹100 welcome charging credit has been credited to your Fast Wallet.',
         'success',
         'Registration Complete'
       );
@@ -164,7 +165,7 @@ export const RegisterScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
               onPress={() => navigation.goBack()}
               activeOpacity={0.7}
             >
-              <Text style={styles.backButtonText}>← Back</Text>
+              <Text style={styles.backButtonText}>← {t('common.back')}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -173,7 +174,7 @@ export const RegisterScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
               activeOpacity={0.75}
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             >
-              <Text style={styles.skipButtonText}>Skip ➔</Text>
+              <Text style={styles.skipButtonText}>{t('common.skip')} ➔</Text>
             </TouchableOpacity>
           </View>
 
@@ -195,9 +196,9 @@ export const RegisterScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
                     resizeMode="contain"
                   />
                 </View>
-                <Text style={styles.title}>Register Vehicle</Text>
+                <Text style={styles.title}>{t('auth.createAccountTitle')}</Text>
                 <Text style={styles.subtitle}>
-                  Join India's unified EV charging mesh & get ₹500 welcome credit
+                  {t('auth.createAccountSubtitle')}
                 </Text>
               </View>
 
@@ -205,12 +206,12 @@ export const RegisterScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
               <View style={styles.card}>
                 {/* Full Name */}
                 <View style={styles.inputGroup}>
-                  <Text style={styles.label}>FULL NAME *</Text>
+                  <Text style={styles.label}>{t('auth.fullNameLabel')} *</Text>
                   <View style={styles.inputWrapper}>
                     <Text style={styles.inputIcon}>👤</Text>
                     <TextInput
                       style={styles.input}
-                      placeholder="e.g. Abhay Singh"
+                      placeholder={t('auth.fullNamePlaceholder')}
                       placeholderTextColor={CM_COLORS.textMuted}
                       value={name}
                       onChangeText={setName}
@@ -220,7 +221,7 @@ export const RegisterScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
 
                 {/* Mobile Number */}
                 <View style={styles.inputGroup}>
-                  <Text style={styles.label}>MOBILE NUMBER *</Text>
+                  <Text style={styles.label}>{t('auth.mobileNumber')} *</Text>
                   <View style={styles.phoneInputRow}>
                     <View style={styles.countryCodeBadge}>
                       <Text style={styles.countryFlag}>🇮🇳</Text>
@@ -228,7 +229,7 @@ export const RegisterScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
                     </View>
                     <TextInput
                       style={styles.phoneTextInput}
-                      placeholder="10-digit mobile number"
+                      placeholder={t('auth.mobilePlaceholder')}
                       placeholderTextColor={CM_COLORS.textMuted}
                       value={phone}
                       onChangeText={(val) => setPhone(val.replace(/\D/g, '').slice(0, 10))}
@@ -240,7 +241,7 @@ export const RegisterScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
 
                 {/* Email Address */}
                 <View style={styles.inputGroup}>
-                  <Text style={styles.label}>EMAIL ADDRESS *</Text>
+                  <Text style={styles.label}>{t('auth.emailLabel')} *</Text>
                   <View style={styles.inputWrapper}>
                     <Text style={styles.inputIcon}>✉️</Text>
                     <TextInput
@@ -257,7 +258,7 @@ export const RegisterScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
 
                 {/* Primary EV Model Selector */}
                 <View style={styles.inputGroup}>
-                  <Text style={styles.label}>PRIMARY ELECTRIC VEHICLE *</Text>
+                  <Text style={styles.label}>{t('auth.primaryEvLabel')} *</Text>
                   <TouchableOpacity
                     style={styles.evDropdownButton}
                     onPress={() => setShowEvDropdown(!showEvDropdown)}
@@ -300,12 +301,12 @@ export const RegisterScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
 
                 {/* Optional Password */}
                 <View style={styles.inputGroup}>
-                  <Text style={styles.label}>PASSWORD (OPTIONAL)</Text>
+                  <Text style={styles.label}>{t('auth.passwordLabel')}</Text>
                   <View style={styles.inputWrapper}>
                     <Text style={styles.inputIcon}>🔒</Text>
                     <TextInput
                       style={styles.input}
-                      placeholder="Leave blank for OTP sign-in"
+                      placeholder={t('auth.passwordPlaceholder')}
                       placeholderTextColor={CM_COLORS.textMuted}
                       value={password}
                       onChangeText={setPassword}
@@ -324,9 +325,7 @@ export const RegisterScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
                     {agreeTerms && <Text style={styles.checkmark}>✓</Text>}
                   </View>
                   <Text style={styles.termsText}>
-                    I agree to the ChargeMesh{' '}
-                    <Text style={styles.termsLink}>Terms of Service</Text> &amp;{' '}
-                    <Text style={styles.termsLink}>DPDP Privacy Policy</Text>
+                    {t('auth.agreeTerms')}
                   </Text>
                 </TouchableOpacity>
 
@@ -340,14 +339,14 @@ export const RegisterScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
                   {isSubmitting || isLoading ? (
                     <ActivityIndicator color="#FFFFFF" />
                   ) : (
-                    <Text style={styles.registerButtonText}>Create Driver Account ➔</Text>
+                    <Text style={styles.registerButtonText}>{t('auth.registerBtn')} ➔</Text>
                   )}
                 </TouchableOpacity>
 
                 {/* Divider */}
                 <View style={styles.dividerRow}>
                   <View style={styles.dividerLine} />
-                  <Text style={styles.dividerText}>OR</Text>
+                  <Text style={styles.dividerText}>{t('auth.orContinueWith')}</Text>
                   <View style={styles.dividerLine} />
                 </View>
 
@@ -359,14 +358,14 @@ export const RegisterScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
                   disabled={isSubmitting || isLoading}
                 >
                   <Text style={styles.googleIcon}>🌐</Text>
-                  <Text style={styles.googleButtonText}>Continue with Google</Text>
+                  <Text style={styles.googleButtonText}>{t('auth.continueWithGoogle')}</Text>
                 </TouchableOpacity>
 
                 {/* Sign In Link */}
                 <View style={styles.loginRow}>
-                  <Text style={styles.loginPrompt}>Already have an account? </Text>
+                  <Text style={styles.loginPrompt}>{t('auth.alreadyRegistered')}</Text>
                   <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-                    <Text style={styles.loginLink}>Sign In ➔</Text>
+                    <Text style={styles.loginLink}>{t('auth.signInBtn')} ➔</Text>
                   </TouchableOpacity>
                 </View>
               </View>
