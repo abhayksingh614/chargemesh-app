@@ -299,10 +299,10 @@ export const SplashScreen: React.FC = () => {
             <Animated.View style={[styles.bottomCard, { opacity: statusFadeAnim }]}>
               <View style={styles.cpoRow}>
                 <Text style={styles.cpoLabel}>SUPPORTING CPOs:</Text>
-                <Text style={styles.cpoNames}>Tata Power · Jio-bp · Statiq · Kazam</Text>
+                <Text style={styles.cpoNames}>Tata Power · Jio-bp · Statiq · Glida · Shell · Zeon</Text>
               </View>
               <Text style={styles.versionText}>
-                ChargeMesh Core Engine v2.4.0 (Build 308) · ISO 15118 Ready
+                ChargeMesh V 1.0.0 (Prototype) · ISO 15118 Ready
               </Text>
             </Animated.View>
           </SafeAreaView>

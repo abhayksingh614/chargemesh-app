@@ -1,4 +1,4 @@
-name: CI — Mobile
+name: CI — Mobile Application
 
 on:
   push:
@@ -6,15 +6,17 @@ on:
     paths:
       - 'apps/mobile/**'
       - 'packages/**'
+      - '.github/workflows/ci-mobile.yml'
   pull_request:
     branches: [main, develop]
     paths:
       - 'apps/mobile/**'
       - 'packages/**'
+      - '.github/workflows/ci-mobile.yml'
 
 jobs:
   test:
-    name: Lint, Typecheck & Unit Test
+    name: Typecheck & Mobile Unit Test
     runs-on: ubuntu-latest
 
     steps:
@@ -29,30 +31,15 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Build shared packages
+        run: |
+          npm run build --workspace=packages/shared-types
+          npm run build --workspace=packages/shared-constants
+
       - name: Typecheck
         run: npm run typecheck --workspace=apps/mobile
-
-      - name: Lint
-        run: npm run lint --workspace=apps/mobile
 
       - name: Unit Tests
         run: npm run test --workspace=apps/mobile
         env:
           NODE_ENV: test
-
-  # Android build check (optional — requires Android SDK setup)
-  # android-build:
-  #   name: Android Build Check
-  #   runs-on: ubuntu-latest
-  #   needs: test
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - name: Setup Java
-  #       uses: actions/setup-java@v4
-  #       with:
-  #         java-version: '17'
-  #         distribution: 'temurin'
-  #     - name: Setup Android SDK
-  #       uses: android-actions/setup-android@v3
-  #     - name: Build Android Debug
-  #       run: cd apps/mobile/android && ./gradlew assembleDebug

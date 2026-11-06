@@ -1,0 +1,29 @@
+name: Documentation Issue
+description: Report an error, missing guide, or improvement in documentation
+title: "docs: "
+labels: ["documentation"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Accurate documentation is critical for open-source contributors and CPO partners. Thank you for pointing out an improvement!
+  - type: input
+    id: doc_path
+    attributes:
+      label: Documentation Page or File Path
+      description: Which file or URL needs attention?
+      placeholder: "e.g., docs/API_DOCUMENTATION.md or README.md"
+    validations:
+      required: true
+  - type: textarea
+    id: issue_description
+    attributes:
+      label: Description of the Documentation Issue
+      description: What is inaccurate, outdated, or missing?
+    validations:
+      required: true
+  - type: textarea
+    id: suggested_update
+    attributes:
+      label: Suggested Correction
+      description: How should the documentation be updated?

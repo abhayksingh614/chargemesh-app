@@ -13,7 +13,7 @@ react {
     debuggableVariants = []
 }
 
-def enableProguardInReleaseBuilds = false
+def enableProguardInReleaseBuilds = true
 def jscFlavor = 'org.webkit:android-jsc:+'
 
 android {
@@ -26,8 +26,8 @@ android {
         applicationId "com.chargemesh.mobile"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 8
-        versionName "1.2.5"
+        versionCode 9
+        versionName "1.0.0"
     }
     signingConfigs {
         debug {
@@ -36,15 +36,35 @@ android {
             keyAlias 'androiddebugkey'
             keyPassword 'android'
         }
+        release {
+            if (project.hasProperty('CM_RELEASE_STORE_FILE')) {
+                storeFile file(CM_RELEASE_STORE_FILE)
+                storePassword CM_RELEASE_STORE_PASSWORD
+                keyAlias CM_RELEASE_KEY_ALIAS
+                keyPassword CM_RELEASE_KEY_PASSWORD
+            } else if (System.getenv('CM_RELEASE_STORE_FILE') != null) {
+                storeFile file(System.getenv('CM_RELEASE_STORE_FILE'))
+                storePassword System.getenv('CM_RELEASE_STORE_PASSWORD')
+                keyAlias System.getenv('CM_RELEASE_KEY_ALIAS')
+                keyPassword System.getenv('CM_RELEASE_KEY_PASSWORD')
+            } else {
+                // Fallback to debug keystore for local unsigned development builds
+                storeFile file('debug.keystore')
+                storePassword 'android'
+                keyAlias 'androiddebugkey'
+                keyPassword 'android'
+            }
+        }
     }
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
         }
         release {
-            signingConfig signingConfigs.debug
+            signingConfig signingConfigs.release
             minifyEnabled enableProguardInReleaseBuilds
-            proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
+            shrinkResources true
+            proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
         }
     }
 }

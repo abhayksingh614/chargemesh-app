@@ -286,7 +286,7 @@ export const en = {
     logoutBtn: 'Log Out',
     confirmLogoutTitle: 'Log Out of ChargeMesh?',
     confirmLogoutMsg: 'You will need to sign in again with your mobile number or email.',
-    appVersion: 'ChargeMesh App v1.2.0 • Build 148',
+    appVersion: 'ChargeMesh V 1.0.0 (Prototype)',
   },
 
   // Activity Screen

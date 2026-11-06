@@ -13,7 +13,6 @@ import {
   StatusBar,
   Image,
   ImageBackground,
-  Modal,
 } from 'react-native';
 import { spacing, borderRadius, shadows } from '../theme';
 import { useAuth, useLanguage } from '../context';
@@ -32,29 +31,8 @@ const CM_COLORS = {
   textMuted: '#64748B',
 };
 
-const GOOGLE_ACCOUNTS = [
-  {
-    name: 'Rahul',
-    email: 'rahul@gmail.com',
-    initial: 'R',
-    bgColor: '#1E40AF',
-  },
-  {
-    name: 'Abhay',
-    email: 'abhay@gmail.com',
-    initial: 'A',
-    bgColor: '#047857',
-  },
-  {
-    name: 'Junaid',
-    email: 'junaid@gmail.com',
-    initial: 'J',
-    bgColor: '#7C3AED',
-  },
-];
-
 export const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
-  const { login, sendPhoneOtp, loginWithPhoneOtp, loginWithGoogle, loginAsGuest, isLoading } =
+  const { login, sendPhoneOtp, loginWithPhoneOtp, loginAsGuest, isLoading } =
     useAuth();
   const { t } = useLanguage();
 
@@ -68,10 +46,6 @@ export const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Google Sign-In Sheet State
-  const [showGoogleSheet, setShowGoogleSheet] = useState(false);
-  const [signingInAccount, setSigningInAccount] = useState<string | null>(null);
 
   // Status Modal State
   const [showStatusModal, setShowStatusModal] = useState(false);
@@ -165,25 +139,13 @@ export const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     }
   };
 
-  // Google Account Select
-  const handleSelectGoogleAccount = async (account: (typeof GOOGLE_ACCOUNTS)[0]) => {
-    setSigningInAccount(account.email);
-    await new Promise((res) => setTimeout(res, 600)); // Realistic Google auth hand-shake
-    const success = await loginWithGoogle({
-      name: account.name,
-      email: account.email,
-    });
-    setSigningInAccount(null);
-    setShowGoogleSheet(false);
-    if (success) {
-      try {
-        navigation.replace('MainTabs');
-      } catch {
-        navigation.navigate('MainTabs');
-      }
-    } else {
-      showModal('Google Sign-In', 'Google sign-in could not be completed.', 'error');
-    }
+  const handleGoogleSignIn = () => {
+    showModal(
+      'Google Sign-In',
+      'Google Sign-In requires active Google Play Services on your device. You can sign in instantly using Mobile Number OTP or Email.',
+      'info',
+      'Play Services'
+    );
   };
 
   const handleSkip = async () => {
@@ -442,7 +404,7 @@ export const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                 <TouchableOpacity
                   style={styles.googleButton}
                   activeOpacity={0.85}
-                  onPress={() => setShowGoogleSheet(true)}
+                  onPress={handleGoogleSignIn}
                   disabled={isSubmitting || isLoading}
                 >
                   <Text style={styles.googleIcon}>🌐</Text>
@@ -461,72 +423,6 @@ export const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
           </KeyboardAvoidingView>
         </SafeAreaView>
       </View>
-
-      {/* Interactive Google Sign-In Account Selector Modal */}
-      <Modal
-        visible={showGoogleSheet}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setShowGoogleSheet(false)}
-      >
-        <View style={styles.googleModalBackdrop}>
-          <View style={styles.googleModalCard}>
-            <View style={styles.googleSheetHandle} />
-
-            <View style={styles.googleHeaderRow}>
-              <Text style={styles.googleBrandIcon}>🌐</Text>
-              <Text style={styles.googleBrandTitle}>Sign in with Google</Text>
-            </View>
-            <Text style={styles.googleSubtitle}>Choose an account to continue to ChargeMesh</Text>
-
-            <View style={styles.accountList}>
-              {GOOGLE_ACCOUNTS.map((acc, index) => {
-                const isThisLoading = signingInAccount === acc.email;
-                return (
-                  <TouchableOpacity
-                    key={index}
-                    style={styles.accountItem}
-                    activeOpacity={0.8}
-                    onPress={() => handleSelectGoogleAccount(acc)}
-                    disabled={signingInAccount !== null}
-                  >
-                    <View style={[styles.accountAvatar, { backgroundColor: acc.bgColor }]}>
-                      <Text style={styles.accountAvatarText}>{acc.initial}</Text>
-                    </View>
-                    <View style={styles.accountInfo}>
-                      <Text style={styles.accountName}>{acc.name}</Text>
-                      <Text style={styles.accountEmail}>{acc.email}</Text>
-                    </View>
-                    {isThisLoading ? (
-                      <ActivityIndicator size="small" color="#1A73E8" />
-                    ) : (
-                      <Text style={styles.accountChevron}>➔</Text>
-                    )}
-                  </TouchableOpacity>
-                );
-              })}
-
-              <TouchableOpacity
-                style={styles.addAccountItem}
-                activeOpacity={0.8}
-                onPress={() => handleSelectGoogleAccount(GOOGLE_ACCOUNTS[0])}
-              >
-                <View style={styles.addAccountAvatar}>
-                  <Text style={styles.addAccountPlus}>＋</Text>
-                </View>
-                <Text style={styles.addAccountText}>Use another account</Text>
-              </TouchableOpacity>
-            </View>
-
-            <TouchableOpacity
-              style={styles.googleCancelBtn}
-              onPress={() => setShowGoogleSheet(false)}
-            >
-              <Text style={styles.googleCancelText}>Cancel</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
 
       {/* Validation Alert Modal */}
       <StatusModal

@@ -15,7 +15,10 @@
               "maxDcPowerKw": 60,
               "maxAcPowerKw": 7.2,
               "rangeKm": 489,
-              "connectorTypes": ["CCS2", "TYPE2"]
+              "connectorTypes": [
+                "CCS2",
+                "TYPE2"
+              ]
             },
             {
               "name": "Max (40.5 kWh)",
@@ -23,7 +26,10 @@
               "maxDcPowerKw": 50,
               "maxAcPowerKw": 7.2,
               "rangeKm": 453,
-              "connectorTypes": ["CCS2", "TYPE2"]
+              "connectorTypes": [
+                "CCS2",
+                "TYPE2"
+              ]
             },
             {
               "name": "Medium Range (30 kWh)",
@@ -31,7 +37,10 @@
               "maxDcPowerKw": 30,
               "maxAcPowerKw": 3.3,
               "rangeKm": 325,
-              "connectorTypes": ["CCS2", "TYPE2"]
+              "connectorTypes": [
+                "CCS2",
+                "TYPE2"
+              ]
             }
           ]
         },
@@ -45,7 +54,10 @@
               "maxDcPowerKw": 50,
               "maxAcPowerKw": 7.2,
               "rangeKm": 421,
-              "connectorTypes": ["CCS2", "TYPE2"]
+              "connectorTypes": [
+                "CCS2",
+                "TYPE2"
+              ]
             },
             {
               "name": "Standard (25 kWh)",
@@ -53,7 +65,10 @@
               "maxDcPowerKw": 30,
               "maxAcPowerKw": 3.3,
               "rangeKm": 315,
-              "connectorTypes": ["CCS2", "TYPE2"]
+              "connectorTypes": [
+                "CCS2",
+                "TYPE2"
+              ]
             }
           ]
         },
@@ -67,7 +82,10 @@
               "maxDcPowerKw": 70,
               "maxAcPowerKw": 7.2,
               "rangeKm": 585,
-              "connectorTypes": ["CCS2", "TYPE2"]
+              "connectorTypes": [
+                "CCS2",
+                "TYPE2"
+              ]
             },
             {
               "name": "Creative (45 kWh)",
@@ -75,7 +93,10 @@
               "maxDcPowerKw": 60,
               "maxAcPowerKw": 7.2,
               "rangeKm": 502,
-              "connectorTypes": ["CCS2", "TYPE2"]
+              "connectorTypes": [
+                "CCS2",
+                "TYPE2"
+              ]
             }
           ]
         },
@@ -89,7 +110,10 @@
               "maxDcPowerKw": 25,
               "maxAcPowerKw": 7.2,
               "rangeKm": 315,
-              "connectorTypes": ["CCS2", "TYPE2"]
+              "connectorTypes": [
+                "CCS2",
+                "TYPE2"
+              ]
             },
             {
               "name": "Medium Range (19.2 kWh)",
@@ -97,7 +121,10 @@
               "maxDcPowerKw": 20,
               "maxAcPowerKw": 3.3,
               "rangeKm": 250,
-              "connectorTypes": ["CCS2", "TYPE2"]
+              "connectorTypes": [
+                "CCS2",
+                "TYPE2"
+              ]
             }
           ]
         },
@@ -111,7 +138,10 @@
               "maxDcPowerKw": 25,
               "maxAcPowerKw": 3.3,
               "rangeKm": 315,
-              "connectorTypes": ["CCS2", "TYPE2"]
+              "connectorTypes": [
+                "CCS2",
+                "TYPE2"
+              ]
             }
           ]
         }
@@ -132,7 +162,10 @@
               "maxDcPowerKw": 75,
               "maxAcPowerKw": 7.4,
               "rangeKm": 461,
-              "connectorTypes": ["CCS2", "TYPE2"]
+              "connectorTypes": [
+                "CCS2",
+                "TYPE2"
+              ]
             },
             {
               "name": "Excite (50.3 kWh)",
@@ -140,7 +173,10 @@
               "maxDcPowerKw": 75,
               "maxAcPowerKw": 7.4,
               "rangeKm": 461,
-              "connectorTypes": ["CCS2", "TYPE2"]
+              "connectorTypes": [
+                "CCS2",
+                "TYPE2"
+              ]
             }
           ]
         },
@@ -154,7 +190,10 @@
               "maxDcPowerKw": 45,
               "maxAcPowerKw": 7.4,
               "rangeKm": 331,
-              "connectorTypes": ["CCS2", "TYPE2"]
+              "connectorTypes": [
+                "CCS2",
+                "TYPE2"
+              ]
             }
           ]
         },
@@ -168,7 +207,9 @@
               "maxDcPowerKw": 0,
               "maxAcPowerKw": 7.4,
               "rangeKm": 230,
-              "connectorTypes": ["TYPE2"]
+              "connectorTypes": [
+                "TYPE2"
+              ]
             },
             {
               "name": "Pace / Play (17.3 kWh)",
@@ -176,7 +217,9 @@
               "maxDcPowerKw": 0,
               "maxAcPowerKw": 3.3,
               "rangeKm": 230,
-              "connectorTypes": ["TYPE2"]
+              "connectorTypes": [
+                "TYPE2"
+              ]
             }
           ]
         }
@@ -197,7 +240,10 @@
               "maxDcPowerKw": 50,
               "maxAcPowerKw": 7.2,
               "rangeKm": 456,
-              "connectorTypes": ["CCS2", "TYPE2"]
+              "connectorTypes": [
+                "CCS2",
+                "TYPE2"
+              ]
             },
             {
               "name": "EC Pro (34.5 kWh)",
@@ -205,7 +251,10 @@
               "maxDcPowerKw": 50,
               "maxAcPowerKw": 3.3,
               "rangeKm": 375,
-              "connectorTypes": ["CCS2", "TYPE2"]
+              "connectorTypes": [
+                "CCS2",
+                "TYPE2"
+              ]
             }
           ]
         },
@@ -219,7 +268,10 @@
               "maxDcPowerKw": 175,
               "maxAcPowerKw": 11.0,
               "rangeKm": 682,
-              "connectorTypes": ["CCS2", "TYPE2"]
+              "connectorTypes": [
+                "CCS2",
+                "TYPE2"
+              ]
             },
             {
               "name": "Standard (59 kWh)",
@@ -227,7 +279,10 @@
               "maxDcPowerKw": 140,
               "maxAcPowerKw": 11.0,
               "rangeKm": 535,
-              "connectorTypes": ["CCS2", "TYPE2"]
+              "connectorTypes": [
+                "CCS2",
+                "TYPE2"
+              ]
             }
           ]
         },
@@ -241,7 +296,10 @@
               "maxDcPowerKw": 175,
               "maxAcPowerKw": 11.0,
               "rangeKm": 656,
-              "connectorTypes": ["CCS2", "TYPE2"]
+              "connectorTypes": [
+                "CCS2",
+                "TYPE2"
+              ]
             }
           ]
         }
@@ -262,7 +320,10 @@
               "maxDcPowerKw": 350,
               "maxAcPowerKw": 11.0,
               "rangeKm": 631,
-              "connectorTypes": ["CCS2", "TYPE2"]
+              "connectorTypes": [
+                "CCS2",
+                "TYPE2"
+              ]
             }
           ]
         },
@@ -276,7 +337,10 @@
               "maxDcPowerKw": 60,
               "maxAcPowerKw": 7.2,
               "rangeKm": 475,
-              "connectorTypes": ["CCS2", "TYPE2"]
+              "connectorTypes": [
+                "CCS2",
+                "TYPE2"
+              ]
             },
             {
               "name": "Standard (45 kWh)",
@@ -284,7 +348,10 @@
               "maxDcPowerKw": 50,
               "maxAcPowerKw": 7.2,
               "rangeKm": 410,
-              "connectorTypes": ["CCS2", "TYPE2"]
+              "connectorTypes": [
+                "CCS2",
+                "TYPE2"
+              ]
             }
           ]
         },
@@ -298,7 +365,10 @@
               "maxDcPowerKw": 50,
               "maxAcPowerKw": 7.2,
               "rangeKm": 452,
-              "connectorTypes": ["CCS2", "TYPE2"]
+              "connectorTypes": [
+                "CCS2",
+                "TYPE2"
+              ]
             }
           ]
         }
@@ -319,7 +389,10 @@
               "maxDcPowerKw": 350,
               "maxAcPowerKw": 11.0,
               "rangeKm": 708,
-              "connectorTypes": ["CCS2", "TYPE2"]
+              "connectorTypes": [
+                "CCS2",
+                "TYPE2"
+              ]
             },
             {
               "name": "GT Line RWD (77.4 kWh)",
@@ -327,7 +400,10 @@
               "maxDcPowerKw": 350,
               "maxAcPowerKw": 11.0,
               "rangeKm": 708,
-              "connectorTypes": ["CCS2", "TYPE2"]
+              "connectorTypes": [
+                "CCS2",
+                "TYPE2"
+              ]
             }
           ]
         },
@@ -341,7 +417,10 @@
               "maxDcPowerKw": 350,
               "maxAcPowerKw": 11.0,
               "rangeKm": 561,
-              "connectorTypes": ["CCS2", "TYPE2"]
+              "connectorTypes": [
+                "CCS2",
+                "TYPE2"
+              ]
             }
           ]
         }
@@ -362,7 +441,10 @@
               "maxDcPowerKw": 80,
               "maxAcPowerKw": 7.4,
               "rangeKm": 521,
-              "connectorTypes": ["CCS2", "TYPE2"]
+              "connectorTypes": [
+                "CCS2",
+                "TYPE2"
+              ]
             },
             {
               "name": "Dynamic (49.92 kWh)",
@@ -370,7 +452,10 @@
               "maxDcPowerKw": 70,
               "maxAcPowerKw": 7.4,
               "rangeKm": 468,
-              "connectorTypes": ["CCS2", "TYPE2"]
+              "connectorTypes": [
+                "CCS2",
+                "TYPE2"
+              ]
             }
           ]
         },
@@ -384,7 +469,10 @@
               "maxDcPowerKw": 150,
               "maxAcPowerKw": 7.0,
               "rangeKm": 580,
-              "connectorTypes": ["CCS2", "TYPE2"]
+              "connectorTypes": [
+                "CCS2",
+                "TYPE2"
+              ]
             },
             {
               "name": "Premium RWD (82.56 kWh)",
@@ -392,7 +480,10 @@
               "maxDcPowerKw": 150,
               "maxAcPowerKw": 7.0,
               "rangeKm": 650,
-              "connectorTypes": ["CCS2", "TYPE2"]
+              "connectorTypes": [
+                "CCS2",
+                "TYPE2"
+              ]
             },
             {
               "name": "Dynamic (61.44 kWh)",
@@ -400,7 +491,10 @@
               "maxDcPowerKw": 110,
               "maxAcPowerKw": 7.0,
               "rangeKm": 510,
-              "connectorTypes": ["CCS2", "TYPE2"]
+              "connectorTypes": [
+                "CCS2",
+                "TYPE2"
+              ]
             }
           ]
         },
@@ -414,7 +508,10 @@
               "maxDcPowerKw": 115,
               "maxAcPowerKw": 7.0,
               "rangeKm": 530,
-              "connectorTypes": ["CCS2", "TYPE2"]
+              "connectorTypes": [
+                "CCS2",
+                "TYPE2"
+              ]
             },
             {
               "name": "Premium (55.4 kWh)",
@@ -422,7 +519,27 @@
               "maxDcPowerKw": 89,
               "maxAcPowerKw": 7.0,
               "rangeKm": 420,
-              "connectorTypes": ["CCS2", "TYPE2"]
+              "connectorTypes": [
+                "CCS2",
+                "TYPE2"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "e6",
+          "name": "e6 MPV",
+          "variants": [
+            {
+              "name": "GLX (71.7 kWh)",
+              "batteryCapacityKwh": 71.7,
+              "maxDcPowerKw": 60,
+              "maxAcPowerKw": 7.0,
+              "rangeKm": 520,
+              "connectorTypes": [
+                "CCS2",
+                "TYPE2"
+              ]
             }
           ]
         }
@@ -443,7 +560,10 @@
               "maxDcPowerKw": 30,
               "maxAcPowerKw": 3.3,
               "rangeKm": 320,
-              "connectorTypes": ["CCS2", "TYPE2"]
+              "connectorTypes": [
+                "CCS2",
+                "TYPE2"
+              ]
             }
           ]
         }
@@ -464,7 +584,10 @@
               "maxDcPowerKw": 130,
               "maxAcPowerKw": 11.0,
               "rangeKm": 440,
-              "connectorTypes": ["CCS2", "TYPE2"]
+              "connectorTypes": [
+                "CCS2",
+                "TYPE2"
+              ]
             }
           ]
         },
@@ -478,7 +601,10 @@
               "maxDcPowerKw": 205,
               "maxAcPowerKw": 11.0,
               "rangeKm": 590,
-              "connectorTypes": ["CCS2", "TYPE2"]
+              "connectorTypes": [
+                "CCS2",
+                "TYPE2"
+              ]
             }
           ]
         },
@@ -492,7 +618,10 @@
               "maxDcPowerKw": 195,
               "maxAcPowerKw": 11.0,
               "rangeKm": 630,
-              "connectorTypes": ["CCS2", "TYPE2"]
+              "connectorTypes": [
+                "CCS2",
+                "TYPE2"
+              ]
             }
           ]
         }
@@ -513,7 +642,10 @@
               "maxDcPowerKw": 100,
               "maxAcPowerKw": 11.0,
               "rangeKm": 560,
-              "connectorTypes": ["CCS2", "TYPE2"]
+              "connectorTypes": [
+                "CCS2",
+                "TYPE2"
+              ]
             }
           ]
         },
@@ -527,7 +659,10 @@
               "maxDcPowerKw": 170,
               "maxAcPowerKw": 11.0,
               "rangeKm": 550,
-              "connectorTypes": ["CCS2", "TYPE2"]
+              "connectorTypes": [
+                "CCS2",
+                "TYPE2"
+              ]
             }
           ]
         },
@@ -541,7 +676,10 @@
               "maxDcPowerKw": 200,
               "maxAcPowerKw": 22.0,
               "rangeKm": 857,
-              "connectorTypes": ["CCS2", "TYPE2"]
+              "connectorTypes": [
+                "CCS2",
+                "TYPE2"
+              ]
             }
           ]
         }
@@ -562,7 +700,10 @@
               "maxDcPowerKw": 150,
               "maxAcPowerKw": 11.0,
               "rangeKm": 475,
-              "connectorTypes": ["CCS2", "TYPE2"]
+              "connectorTypes": [
+                "CCS2",
+                "TYPE2"
+              ]
             },
             {
               "name": "Single Motor (69 kWh)",
@@ -570,7 +711,10 @@
               "maxDcPowerKw": 130,
               "maxAcPowerKw": 11.0,
               "rangeKm": 475,
-              "connectorTypes": ["CCS2", "TYPE2"]
+              "connectorTypes": [
+                "CCS2",
+                "TYPE2"
+              ]
             }
           ]
         },
@@ -584,7 +728,323 @@
               "maxDcPowerKw": 150,
               "maxAcPowerKw": 11.0,
               "rangeKm": 530,
-              "connectorTypes": ["CCS2", "TYPE2"]
+              "connectorTypes": [
+                "CCS2",
+                "TYPE2"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "audi",
+      "name": "Audi",
+      "logoEmoji": "🏎️",
+      "models": [
+        {
+          "id": "q8-e-tron",
+          "name": "Q8 e-tron",
+          "variants": [
+            {
+              "name": "55 quattro (114 kWh)",
+              "batteryCapacityKwh": 114.0,
+              "maxDcPowerKw": 170,
+              "maxAcPowerKw": 22.0,
+              "rangeKm": 600,
+              "connectorTypes": [
+                "CCS2",
+                "TYPE2"
+              ]
+            },
+            {
+              "name": "50 quattro (95 kWh)",
+              "batteryCapacityKwh": 95.0,
+              "maxDcPowerKw": 150,
+              "maxAcPowerKw": 11.0,
+              "rangeKm": 491,
+              "connectorTypes": [
+                "CCS2",
+                "TYPE2"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "e-tron-gt",
+          "name": "e-tron GT",
+          "variants": [
+            {
+              "name": "quattro (93.4 kWh)",
+              "batteryCapacityKwh": 93.4,
+              "maxDcPowerKw": 270,
+              "maxAcPowerKw": 22.0,
+              "rangeKm": 500,
+              "connectorTypes": [
+                "CCS2",
+                "TYPE2"
+              ]
+            },
+            {
+              "name": "RS e-tron GT (93.4 kWh)",
+              "batteryCapacityKwh": 93.4,
+              "maxDcPowerKw": 270,
+              "maxAcPowerKw": 22.0,
+              "rangeKm": 472,
+              "connectorTypes": [
+                "CCS2",
+                "TYPE2"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "e-tron",
+          "name": "e-tron SUV / Sportback",
+          "variants": [
+            {
+              "name": "55 quattro (95 kWh)",
+              "batteryCapacityKwh": 95.0,
+              "maxDcPowerKw": 150,
+              "maxAcPowerKw": 11.0,
+              "rangeKm": 484,
+              "connectorTypes": [
+                "CCS2",
+                "TYPE2"
+              ]
+            },
+            {
+              "name": "50 quattro (71 kWh)",
+              "batteryCapacityKwh": 71.0,
+              "maxDcPowerKw": 120,
+              "maxAcPowerKw": 11.0,
+              "rangeKm": 336,
+              "connectorTypes": [
+                "CCS2",
+                "TYPE2"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "porsche",
+      "name": "Porsche",
+      "logoEmoji": "🏁",
+      "models": [
+        {
+          "id": "taycan",
+          "name": "Taycan",
+          "variants": [
+            {
+              "name": "4S (93.4 kWh Performance Battery Plus)",
+              "batteryCapacityKwh": 93.4,
+              "maxDcPowerKw": 270,
+              "maxAcPowerKw": 22.0,
+              "rangeKm": 512,
+              "connectorTypes": [
+                "CCS2",
+                "TYPE2"
+              ]
+            },
+            {
+              "name": "Turbo S (93.4 kWh)",
+              "batteryCapacityKwh": 93.4,
+              "maxDcPowerKw": 270,
+              "maxAcPowerKw": 22.0,
+              "rangeKm": 412,
+              "connectorTypes": [
+                "CCS2",
+                "TYPE2"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "macan-ev",
+          "name": "Macan Electric",
+          "variants": [
+            {
+              "name": "Macan 4 (100 kWh)",
+              "batteryCapacityKwh": 100.0,
+              "maxDcPowerKw": 270,
+              "maxAcPowerKw": 11.0,
+              "rangeKm": 613,
+              "connectorTypes": [
+                "CCS2",
+                "TYPE2"
+              ]
+            },
+            {
+              "name": "Macan Turbo (100 kWh)",
+              "batteryCapacityKwh": 100.0,
+              "maxDcPowerKw": 270,
+              "maxAcPowerKw": 11.0,
+              "rangeKm": 591,
+              "connectorTypes": [
+                "CCS2",
+                "TYPE2"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "jaguar",
+      "name": "Jaguar",
+      "logoEmoji": "🐆",
+      "models": [
+        {
+          "id": "i-pace",
+          "name": "I-PACE",
+          "variants": [
+            {
+              "name": "EV400 HSE (90 kWh)",
+              "batteryCapacityKwh": 90.0,
+              "maxDcPowerKw": 100,
+              "maxAcPowerKw": 11.0,
+              "rangeKm": 470,
+              "connectorTypes": [
+                "CCS2",
+                "TYPE2"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mini",
+      "name": "Mini",
+      "logoEmoji": "🇬🇧",
+      "models": [
+        {
+          "id": "cooper-se",
+          "name": "Cooper SE",
+          "variants": [
+            {
+              "name": "Electric Hatch (32.6 kWh)",
+              "batteryCapacityKwh": 32.6,
+              "maxDcPowerKw": 50,
+              "maxAcPowerKw": 11.0,
+              "rangeKm": 270,
+              "connectorTypes": [
+                "CCS2",
+                "TYPE2"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "countryman-e",
+          "name": "Countryman Electric",
+          "variants": [
+            {
+              "name": "Countryman E (66.5 kWh)",
+              "batteryCapacityKwh": 66.5,
+              "maxDcPowerKw": 130,
+              "maxAcPowerKw": 22.0,
+              "rangeKm": 462,
+              "connectorTypes": [
+                "CCS2",
+                "TYPE2"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lotus",
+      "name": "Lotus",
+      "logoEmoji": "🏎️",
+      "models": [
+        {
+          "id": "eletre",
+          "name": "Eletre Hyper-SUV",
+          "variants": [
+            {
+              "name": "Eletre S (112 kWh)",
+              "batteryCapacityKwh": 112.0,
+              "maxDcPowerKw": 350,
+              "maxAcPowerKw": 22.0,
+              "rangeKm": 600,
+              "connectorTypes": [
+                "CCS2",
+                "TYPE2"
+              ]
+            },
+            {
+              "name": "Eletre R (112 kWh)",
+              "batteryCapacityKwh": 112.0,
+              "maxDcPowerKw": 350,
+              "maxAcPowerKw": 22.0,
+              "rangeKm": 490,
+              "connectorTypes": [
+                "CCS2",
+                "TYPE2"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "rolls-royce",
+      "name": "Rolls-Royce",
+      "logoEmoji": "👑",
+      "models": [
+        {
+          "id": "spectre",
+          "name": "Spectre",
+          "variants": [
+            {
+              "name": "Ultra-Luxury EV (102 kWh)",
+              "batteryCapacityKwh": 102.0,
+              "maxDcPowerKw": 195,
+              "maxAcPowerKw": 22.0,
+              "rangeKm": 530,
+              "connectorTypes": [
+                "CCS2",
+                "TYPE2"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "maruti-suzuki",
+      "name": "Maruti Suzuki",
+      "logoEmoji": "🚙",
+      "models": [
+        {
+          "id": "e-vitara",
+          "name": "e Vitara",
+          "variants": [
+            {
+              "name": "Long Range AWD (61 kWh)",
+              "batteryCapacityKwh": 61.0,
+              "maxDcPowerKw": 150,
+              "maxAcPowerKw": 11.0,
+              "rangeKm": 500,
+              "connectorTypes": [
+                "CCS2",
+                "TYPE2"
+              ]
+            },
+            {
+              "name": "Standard (49 kWh)",
+              "batteryCapacityKwh": 49.0,
+              "maxDcPowerKw": 100,
+              "maxAcPowerKw": 7.4,
+              "rangeKm": 400,
+              "connectorTypes": [
+                "CCS2",
+                "TYPE2"
+              ]
             }
           ]
         }

@@ -1,0 +1,49 @@
+name: Feature Request
+description: Propose a new feature, CPO integration, or improvement
+title: "feat: "
+labels: ["enhancement", "feature"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for suggesting a feature for ChargeMesh!
+  - type: dropdown
+    id: component
+    attributes:
+      label: Target Component
+      description: Which area does this feature enhance?
+      options:
+        - Mobile Application (apps/mobile)
+        - Backend CSMS & REST API (apps/backend)
+        - Admin Operations Portal (apps/admin)
+        - OCPP 1.6-J / 2.0.1 Hardware Protocols
+        - OCPI 2.2 / 2.3 Roaming Modules
+        - Shared Types & Domain Models
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+      description: Is your feature request related to a problem or limitation? Please describe clearly.
+      placeholder: "Drivers often need to..."
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution / User Story
+      description: Describe your proposed solution or how the user experience should work.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Any alternative implementations or existing workarounds?
+  - type: checkboxes
+    id: willingness
+    attributes:
+      label: Contribution
+      options:
+        - label: I am interested in contributing code to implement this feature!

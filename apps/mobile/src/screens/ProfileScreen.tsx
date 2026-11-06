@@ -148,8 +148,8 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
     {
       icon: '✨',
       title: 'Release Updates',
-      subtitle: 'v1.2.5 • See what’s new, fixes & features',
-      badge: 'v1.2.5',
+      subtitle: 'V 1.0.0 (Prototype) • See what’s new, fixes & features',
+      badge: 'V 1.0.0 (Prototype)',
       onPress: () => setShowReleaseUpdatesModal(true),
     },
   ];

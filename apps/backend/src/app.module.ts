@@ -6,6 +6,7 @@ import { StationsModule } from './modules/stations/stations.module';
 import { SessionsModule } from './modules/sessions/sessions.module';
 import { TelemetryModule } from './modules/telemetry/telemetry.module';
 import { OcppModule } from './modules/ocpp/ocpp.module';
+import { AdminModule } from './modules/admin/admin.module';
 
 @Module({
   imports: [
@@ -18,6 +19,8 @@ import { OcppModule } from './modules/ocpp/ocpp.module';
     SessionsModule,
     TelemetryModule,
     OcppModule,
+    AdminModule,
   ],
 })
 export class AppModule {}
+

@@ -24,7 +24,7 @@ export const ReleaseUpdatesModal: React.FC<ReleaseUpdatesModalProps> = ({
 }) => {
   const { theme, mode } = useTheme();
   const isDark = mode === 'dark';
-  const [selectedVersion, setSelectedVersion] = useState<'1.2.5' | '1.2.0' | '1.1.0'>('1.2.5');
+  const [selectedVersion, setSelectedVersion] = useState<'1.0.0' | '0.9.0'>('1.0.0');
 
   return (
     <Modal
@@ -65,7 +65,7 @@ export const ReleaseUpdatesModal: React.FC<ReleaseUpdatesModalProps> = ({
                     ChargeMesh Updates
                   </Text>
                   <Text style={[styles.modalSubtitle, { color: theme.primary }]}>
-                    v{selectedVersion} • Released 24 Aug 2026
+                    V 1.0.0 (Prototype) • Released 30 Aug 2026
                   </Text>
                 </View>
               </View>
@@ -89,7 +89,7 @@ export const ReleaseUpdatesModal: React.FC<ReleaseUpdatesModalProps> = ({
 
             {/* Version Filter Tabs */}
             <View style={styles.versionTabsRow}>
-              {(['1.2.5', '1.2.0', '1.1.0'] as const).map((ver) => (
+              {(['1.0.0', '0.9.0'] as const).map((ver) => (
                 <TouchableOpacity
                   key={ver}
                   style={[
@@ -113,7 +113,7 @@ export const ReleaseUpdatesModal: React.FC<ReleaseUpdatesModalProps> = ({
                       selectedVersion === ver && { color: theme.primary, fontWeight: '800' },
                     ]}
                   >
-                    v{ver} {ver === '1.2.5' ? ' (Latest)' : ''}
+                    {ver === '1.0.0' ? 'V 1.0.0 (Prototype)' : `v${ver}`}
                   </Text>
                 </TouchableOpacity>
               ))}
@@ -126,7 +126,7 @@ export const ReleaseUpdatesModal: React.FC<ReleaseUpdatesModalProps> = ({
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
           >
-            {selectedVersion === '1.2.5' && (
+            {selectedVersion === '1.0.0' && (
               <>
                 {/* 🚀 New Features */}
                 <View style={styles.changeGroup}>
@@ -300,7 +300,7 @@ export const ReleaseUpdatesModal: React.FC<ReleaseUpdatesModalProps> = ({
               </>
             )}
 
-            {selectedVersion === '1.2.0' && (
+            {selectedVersion === '0.9.0' && (
               <View style={styles.changeGroup}>
                 <View
                   style={[
@@ -312,31 +312,19 @@ export const ReleaseUpdatesModal: React.FC<ReleaseUpdatesModalProps> = ({
                   ]}
                 >
                   <Text style={[styles.itemTitle, { color: theme.textPrimary }]}>
-                    ⚡ Multi-CPO Roaming Integration
+                    ⚡ Multi-CPO Interoperability Core
                   </Text>
                   <Text style={[styles.itemDesc, { color: theme.textSecondary }]}>
-                    Added live charging compatibility for Tata Power, Jio-bp pulse, Statiq, ChargeZone, and Ather Grid.
+                    Initial architecture supporting Tata Power, Jio-bp, Statiq, and ChargeZone charging protocols with EV garage profiles.
                   </Text>
-                </View>
-              </View>
-            )}
 
-            {selectedVersion === '1.1.0' && (
-              <View style={styles.changeGroup}>
-                <View
-                  style={[
-                    styles.changeCard,
-                    {
-                      backgroundColor: isDark ? 'rgba(255, 255, 255, 0.04)' : '#F8FAFC',
-                      borderColor: theme.border,
-                    },
-                  ]}
-                >
+                  <View style={[styles.cardDivider, { backgroundColor: theme.border }]} />
+
                   <Text style={[styles.itemTitle, { color: theme.textPrimary }]}>
-                    🌱 Eco Sustainability Impact Tracker
+                    🌱 Eco Sustainability Metrics
                   </Text>
                   <Text style={[styles.itemDesc, { color: theme.textSecondary }]}>
-                    Track CO₂ emission reductions and fossil fuel savings for every verified kWh delivered.
+                    Initial CO₂ emission offset and tree planting equivalent calculations.
                   </Text>
                 </View>
               </View>

@@ -315,3 +315,161 @@ export interface PaginatedResponse<T> {
     totalPages: number;
   };
 }
+
+// ─── Admin Dashboard & RBAC Models ───────────────────────────────────────────
+
+export enum AdminRole {
+  SUPER_ADMIN = 'SUPER_ADMIN',
+  OPERATIONS_ADMIN = 'OPERATIONS_ADMIN',
+  FINANCE_ADMIN = 'FINANCE_ADMIN',
+  SUPPORT_ADMIN = 'SUPPORT_ADMIN',
+  ANALYST = 'ANALYST',
+}
+
+export enum AdminStatus {
+  ACTIVE = 'ACTIVE',
+  SUSPENDED = 'SUSPENDED',
+  INACTIVE = 'INACTIVE',
+}
+
+export interface AdminUser {
+  id: string;
+  email: string;
+  name: string;
+  role: AdminRole;
+  status: AdminStatus;
+  department?: string;
+  avatarUrl?: string;
+  lastLoginAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export enum AuditActionType {
+  USER_SUSPEND = 'USER_SUSPEND',
+  USER_REACTIVATE = 'USER_REACTIVATE',
+  WALLET_ADJUSTMENT = 'WALLET_ADJUSTMENT',
+  PAYMENT_REFUND = 'PAYMENT_REFUND',
+  CPO_UPDATE = 'CPO_UPDATE',
+  CPO_SYNC_TRIGGER = 'CPO_SYNC_TRIGGER',
+  STATION_CREATE = 'STATION_CREATE',
+  STATION_UPDATE = 'STATION_UPDATE',
+  REMOTE_COMMAND_EXECUTE = 'REMOTE_COMMAND_EXECUTE',
+  EV_MASTER_UPDATE = 'EV_MASTER_UPDATE',
+  BROADCAST_CREATE = 'BROADCAST_CREATE',
+  ADMIN_USER_CREATE = 'ADMIN_USER_CREATE',
+  ADMIN_USER_UPDATE = 'ADMIN_USER_UPDATE',
+}
+
+export interface AuditLogEntry {
+  id: string;
+  actorId: string;
+  actorName: string;
+  actorRole: AdminRole;
+  action: AuditActionType;
+  targetEntity: 'USER' | 'WALLET' | 'PAYMENT' | 'CPO' | 'STATION' | 'CHARGER' | 'EV_MASTER' | 'BROADCAST' | 'ADMIN';
+  targetId: string;
+  previousValue?: Record<string, any>;
+  newValue?: Record<string, any>;
+  reason: string;
+  ipAddress: string;
+  userAgent?: string;
+  timestamp: string;
+}
+
+export interface AdminCpoDetail extends Cpo {
+  apiEndpointUrl?: string;
+  apiKeyMasked?: string;
+  syncFrequencySeconds: number;
+  totalStationCount: number;
+  totalOnlineChargers: number;
+  totalSessionsLifetime: number;
+  revenueSharePercent: number;
+  uptimePercent30d: number;
+  lastSyncResult?: {
+    status: 'SUCCESS' | 'PARTIAL' | 'FAILED';
+    locationsSynced: number;
+    tariffsSynced: number;
+    errorCount: number;
+    timestamp: string;
+  };
+}
+
+export interface OemBrandMaster {
+  id: string;
+  name: string;
+  logoEmoji: string;
+  country: string;
+  modelCount: number;
+  models: EvModelMaster[];
+}
+
+export interface EvModelMaster {
+  id: string;
+  brandId: string;
+  name: string;
+  bodyType: 'SUV' | 'SEDAN' | 'HATCHBACK' | 'CROSSOVER' | 'VAN';
+  variants: EvVariantMaster[];
+}
+
+export interface EvVariantMaster {
+  id: string;
+  modelId: string;
+  name: string;
+  batteryCapacityKwh: number;
+  maxDcPowerKw: number;
+  maxAcPowerKw: number;
+  rangeKm: number;
+  connectorTypes: ConnectorType[];
+  releaseYear?: number;
+  isVerified: boolean;
+}
+
+export interface AdminDashboardStats {
+  totalUsers: number;
+  activeDrivers24h: number;
+  totalCpos: number;
+  totalStations: number;
+  chargers: {
+    available: number;
+    inUse: number;
+    unavailable: number;
+    offline: number;
+    stale: number;
+    total: number;
+  };
+  todayRevenueInr: number;
+  todayEnergyKwh: number;
+  todayCo2SavedKg: number;
+  activeLiveSessions: number;
+  recentAlerts: {
+    id: string;
+    level: 'INFO' | 'WARNING' | 'ERROR';
+    title: string;
+    message: string;
+    timestamp: string;
+  }[];
+}
+
+export interface AdminWalletAdjustmentRequest {
+  userId: string;
+  amountRupees: number;
+  isCredit: boolean;
+  reason: string;
+  referenceTicketId?: string;
+}
+
+export interface AdminUserStatusUpdateRequest {
+  status: 'ACTIVE' | 'SUSPENDED' | 'BANNED';
+  reason: string;
+}
+
+export interface AdminBroadcastRequest {
+  title: string;
+  message: string;
+  targetAudience: 'ALL' | 'ACTIVE_DRIVERS' | 'REGION' | 'VEHICLE_MAKE';
+  regionFilter?: string;
+  vehicleMakeFilter?: string;
+  priority: 'NORMAL' | 'HIGH' | 'URGENT';
+}
+

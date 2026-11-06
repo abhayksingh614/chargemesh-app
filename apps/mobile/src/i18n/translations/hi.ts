@@ -288,7 +288,7 @@ export const hi: TranslationDictionary = {
     logoutBtn: 'लॉग आउट करें',
     confirmLogoutTitle: 'चार्जमेश से लॉग आउट करें?',
     confirmLogoutMsg: 'आपको अपने मोबाइल नंबर या ईमेल से दोबारा साइन इन करना होगा।',
-    appVersion: 'चार्जमेश ऐप v1.2.0 • बिल्ड 148',
+    appVersion: 'चार्जमेश V 1.0.0 (प्रोटोटाइप)',
   },
 
   // Activity Screen

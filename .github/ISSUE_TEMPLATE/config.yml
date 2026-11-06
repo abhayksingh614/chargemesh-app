@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security Vulnerabilities
+    url: https://github.com/abhayksingh614/chargemesh-app/blob/develop/SECURITY.md
+    about: Please report security vulnerabilities privately via our security process.
+  - name: Community Discussions & Q&A
+    url: https://github.com/abhayksingh614/chargemesh-app/discussions
+    about: Ask questions, share ideas, and connect with other contributors.
