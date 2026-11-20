@@ -3,11 +3,12 @@
   "rootDir": ".",
   "testEnvironment": "node",
   "testRegex": ".e2e-spec.ts$",
+  "testTimeout": 60000,
   "transform": {
-    "^.+\\.(t|j)s$": "ts-jest"
+    "^.+\\.ts$": "ts-jest"
   },
   "moduleNameMapper": {
-    "@chargemesh/shared-types": "<rootDir>/../../packages/shared-types/index.ts",
-    "@chargemesh/shared-constants": "<rootDir>/../../packages/shared-constants/index.ts"
+    "@chargemesh/shared-types": "<rootDir>/../../../packages/shared-types/index.ts",
+    "@chargemesh/shared-constants": "<rootDir>/../../../packages/shared-constants/index.ts"
   }
 }

@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -6,6 +7,13 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { StationsModule } from '../stations/stations.module';
 import { SessionsModule } from '../sessions/sessions.module';
 import { OcppModule } from '../ocpp/ocpp.module';
+import {
+  AdminUserEntity,
+  CpoEntity,
+  UserEntity,
+  FinanceLedgerEntity,
+  AuditLogEntity,
+} from '../../database/entities';
 
 import { AdminAuditService } from './admin-audit.service';
 import { AdminAuthService } from './admin-auth.service';
@@ -24,13 +32,18 @@ import { AdminAuditController } from './admin-audit.controller';
 
 @Module({
   imports: [
+    TypeOrmModule.forFeature([
+      AdminUserEntity,
+      CpoEntity,
+      UserEntity,
+      FinanceLedgerEntity,
+      AuditLogEntity,
+    ]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
-        secret:
-          configService.get<string>('app.jwtSecret') ||
-          'chargemesh-super-secret-jwt-key-2026',
+        secret: configService.getOrThrow<string>('app.jwtSecret'),
         signOptions: {
           expiresIn: '8h',
         },

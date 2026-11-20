@@ -1,13 +1,16 @@
 import { Controller, Get, Post, Query, Body, UseGuards, Request } from '@nestjs/common';
 import { AdminFinanceService } from './admin-finance.service';
 import { AuthGuard } from '@nestjs/passport';
-import { AdminWalletAdjustmentRequest } from '@chargemesh/shared-types';
+import { RolesGuard } from './guards/roles.guard';
+import { Roles } from './guards/roles.decorator';
+import { AdminRole, AdminWalletAdjustmentRequest } from '@chargemesh/shared-types';
 
 @Controller('api/v1/admin/finance')
+@UseGuards(AuthGuard('jwt'), RolesGuard)
+@Roles(AdminRole.SUPER_ADMIN, AdminRole.FINANCE_ADMIN)
 export class AdminFinanceController {
   constructor(private readonly financeService: AdminFinanceService) {}
 
-  @UseGuards(AuthGuard('jwt'))
   @Get('transactions')
   async getTransactions(
     @Query('search') search?: string,
@@ -19,11 +22,10 @@ export class AdminFinanceController {
     return this.financeService.getTransactions({ search, userId, type, page, pageSize });
   }
 
-  @UseGuards(AuthGuard('jwt'))
   @Post('wallet/adjust')
   async adjustWalletBalance(@Body() body: AdminWalletAdjustmentRequest, @Request() req: any) {
     const actor = {
-      id: req.user.sub || req.user.id,
+      id: req.user.sub || req.user.id || req.user.userId,
       name: req.user.name || 'Finance Admin',
       role: req.user.role || 'FINANCE_ADMIN',
     };

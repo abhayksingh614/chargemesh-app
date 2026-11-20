@@ -10,6 +10,7 @@ import {
 } from '@chargemesh/shared-types';
 import { mockVehicles } from '../services/mockData';
 import { WELCOME_BONUS_AMOUNT_PAISE } from '../constants/appConstants';
+import { apiClient } from '../services/apiClient';
 
 export { UserProfile, UserGender, ChargingPreferences, NotificationPreferences };
 
@@ -243,21 +244,79 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!phoneNumber || phoneNumber.replace(/\D/g, '').length < 10) {
       return false;
     }
-    // Simulate sending OTP SMS to India number
-    await new Promise((res) => setTimeout(res, 400));
-    return true;
+    const rawDigits = phoneNumber.replace(/\D/g, '').slice(-10);
+    const cleanPhone = `+91${rawDigits}`;
+
+    try {
+      const res = await apiClient.sendOtp(cleanPhone);
+      if (res.success) {
+        return true;
+      }
+      if (typeof __DEV__ !== 'undefined' && __DEV__ && process.env.NODE_ENV !== 'production') {
+        return true;
+      }
+      return false;
+    } catch {
+      if (typeof __DEV__ !== 'undefined' && __DEV__ && process.env.NODE_ENV !== 'production') {
+        return true;
+      }
+      return false;
+    }
   };
 
   const loginWithPhoneOtp = async (phoneNumber: string, otp: string): Promise<boolean> => {
     setIsLoading(true);
     try {
       const cleanOtp = (otp || '').trim();
-      // Validate OTP (allow valid 6-digit or demo '123456')
+      const rawPhone = phoneNumber.replace(/\D/g, '').slice(-10);
+      const cleanPhone = `+91${rawPhone}`;
+
+      // 1. Live Central System Backend Authentication
+      try {
+        const apiRes = await apiClient.login(cleanPhone, cleanOtp);
+        if (apiRes.success && apiRes.data?.token) {
+          const { token, user: backendUser } = apiRes.data;
+          const formattedPhone = `+91 ${rawPhone.slice(0, 5)} ${rawPhone.slice(5)}`;
+          const loggedUser: UserProfile = {
+            id: backendUser.id,
+            name: backendUser.name || 'EV Driver',
+            phoneNumber: formattedPhone,
+            email: backendUser.email || `${rawPhone}@chargemesh.com`,
+            isPhoneVerified: true,
+            walletBalancePaise: Number(backendUser.walletBalancePaise || 0),
+            totalKwhCharged: Number(backendUser.totalKwhCharged || 0),
+            co2SavedKg: Number(backendUser.co2SavedKg || 0),
+            totalSessions: Number(backendUser.totalSessions || 0),
+            authProvider: 'phone',
+            membershipTier: 'ChargeMesh Verified Driver',
+            memberSince: '2026',
+            profileCompletionPercentage: 85,
+            joiningBonusStatus: 'CREDITED',
+            joiningBonusAmountPaise: 10000,
+          };
+
+          setUser(loggedUser);
+          setIsAuthenticated(true);
+          await Promise.all([
+            AsyncStorage.setItem(STORAGE_KEYS.USER_PROFILE, JSON.stringify(loggedUser)),
+            AsyncStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, token),
+          ]);
+          return true;
+        }
+      } catch {
+        // Fall through to dev fallback only if in development mode
+      }
+
+      // 2. Strict Production Guard: Never fall back to mock data in production
+      if (process.env.NODE_ENV === 'production') {
+        return false;
+      }
+
+      // 3. Development / Offline Test Fallback
       if (cleanOtp.length !== 6 && cleanOtp !== '123456') {
         return false;
       }
 
-      const rawPhone = phoneNumber.replace(/\D/g, '').slice(-10);
       const demoUser = DEMO_USER_DATABASE.find(
         (u) => u.phoneNumber.replace(/\D/g, '').slice(-10) === rawPhone
       );
@@ -338,7 +397,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               autoFilterIncompatible: true,
               preferredSpeed: 'ULTRA_FAST',
               preferredConnector: ConnectorType.CCS2,
-              preferredNetworks: ['Tata Power EZ Charge'],
+              preferredNetworks: ['Tata Power EZ Charge', 'Jio-bp pulse'],
               searchRadiusKm: 25,
             },
             notificationPreferences: {
@@ -346,7 +405,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               completionAlerts: true,
               stationAvailabilityAlerts: true,
               emailInvoices: true,
-              promotionalOffers: true,
+              promotionalOffers: false,
             },
           };
 
@@ -354,7 +413,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsAuthenticated(true);
       await Promise.all([
         AsyncStorage.setItem(STORAGE_KEYS.USER_PROFILE, JSON.stringify(loggedUser)),
-        AsyncStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, `cm-phone-jwt-${Date.now()}`),
+        AsyncStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, `cm-dev-token-${Date.now()}`),
       ]);
       return true;
     } catch {
@@ -570,6 +629,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = async () => {
     setIsLoading(true);
     try {
+      await apiClient.logout().catch(() => {});
       setIsAuthenticated(false);
       setUser(guestUser);
       await Promise.all([

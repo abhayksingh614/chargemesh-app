@@ -1,84 +1,119 @@
-import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  ConflictException,
+  BadRequestException,
+  Logger,
+  Optional,
+} from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
-
-export interface UserEntity {
-  id: string;
-  phoneNumber: string;
-  name: string;
-  email?: string;
-  vehicle?: {
-    make: string;
-    model: string;
-    connectorType: string;
-    batteryCapacity?: number;
-  };
-  createdAt: Date;
-}
+import { OtpService } from './otp/otp.service';
+import { TokenBlacklistService } from './token-blacklist.service';
+import { UserEntity } from '../../database/entities';
 
 @Injectable()
 export class AuthService {
-  private readonly users = new Map<string, UserEntity>();
+  private readonly logger = new Logger(AuthService.name);
+  private readonly inMemoryUsers = new Map<string, UserEntity>();
 
-  constructor(private readonly jwtService: JwtService) {
-    // Seed test driver profile
-    const defaultUser: UserEntity = {
-      id: 'usr-default-01',
-      phoneNumber: '+919876543210',
-      name: 'Rahul',
-      email: 'rahul@gmail.com',
-      vehicle: {
-        make: 'Tata',
-        model: 'Nexon EV Max',
-        connectorType: 'CCS2',
-        batteryCapacity: 40.5,
-      },
-      createdAt: new Date(),
-    };
-    this.users.set(defaultUser.phoneNumber, defaultUser);
+  constructor(
+    @InjectRepository(UserEntity)
+    private readonly userRepo: Repository<UserEntity>,
+    private readonly jwtService: JwtService,
+    private readonly otpService: OtpService,
+    @Optional() private readonly tokenBlacklistService?: TokenBlacklistService,
+  ) {}
+
+  async requestOtp(phoneNumber: string) {
+    return this.otpService.sendOtp(phoneNumber);
   }
 
   async register(dto: RegisterDto) {
-    if (this.users.has(dto.phoneNumber)) {
+    let existing: UserEntity | null = null;
+    try {
+      existing = await this.userRepo.findOneBy({ phoneNumber: dto.phoneNumber });
+    } catch {
+      existing = this.inMemoryUsers.get(dto.phoneNumber) || null;
+    }
+
+    if (existing) {
       throw new ConflictException('User with this phone number already exists');
     }
 
-    const newUser: UserEntity = {
+    const newUser: Partial<UserEntity> = {
       id: `usr-${Date.now()}`,
       phoneNumber: dto.phoneNumber,
       name: dto.name,
       email: dto.email,
       vehicle: dto.vehicle,
-      createdAt: new Date(),
+      status: 'ACTIVE',
+      walletBalancePaise: 0,
+      totalKwhCharged: 0,
+      co2SavedKg: 0,
+      totalSessions: 0,
     };
 
-    this.users.set(dto.phoneNumber, newUser);
+    let savedUser = newUser as UserEntity;
+    try {
+      savedUser = await this.userRepo.save(newUser as UserEntity);
+      this.logger.log(`Persisted registered user ${savedUser.id} (${savedUser.phoneNumber})`);
+    } catch (err: any) {
+      this.logger.warn(`Failed to persist user to database: ${err.message}. Retaining in-memory.`);
+    }
 
-    const token = this.generateToken(newUser);
+    this.inMemoryUsers.set(dto.phoneNumber, savedUser);
+
+    const token = this.generateToken(savedUser);
     return {
-      user: newUser,
+      user: savedUser,
       token,
     };
   }
 
   async login(dto: LoginDto) {
-    let user = this.users.get(dto.phoneNumber);
+    if (!dto.otp) {
+      throw new BadRequestException('OTP code is required for login');
+    }
 
-    // Auto-create user if in testing/dev mode with OTP
+    // Verify OTP using secure provider with single-use and rate limiting controls
+    await this.otpService.verifyOtp(dto.phoneNumber, dto.otp);
+
+    let user: UserEntity | null = null;
+    try {
+      user = await this.userRepo.findOneBy({ phoneNumber: dto.phoneNumber });
+    } catch {
+      user = this.inMemoryUsers.get(dto.phoneNumber) || null;
+    }
+
     if (!user) {
-      user = {
+      user = this.inMemoryUsers.get(dto.phoneNumber) || null;
+    }
+
+    if (!user) {
+      if (process.env.NODE_ENV === 'production') {
+        throw new UnauthorizedException('User account not found. Please register first.');
+      }
+      const newUser: Partial<UserEntity> = {
         id: `usr-${Date.now()}`,
         phoneNumber: dto.phoneNumber,
         name: 'New Driver',
-        createdAt: new Date(),
+        status: 'ACTIVE',
+        walletBalancePaise: 0,
+        totalKwhCharged: 0,
+        co2SavedKg: 0,
+        totalSessions: 0,
       };
-      this.users.set(dto.phoneNumber, user);
-    }
 
-    // OTP validation simulation (accepts valid 6-digit or default '123456')
-    if (dto.otp && dto.otp !== '123456' && dto.otp.length !== 6) {
-      throw new UnauthorizedException('Invalid or expired OTP');
+      try {
+        user = await this.userRepo.save(newUser as UserEntity);
+      } catch {
+        user = newUser as UserEntity;
+      }
+      this.inMemoryUsers.set(dto.phoneNumber, user);
     }
 
     const token = this.generateToken(user);
@@ -89,12 +124,50 @@ export class AuthService {
   }
 
   async getProfile(userId: string): Promise<UserEntity> {
-    for (const u of this.users.values()) {
+    try {
+      const user = await this.userRepo.findOneBy({ id: userId });
+      if (user) return user;
+    } catch {}
+
+    for (const u of this.inMemoryUsers.values()) {
       if (u.id === userId) {
         return u;
       }
     }
     throw new UnauthorizedException('User not found');
+  }
+
+  async logout(token: string) {
+    if (this.tokenBlacklistService) {
+      await this.tokenBlacklistService.blacklistToken(token);
+    }
+    return { success: true, message: 'Logged out successfully' };
+  }
+
+  async refreshToken(token: string) {
+    if (this.tokenBlacklistService && (await this.tokenBlacklistService.isTokenBlacklisted(token))) {
+      throw new UnauthorizedException('Token has been revoked');
+    }
+
+    let payload: any;
+    try {
+      payload = await this.jwtService.verifyAsync(token);
+    } catch {
+      throw new UnauthorizedException('Invalid or expired token');
+    }
+
+    const userId = payload.sub;
+    const user = await this.getProfile(userId);
+
+    if (this.tokenBlacklistService) {
+      await this.tokenBlacklistService.blacklistToken(token);
+    }
+
+    const newToken = this.generateToken(user);
+    return {
+      user,
+      token: newToken,
+    };
   }
 
   private generateToken(user: UserEntity): string {

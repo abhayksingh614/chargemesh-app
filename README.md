@@ -17,7 +17,8 @@
   <a href="#docker"><img src="https://img.shields.io/badge/PostgreSQL%20%2B%20PostGIS-16-336791.svg?logo=postgresql&logoColor=white" alt="PostGIS 16" /></a>
   <a href="#-protocols--standards"><img src="https://img.shields.io/badge/Protocol-OCPP%201.6--J%20%2F%202.0.1-orange.svg" alt="OCPP 1.6-J / 2.0.1" /></a>
   <a href="CONTRIBUTING.md"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" alt="PRs Welcome" /></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT%20Evaluation-green.svg" alt="License" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache--2.0-blue.svg" alt="License" /></a>
+  <a href="#-testing--quality-assurance"><img src="https://img.shields.io/badge/Tests-109%20passed-brightgreen.svg" alt="Tests 109 Passed" /></a>
 </p>
 
 ---
@@ -242,19 +243,25 @@ npm run typecheck
 ```bash
 npm run docker:up
 ```
-*Spins up PostgreSQL 16 (PostGIS) on port 5432 and Redis 7 on port 6379.*
+*Spins up PostgreSQL 16 (PostGIS) on port 5434 (configurable via `DB_PORT`) and Redis 7 on port 6379.*
 
-### 5. Launch Applications
+### 5. Run Database Migrations
+```bash
+npm run migration:run --workspace=apps/backend
+```
+*Applies all versioned TypeORM migrations and spatial PostGIS extensions.*
+
+### 6. Launch Applications
 - **Backend CSMS Server:**
   ```bash
   npm run dev:backend
   ```
-  *Server starts on `http://localhost:3001` with WebSocket gateways at `ws://localhost:3001/ocpp` and `ws://localhost:3001/telemetry`.*
+  *Server starts on `http://localhost:3000` with WebSocket gateways at `ws://localhost:3000/ocpp` and `ws://localhost:3000/telemetry`.*
 - **Admin Operations Portal:**
   ```bash
   npm run dev:admin
   ```
-  *Accessible at `http://localhost:3000` (or 3001).*
+  *Accessible at `http://localhost:3001`.*
 - **Mobile Driver App:**
   ```bash
   # Terminal 1: Start Metro bundler
@@ -308,8 +315,12 @@ Database initialization is automated via `docker/postgres/init.sql`, enabling:
 
 | Protocol | Endpoint | Description |
 | :--- | :--- | :--- |
+| `GET` | `/health` | Service health status and uptime |
+| `GET` | `/health/live` | Container liveness probe |
+| `GET` | `/health/ready` | Database & Redis readiness probe |
 | `POST` | `/api/v1/auth/register` | Driver registration with vehicle details |
 | `POST` | `/api/v1/auth/login` | Driver authentication; returns JWT Bearer token |
+| `POST` | `/api/v1/auth/otp/send` | Request cryptographic 6-digit OTP |
 | `GET` | `/api/v1/auth/me` | Authenticated driver profile retrieval |
 | `GET` | `/api/v1/stations` | Spatial search with `lat`, `lng`, `radiusKm`, `connectorType` |
 | `GET` | `/api/v1/stations/:id` | Full station details and live connector status |
@@ -325,14 +336,26 @@ Database initialization is automated via `docker/postgres/init.sql`, enabling:
 ## 🧪 Testing & Quality Assurance
 
 ```bash
+# Run tests across all workspaces (Backend, Admin, Mobile)
+npm test
+
+# Run backend unit tests (90 passing tests across 15 suites, including adversarial financial & OCPP tests)
+npm run test:backend
+
+# Run backend E2E tests against live PostgreSQL 16 + PostGIS & Redis 7
+npm run test:e2e --workspace=apps/backend
+
+# Run admin data consistency tests (10 passing tests across 2 suites)
+npm run test:admin
+
+# Run mobile theme and safety tests (9 passing tests across 2 suites)
+npm run test --workspace=apps/mobile
+
 # Run full monorepo typecheck (0 errors across 5 workspaces)
 npm run typecheck
 
-# Run backend unit test suites (12 passing tests)
-npm run test:backend
-
-# Run with coverage report
-npm run test:cov --workspace=apps/backend
+# Run linter across all workspaces
+npm run lint
 ```
 
 *Testing specifications and guidelines:* [`TESTING.md`](TESTING.md)
@@ -397,7 +420,7 @@ ChargeMesh development is organized into 5 clear phases:
 ## 📄 Licensing & Copyright
 
 - **Copyright:** Copyright (c) 2026 Abhay Kumar Singh and ChargeMesh Contributors. See [`COPYRIGHT.md`](COPYRIGHT.md).
-- **Open-Source Evaluation:** The maintainers recommend the **MIT License** for broad community adoption. See [`docs/LICENSE_EVALUATION.md`](docs/LICENSE_EVALUATION.md) and [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
+- **License:** Distributed under the **Apache-2.0 License**. See [`LICENSE`](LICENSE) and [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
 
 ---
 

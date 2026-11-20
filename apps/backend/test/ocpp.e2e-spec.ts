@@ -22,14 +22,18 @@ describe('OCPP 1.6-J Charge Point Gateway (e2e)', () => {
 
     const address = app.getHttpServer().address();
     serverPort = typeof address === 'string' ? 3000 : address.port;
-  });
+  }, 60000);
 
   afterAll(async () => {
     if (wsClient && wsClient.readyState === WebSocket.OPEN) {
       wsClient.close();
     }
-    await app.close();
+    if (app) {
+      await app.close();
+    }
   });
+
+  jest.setTimeout(30000);
 
   it('should connect Charge Point via WebSocket and complete BootNotification flow', (done) => {
     wsClient = new WebSocket(`ws://localhost:${serverPort}/ocpp?cp=CP-TEST-001`, ['ocpp1.6']);

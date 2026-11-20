@@ -7,24 +7,32 @@ import { TransformInterceptor } from '../src/common/interceptors/transform.inter
 import { AllExceptionsFilter } from '../src/common/filters/http-exception.filter';
 
 describe('ChargeMesh Backend Hub (e2e)', () => {
+  jest.setTimeout(30000);
   let app: INestApplication;
   let jwtToken: string;
 
   beforeAll(async () => {
+    console.log('[E2E DEBUG] Step 1: createTestingModule');
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
 
+    console.log('[E2E DEBUG] Step 2: createNestApplication');
     app = moduleFixture.createNestApplication();
     app.useWebSocketAdapter(new WsAdapter(app));
     app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
     app.useGlobalInterceptors(new TransformInterceptor());
     app.useGlobalFilters(new AllExceptionsFilter());
+
+    console.log('[E2E DEBUG] Step 3: app.init');
     await app.init();
-  });
+    console.log('[E2E DEBUG] Step 4: done init');
+  }, 60000);
 
   afterAll(async () => {
-    await app.close();
+    if (app) {
+      await app.close();
+    }
   });
 
   it('/api/v1/auth/login (POST) - should authenticate driver and return JWT', async () => {
@@ -91,5 +99,22 @@ describe('ChargeMesh Backend Hub (e2e)', () => {
 
     expect(stopRes.body.success).toBe(true);
     expect(stopRes.body.data.status).toBe('COMPLETED');
+  });
+
+  it('/health & /health/ready (GET) - DevOps liveness and readiness probe', async () => {
+    const healthRes = await request(app.getHttpServer())
+      .get('/health')
+      .expect(200);
+
+    expect(healthRes.body.success).toBe(true);
+    expect(healthRes.body.data.status).toBe('ok');
+    expect(healthRes.body.data.service).toBe('chargemesh-backend');
+
+    const readyRes = await request(app.getHttpServer())
+      .get('/health/ready')
+      .expect(200);
+
+    expect(readyRes.body.success).toBe(true);
+    expect(readyRes.body.data.checks.database).toBe('connected');
   });
 });

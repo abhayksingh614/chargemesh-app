@@ -1,12 +1,19 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { AdminCpoDetail, CpoProtocol, CpoIntegrationStatus, AuditActionType, AdminRole } from '@chargemesh/shared-types';
 import { AdminAuditService } from './admin-audit.service';
+import { CpoEntity } from '../../database/entities';
 
 @Injectable()
 export class AdminCpoService {
   private readonly cpos: Map<string, AdminCpoDetail> = new Map();
 
-  constructor(private readonly auditService: AdminAuditService) {
+  constructor(
+    @InjectRepository(CpoEntity)
+    private readonly cpoRepo: Repository<CpoEntity>,
+    private readonly auditService: AdminAuditService,
+  ) {
     const list: AdminCpoDetail[] = [
       {
         id: 'cpo-tata',
@@ -155,10 +162,39 @@ export class AdminCpoService {
   }
 
   async findAll(): Promise<AdminCpoDetail[]> {
+    try {
+      const dbCpos = await this.cpoRepo.find();
+      if (dbCpos.length > 0) {
+        return dbCpos.map((c) => ({
+          ...c,
+          protocol: c.protocol as CpoProtocol,
+          integrationStatus: c.integrationStatus as CpoIntegrationStatus,
+          createdAt: c.createdAt.toISOString(),
+          updatedAt: c.updatedAt.toISOString(),
+          lastSyncAt: c.lastSyncAt ? c.lastSyncAt.toISOString() : undefined,
+          lastSyncResult: c.lastSyncResult as AdminCpoDetail['lastSyncResult'],
+        }));
+      }
+    } catch {}
     return Array.from(this.cpos.values());
   }
 
   async findById(id: string): Promise<AdminCpoDetail> {
+    try {
+      const dbCpo = await this.cpoRepo.findOneBy({ id });
+      if (dbCpo) {
+        return {
+          ...dbCpo,
+          protocol: dbCpo.protocol as CpoProtocol,
+          integrationStatus: dbCpo.integrationStatus as CpoIntegrationStatus,
+          createdAt: dbCpo.createdAt.toISOString(),
+          updatedAt: dbCpo.updatedAt.toISOString(),
+          lastSyncAt: dbCpo.lastSyncAt ? dbCpo.lastSyncAt.toISOString() : undefined,
+          lastSyncResult: dbCpo.lastSyncResult as AdminCpoDetail['lastSyncResult'],
+        };
+      }
+    } catch {}
+
     const cpo = this.cpos.get(id);
     if (!cpo) {
       throw new NotFoundException(`CPO ${id} not found`);
@@ -167,10 +203,7 @@ export class AdminCpoService {
   }
 
   async triggerSync(id: string, adminActor: { id: string; name: string; role: AdminRole }): Promise<AdminCpoDetail> {
-    const cpo = this.cpos.get(id);
-    if (!cpo) {
-      throw new NotFoundException(`CPO ${id} not found`);
-    }
+    const cpo = await this.findById(id);
 
     cpo.lastSyncAt = new Date().toISOString();
     cpo.lastSyncResult = {
@@ -180,6 +213,14 @@ export class AdminCpoService {
       errorCount: 0,
       timestamp: cpo.lastSyncAt,
     };
+
+    try {
+      await this.cpoRepo.update(id, {
+        lastSyncAt: new Date(cpo.lastSyncAt),
+        lastSyncResult: cpo.lastSyncResult as any,
+        updatedAt: new Date(),
+      });
+    } catch {}
 
     await this.auditService.record({
       actorId: adminActor.id,

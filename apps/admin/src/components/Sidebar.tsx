@@ -77,7 +77,7 @@ export function Sidebar() {
         }}
       >
         {NAV_ITEMS.map((item) => {
-          const isActive = pathname === item.path || pathname.startsWith(`${item.path}/`);
+          const isActive = pathname === item.path || (pathname?.startsWith(`${item.path}/`) ?? false);
           return (
             <Link
               key={item.path}

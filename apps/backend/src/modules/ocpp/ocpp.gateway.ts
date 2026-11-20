@@ -18,7 +18,7 @@ export class OcppGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   constructor(private readonly ocppService: OcppService) {}
 
-  handleConnection(client: WebSocket, req: IncomingMessage) {
+  async handleConnection(client: WebSocket, req: IncomingMessage) {
     const url = req.url || '';
     // Extract chargePointId from URL path e.g. /ocpp/CP-DELHI-001 or query ?cp=CP-DELHI-001
     let chargePointId = 'UNKNOWN_CP';
@@ -31,7 +31,17 @@ export class OcppGateway implements OnGatewayConnection, OnGatewayDisconnect {
       chargePointId = params.get('chargePointId') || params.get('cp') || 'UNKNOWN_CP';
     }
 
+    const authHeader = req.headers['authorization'] as string | undefined;
     const protocol = (req.headers['sec-websocket-protocol'] as string) || 'ocpp1.6';
+
+    const authCheck = await this.ocppService.authenticateChargePoint(chargePointId, authHeader);
+    if (!authCheck.authorized) {
+      this.logger.warn(
+        `OCPP handshake rejected for [${chargePointId}]: ${authCheck.reason} (IP: ${req.socket.remoteAddress})`,
+      );
+      client.close(1008, authCheck.reason || 'Unauthorized');
+      return;
+    }
 
     this.logger.log(
       `Charge Point connected: ${chargePointId} [Subprotocol: ${protocol}] (IP: ${req.socket.remoteAddress})`,

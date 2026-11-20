@@ -17,30 +17,27 @@ export default function LoginPage() {
     e.preventDefault();
     setError(null);
 
-    const validEmails = ['admin@chargemesh.com', 'admin@cm.com', 'ops@chargemesh.com', 'finance@chargemesh.com', 'support@chargemesh.com'];
-    const validPasswords = ['ChargeMesh@123', 'Hello@123', 'admin123'];
-
-    if (!validEmails.includes(email.toLowerCase()) || !validPasswords.includes(password)) {
-      setError('Invalid admin credentials. For demo access use admin@chargemesh.com or admin@cm.com with ChargeMesh@123 / Hello@123');
-      return;
-    }
-
     let role = AdminRole.SUPER_ADMIN;
     if (email.includes('ops')) role = AdminRole.OPERATIONS_ADMIN;
     else if (email.includes('finance')) role = AdminRole.FINANCE_ADMIN;
     else if (email.includes('support')) role = AdminRole.SUPPORT_ADMIN;
 
-    const success = await login(email, role);
+    const success = await login(email, password, role);
     if (success) {
       router.push('/dashboard');
     } else {
-      setError('Authentication failed. Please check your credentials.');
+      setError('Authentication failed. Please verify your administrative credentials.');
     }
   };
 
   const handleQuickLogin = async (role: AdminRole, roleEmail: string) => {
-    await login(roleEmail, role);
-    router.push('/dashboard');
+    setError(null);
+    const success = await login(roleEmail, 'Dev@ChargeMesh2026!', role);
+    if (success) {
+      router.push('/dashboard');
+    } else {
+      setError('Unable to authenticate demo administrator.');
+    }
   };
 
   return (

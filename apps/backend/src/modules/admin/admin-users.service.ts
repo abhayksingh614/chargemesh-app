@@ -1,12 +1,28 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { UserProfile, UserGender, ConnectorType, AuditActionType, AdminRole } from '@chargemesh/shared-types';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import {
+  UserProfile,
+  UserGender,
+  ConnectorType,
+  AuditActionType,
+  AdminRole,
+} from '@chargemesh/shared-types';
 import { AdminAuditService } from './admin-audit.service';
+import { UserEntity } from '../../database/entities';
 
 @Injectable()
 export class AdminUsersService {
-  private readonly users: Map<string, UserProfile & { status: 'ACTIVE' | 'SUSPENDED' | 'BANNED'; adminNotes?: string }> = new Map();
+  private readonly users: Map<
+    string,
+    UserProfile & { status: 'ACTIVE' | 'SUSPENDED' | 'BANNED'; adminNotes?: string }
+  > = new Map();
 
-  constructor(private readonly auditService: AdminAuditService) {
+  constructor(
+    @InjectRepository(UserEntity)
+    private readonly userRepo: Repository<UserEntity>,
+    private readonly auditService: AdminAuditService,
+  ) {
     const demoUser: UserProfile & { status: 'ACTIVE' | 'SUSPENDED' | 'BANNED'; adminNotes?: string } = {
       id: 'usr-abhay-01',
       name: 'Abhay Singh',
@@ -104,7 +120,74 @@ export class AdminUsersService {
     this.users.set(demoUser3.id, demoUser3);
   }
 
-  async findAll(query?: { search?: string; status?: string; page?: number; pageSize?: number }) {
+  private mapUserEntityToProfile(u: UserEntity) {
+    const mem = this.users.get(u.id);
+    return {
+      id: u.id,
+      name: u.name,
+      phoneNumber: u.phoneNumber,
+      email: u.email || '',
+      walletBalancePaise: Number(u.walletBalancePaise),
+      totalKwhCharged: Number(u.totalKwhCharged),
+      co2SavedKg: Number(u.co2SavedKg),
+      totalSessions: Number(u.totalSessions),
+      status: (u.status as 'ACTIVE' | 'SUSPENDED' | 'BANNED') || 'ACTIVE',
+      vehicle: u.vehicle,
+      createdAt: u.createdAt,
+      updatedAt: u.updatedAt,
+      adminNotes: mem?.adminNotes,
+      membershipTier: mem?.membershipTier || 'ChargeMesh Member',
+      userCode: mem?.userCode || `CM-DRV-${u.id.substring(u.id.length - 4).toUpperCase()}`,
+    };
+  }
+
+  async findAll(query?: {
+    search?: string;
+    status?: string;
+    page?: number;
+    pageSize?: number;
+  }) {
+    const page = Math.max(1, Number(query?.page) || 1);
+    const pageSize = Math.max(1, Math.min(100, Number(query?.pageSize) || 20));
+
+    try {
+      const qb = this.userRepo.createQueryBuilder('u');
+
+      if (query?.status) {
+        qb.andWhere('u.status = :status', { status: query.status });
+      }
+
+      if (query?.search) {
+        const s = `%${query.search.trim().toLowerCase()}%`;
+        qb.andWhere(
+          '(LOWER(u.name) LIKE :s OR u.phoneNumber LIKE :s OR LOWER(u.email) LIKE :s)',
+          { s },
+        );
+      }
+
+      qb.orderBy('u.createdAt', 'DESC')
+        .skip((page - 1) * pageSize)
+        .take(pageSize);
+
+      const [dbUsers, total] = await qb.getManyAndCount();
+
+      if (total > 0) {
+        const data = dbUsers.map((u) => this.mapUserEntityToProfile(u));
+        return {
+          success: true,
+          data,
+          pagination: {
+            page,
+            pageSize,
+            total,
+            totalPages: Math.ceil(total / pageSize),
+          },
+        };
+      }
+    } catch {
+      // In-memory fallback if database query is unavailable
+    }
+
     let result = Array.from(this.users.values());
 
     if (query?.search) {
@@ -113,7 +196,7 @@ export class AdminUsersService {
         (u) =>
           u.name.toLowerCase().includes(s) ||
           u.phoneNumber.includes(s) ||
-          u.email.toLowerCase().includes(s) ||
+          (u.email && u.email.toLowerCase().includes(s)) ||
           (u.userCode && u.userCode.toLowerCase().includes(s)),
       );
     }
@@ -122,8 +205,6 @@ export class AdminUsersService {
       result = result.filter((u) => u.status === query.status);
     }
 
-    const page = Number(query?.page) || 1;
-    const pageSize = Number(query?.pageSize) || 20;
     const total = result.length;
     const paginated = result.slice((page - 1) * pageSize, page * pageSize);
 
@@ -140,6 +221,13 @@ export class AdminUsersService {
   }
 
   async findById(id: string) {
+    try {
+      const dbUser = await this.userRepo.findOneBy({ id });
+      if (dbUser) {
+        return this.mapUserEntityToProfile(dbUser);
+      }
+    } catch {}
+
     const user = this.users.get(id);
     if (!user) {
       throw new NotFoundException(`Driver ${id} not found`);
@@ -153,21 +241,40 @@ export class AdminUsersService {
     reason: string,
     adminActor: { id: string; name: string; role: AdminRole },
   ) {
-    const user = this.users.get(id);
+    let user: any = null;
+    let previousStatus = 'ACTIVE';
+
+    try {
+      const dbUser = await this.userRepo.findOneBy({ id });
+      if (dbUser) {
+        previousStatus = dbUser.status;
+        dbUser.status = status;
+        await this.userRepo.update(id, { status, updatedAt: new Date() });
+        user = this.mapUserEntityToProfile(dbUser);
+      }
+    } catch {}
+
+    const memUser = this.users.get(id);
+    if (memUser) {
+      previousStatus = memUser.status;
+      memUser.status = status;
+      if (!user) user = memUser;
+    }
+
     if (!user) {
       throw new NotFoundException(`Driver ${id} not found`);
     }
-
-    const previousStatus = user.status;
-    user.status = status;
 
     await this.auditService.record({
       actorId: adminActor.id,
       actorName: adminActor.name,
       actorRole: adminActor.role,
-      action: status === 'ACTIVE' ? AuditActionType.USER_REACTIVATE : AuditActionType.USER_SUSPEND,
+      action:
+        status === 'ACTIVE'
+          ? AuditActionType.USER_REACTIVATE
+          : AuditActionType.USER_SUSPEND,
       targetEntity: 'USER',
-      targetId: user.id,
+      targetId: id,
       previousValue: { status: previousStatus },
       newValue: { status },
       reason,

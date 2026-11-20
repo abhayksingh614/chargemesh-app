@@ -1,7 +1,10 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Optional } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository, DataSource } from 'typeorm';
 import { AuditActionType, AdminRole } from '@chargemesh/shared-types';
 import { AdminAuditService } from './admin-audit.service';
 import { AdminUsersService } from './admin-users.service';
+import { FinanceLedgerEntity, UserEntity } from '../../database/entities';
 
 export interface FinanceLedgerEntry {
   id: string;
@@ -124,12 +127,49 @@ export class AdminFinanceService {
   ];
 
   constructor(
+    @InjectRepository(FinanceLedgerEntity)
+    private readonly financeRepo: Repository<FinanceLedgerEntity>,
+    @InjectRepository(UserEntity)
+    private readonly userRepo: Repository<UserEntity>,
+    @Optional()
+    private readonly dataSource: DataSource,
     private readonly auditService: AdminAuditService,
     private readonly usersService: AdminUsersService,
   ) {}
 
-  async getTransactions(query?: { search?: string; userId?: string; type?: string; page?: number; pageSize?: number }) {
+  async getTransactions(query?: {
+    search?: string;
+    userId?: string;
+    type?: string;
+    page?: number;
+    pageSize?: number;
+  }) {
     let result = [...this.transactions];
+
+    try {
+      const dbEntries = await this.financeRepo.find({ order: { createdAt: 'DESC' } });
+      if (dbEntries.length > 0) {
+        result = dbEntries.map((e) => ({
+          id: e.id,
+          referenceId: e.referenceId,
+          userId: e.userId,
+          userName: e.userName,
+          type: e.type,
+          title: e.title,
+          amountRupees: Number(e.amountRupees),
+          isCredit: e.isCredit,
+          status: e.status as any,
+          dateStr: e.dateStr,
+          timeStr: e.timeStr,
+          rawTimestamp: Number(e.rawTimestamp),
+          paymentMethodName: e.paymentMethodName,
+          balanceBeforeRupees: Number(e.balanceBeforeRupees),
+          balanceAfterRupees: Number(e.balanceAfterRupees),
+          remarks: e.remarks,
+          reconciled: e.reconciled,
+        }));
+      }
+    } catch {}
 
     if (query?.userId) {
       result = result.filter((t) => t.userId === query.userId);
@@ -148,8 +188,8 @@ export class AdminFinanceService {
       );
     }
 
-    const page = Number(query?.page) || 1;
-    const pageSize = Number(query?.pageSize) || 20;
+    const page = Math.max(1, Number(query?.page) || 1);
+    const pageSize = Math.max(1, Math.min(100, Number(query?.pageSize) || 20));
     const total = result.length;
     const paginated = result.slice((page - 1) * pageSize, page * pageSize);
 
@@ -173,56 +213,202 @@ export class AdminFinanceService {
     referenceTicketId: string | undefined,
     adminActor: { id: string; name: string; role: AdminRole },
   ) {
-    const user = await this.usersService.findById(userId);
-    if (!user) {
-      throw new NotFoundException(`Driver ${userId} not found`);
+    if (amountRupees <= 0) {
+      throw new BadRequestException('Adjustment amount must be positive');
     }
 
-    const currentBalanceRupees = user.walletBalancePaise / 100;
-    const newBalanceRupees = isCredit
-      ? currentBalanceRupees + amountRupees
-      : Math.max(0, currentBalanceRupees - amountRupees);
+    const adjustmentPaise = Math.round(amountRupees * 100);
+    let finalTx: FinanceLedgerEntry;
+    let newBalanceRupees = 0;
+    let currentBalanceRupees = 0;
 
-    user.walletBalancePaise = Math.round(newBalanceRupees * 100);
+    // Use atomic database transaction with pessimistic write locking if DataSource is active
+    if (this.dataSource && this.dataSource.isInitialized) {
+      finalTx = await this.dataSource.transaction(async (manager) => {
+        const user = await manager
+          .getRepository(UserEntity)
+          .createQueryBuilder('u')
+          .setLock('pessimistic_write')
+          .where('u.id = :id', { id: userId })
+          .getOne();
 
-    const newTx: FinanceLedgerEntry = {
-      id: `tx-${Date.now()}`,
-      referenceId: `CM-ADJ-${Date.now().toString().slice(-8)}`,
-      userId: user.id,
-      userName: user.name,
-      type: isCredit ? 'WALLET_CREDIT_ADJUSTMENT' : 'WALLET_DEBIT_ADJUSTMENT',
-      title: `₹${amountRupees.toFixed(2)} ${isCredit ? 'Credit Adjustment' : 'Debit Adjustment'}`,
-      amountRupees,
-      isCredit,
-      status: 'SUCCESS',
-      dateStr: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
-      timeStr: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
-      rawTimestamp: Date.now(),
-      paymentMethodName: 'ChargeMesh Admin Adjuster',
-      balanceBeforeRupees: currentBalanceRupees,
-      balanceAfterRupees: newBalanceRupees,
-      remarks: `${reason}${referenceTicketId ? ` (Ref: ${referenceTicketId})` : ''}`,
-      reconciled: true,
-    };
+        if (!user) {
+          // If not in DB, fallback to checking memory via usersService
+          const memUser = await this.usersService.findById(userId);
+          if (!memUser) {
+            throw new NotFoundException(`Driver ${userId} not found`);
+          }
+          currentBalanceRupees = memUser.walletBalancePaise / 100;
+          newBalanceRupees = isCredit
+            ? currentBalanceRupees + amountRupees
+            : Math.max(0, currentBalanceRupees - amountRupees);
+          memUser.walletBalancePaise = Math.round(newBalanceRupees * 100);
 
-    this.transactions.unshift(newTx);
+          const tx: FinanceLedgerEntry = {
+            id: `tx-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+            referenceId: `CM-ADJ-${Date.now().toString().slice(-8)}`,
+            userId: memUser.id,
+            userName: memUser.name,
+            type: isCredit ? 'WALLET_CREDIT_ADJUSTMENT' : 'WALLET_DEBIT_ADJUSTMENT',
+            title: `₹${amountRupees.toFixed(2)} ${isCredit ? 'Credit Adjustment' : 'Debit Adjustment'}`,
+            amountRupees,
+            isCredit,
+            status: 'SUCCESS',
+            dateStr: new Date().toLocaleDateString('en-IN', {
+              day: '2-digit',
+              month: 'short',
+              year: 'numeric',
+            }),
+            timeStr: new Date().toLocaleTimeString('en-IN', {
+              hour: '2-digit',
+              minute: '2-digit',
+            }),
+            rawTimestamp: Date.now(),
+            paymentMethodName: 'ChargeMesh Admin Adjuster',
+            balanceBeforeRupees: currentBalanceRupees,
+            balanceAfterRupees: newBalanceRupees,
+            remarks: `${reason}${referenceTicketId ? ` (Ref: ${referenceTicketId})` : ''}`,
+            reconciled: true,
+          };
+          this.transactions.unshift(tx);
+          return tx;
+        }
 
+        const currentBalancePaise = Number(user.walletBalancePaise);
+        currentBalanceRupees = currentBalancePaise / 100;
+        const newBalancePaise = isCredit
+          ? currentBalancePaise + adjustmentPaise
+          : Math.max(0, currentBalancePaise - adjustmentPaise);
+        newBalanceRupees = newBalancePaise / 100;
+
+        // 1. Atomically update user balance in PostgreSQL
+        await manager.getRepository(UserEntity).update(user.id, {
+          walletBalancePaise: newBalancePaise,
+          updatedAt: new Date(),
+        });
+
+        // 2. Insert finance ledger entry atomically
+        const txRecord = manager.getRepository(FinanceLedgerEntity).create({
+          id: `tx-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+          referenceId: `CM-ADJ-${Date.now().toString().slice(-8)}`,
+          userId: user.id,
+          userName: user.name,
+          type: isCredit ? 'WALLET_CREDIT_ADJUSTMENT' : 'WALLET_DEBIT_ADJUSTMENT',
+          title: `₹${amountRupees.toFixed(2)} ${isCredit ? 'Credit Adjustment' : 'Debit Adjustment'}`,
+          amountRupees,
+          isCredit,
+          status: 'SUCCESS',
+          dateStr: new Date().toLocaleDateString('en-IN', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+          }),
+          timeStr: new Date().toLocaleTimeString('en-IN', {
+            hour: '2-digit',
+            minute: '2-digit',
+          }),
+          rawTimestamp: Date.now(),
+          paymentMethodName: 'ChargeMesh Admin Adjuster',
+          balanceBeforeRupees: currentBalanceRupees,
+          balanceAfterRupees: newBalanceRupees,
+          remarks: `${reason}${referenceTicketId ? ` (Ref: ${referenceTicketId})` : ''}`,
+          reconciled: true,
+        });
+
+        const saved = await manager.getRepository(FinanceLedgerEntity).save(txRecord);
+
+        const tx: FinanceLedgerEntry = {
+          id: saved.id,
+          referenceId: saved.referenceId,
+          userId: saved.userId,
+          userName: saved.userName,
+          type: saved.type,
+          title: saved.title,
+          amountRupees: Number(saved.amountRupees),
+          isCredit: saved.isCredit,
+          status: saved.status as any,
+          dateStr: saved.dateStr,
+          timeStr: saved.timeStr,
+          rawTimestamp: Number(saved.rawTimestamp),
+          paymentMethodName: saved.paymentMethodName,
+          balanceBeforeRupees: Number(saved.balanceBeforeRupees),
+          balanceAfterRupees: Number(saved.balanceAfterRupees),
+          remarks: saved.remarks,
+          reconciled: saved.reconciled,
+        };
+
+        this.transactions.unshift(tx);
+        return tx;
+      });
+    } else {
+      // Fallback for isolated unit tests without active DataSource
+      const user = await this.usersService.findById(userId);
+      if (!user) {
+        throw new NotFoundException(`Driver ${userId} not found`);
+      }
+      currentBalanceRupees = user.walletBalancePaise / 100;
+      newBalanceRupees = isCredit
+        ? currentBalanceRupees + amountRupees
+        : Math.max(0, currentBalanceRupees - amountRupees);
+      user.walletBalancePaise = Math.round(newBalanceRupees * 100);
+
+      try {
+        await this.userRepo.update(user.id, {
+          walletBalancePaise: user.walletBalancePaise,
+          updatedAt: new Date(),
+        });
+      } catch {}
+
+      finalTx = {
+        id: `tx-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+        referenceId: `CM-ADJ-${Date.now().toString().slice(-8)}`,
+        userId: user.id,
+        userName: user.name,
+        type: isCredit ? 'WALLET_CREDIT_ADJUSTMENT' : 'WALLET_DEBIT_ADJUSTMENT',
+        title: `₹${amountRupees.toFixed(2)} ${isCredit ? 'Credit Adjustment' : 'Debit Adjustment'}`,
+        amountRupees,
+        isCredit,
+        status: 'SUCCESS',
+        dateStr: new Date().toLocaleDateString('en-IN', {
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric',
+        }),
+        timeStr: new Date().toLocaleTimeString('en-IN', {
+          hour: '2-digit',
+          minute: '2-digit',
+        }),
+        rawTimestamp: Date.now(),
+        paymentMethodName: 'ChargeMesh Admin Adjuster',
+        balanceBeforeRupees: currentBalanceRupees,
+        balanceAfterRupees: newBalanceRupees,
+        remarks: `${reason}${referenceTicketId ? ` (Ref: ${referenceTicketId})` : ''}`,
+        reconciled: true,
+      };
+
+      this.transactions.unshift(finalTx);
+      try {
+        await this.financeRepo.save(this.financeRepo.create(finalTx));
+      } catch {}
+    }
+
+    // 3. Record immutable audit log
     await this.auditService.record({
       actorId: adminActor.id,
       actorName: adminActor.name,
       actorRole: adminActor.role,
       action: AuditActionType.WALLET_ADJUSTMENT,
       targetEntity: 'WALLET',
-      targetId: user.id,
+      targetId: userId,
       previousValue: { walletBalancePaise: Math.round(currentBalanceRupees * 100) },
-      newValue: { walletBalancePaise: user.walletBalancePaise },
+      newValue: { walletBalancePaise: Math.round(newBalanceRupees * 100) },
       reason: `${reason} [Adjustment: ₹${amountRupees}, ${isCredit ? 'Credit' : 'Debit'}]`,
       ipAddress: '127.0.0.1',
     });
 
     return {
       success: true,
-      transaction: newTx,
+      transaction: finalTx,
       updatedBalanceRupees: newBalanceRupees,
     };
   }

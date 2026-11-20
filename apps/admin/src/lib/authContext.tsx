@@ -2,13 +2,14 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { AdminUser, AdminRole, AdminStatus } from '@chargemesh/shared-types';
+import { adminApiClient } from './adminApiClient';
 
 interface AuthContextType {
   user: AdminUser | null;
   token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string, role?: AdminRole) => Promise<boolean>;
+  login: (email: string, passwordOrRole?: string | AdminRole, roleOverride?: AdminRole) => Promise<boolean>;
   logout: () => void;
 }
 
@@ -46,25 +47,89 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(JSON.parse(savedUser));
         setToken(savedToken);
       }
-    } catch {}
+    } catch {
+      // LocalStorage is unavailable or corrupted during initial hydrate
+    }
   }, []);
 
-  const login = async (email: string, role: AdminRole = AdminRole.SUPER_ADMIN): Promise<boolean> => {
+  const login = async (
+    email: string,
+    passwordOrRole?: string | AdminRole,
+    roleOverride?: AdminRole,
+  ): Promise<boolean> => {
     setIsLoading(true);
+    const isRole =
+      typeof passwordOrRole === 'string' &&
+      (passwordOrRole.startsWith('SUPER_ADMIN') || passwordOrRole.endsWith('_ADMIN'));
+    const password =
+      typeof passwordOrRole === 'string' && !isRole ? passwordOrRole : undefined;
+    let role = isRole
+      ? (passwordOrRole as AdminRole)
+      : roleOverride || AdminRole.SUPER_ADMIN;
+
     try {
-      // Create authenticated admin persona based on email/role selection
+      // 1. Attempt real API login if password provided or configured
+      if (password) {
+        const res = await adminApiClient.login(email, password);
+        if (res.success && res.data?.token) {
+          const rawAdmin = (res.data as any).admin || (res.data as any).user;
+          const adminUser: AdminUser = rawAdmin
+            ? {
+                id: rawAdmin.id || 'adm-001',
+                email: rawAdmin.email || email,
+                name: rawAdmin.name || email.split('@')[0],
+                role: rawAdmin.role || role,
+                status: rawAdmin.status || AdminStatus.ACTIVE,
+                department: rawAdmin.department || 'Platform Engineering',
+                avatarUrl: rawAdmin.avatarUrl,
+                createdAt: rawAdmin.createdAt || new Date().toISOString(),
+                updatedAt: rawAdmin.updatedAt || new Date().toISOString(),
+              }
+            : {
+                id: 'adm-001',
+                email,
+                name: email.split('@')[0],
+                role,
+                status: AdminStatus.ACTIVE,
+                department: 'Platform Engineering',
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+              };
+
+          setUser(adminUser);
+          setToken(res.data.token);
+          localStorage.setItem('chargemesh_admin_user', JSON.stringify(adminUser));
+          localStorage.setItem('chargemesh_admin_token', res.data.token);
+          setIsLoading(false);
+          return true;
+        } else if (process.env.NODE_ENV === 'production') {
+          setIsLoading(false);
+          return false;
+        }
+      }
+
+      // In production, fallback without valid password/token is strictly disallowed
+      if (process.env.NODE_ENV === 'production') {
+        setIsLoading(false);
+        return false;
+      }
+
+      // Development / Test Environment Fallback
       let name = 'Abhay Singh';
       let dept = 'Platform Engineering';
 
       if (role === AdminRole.OPERATIONS_ADMIN || email.includes('ops')) {
         name = 'Rohan Verma';
         dept = 'CPO & Station Operations';
+        role = AdminRole.OPERATIONS_ADMIN;
       } else if (role === AdminRole.FINANCE_ADMIN || email.includes('finance')) {
         name = 'Priya Sharma';
         dept = 'Finance & Reconciliation';
+        role = AdminRole.FINANCE_ADMIN;
       } else if (role === AdminRole.SUPPORT_ADMIN || email.includes('support')) {
         name = 'Ananya Gupta';
         dept = 'Driver Support & KYC';
+        role = AdminRole.SUPPORT_ADMIN;
       }
 
       const adminUser: AdminUser = {
@@ -81,17 +146,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const mockToken = `jwt-admin-${Date.now()}`;
       setUser(adminUser);
       setToken(mockToken);
+      adminApiClient.setAuthToken(mockToken);
       localStorage.setItem('chargemesh_admin_user', JSON.stringify(adminUser));
       localStorage.setItem('chargemesh_admin_token', mockToken);
       setIsLoading(false);
       return true;
-    } catch (e) {
+    } catch {
       setIsLoading(false);
       return false;
     }
   };
 
   const logout = () => {
+    adminApiClient.logout().catch(() => {});
     setUser(null);
     setToken(null);
     localStorage.removeItem('chargemesh_admin_user');
