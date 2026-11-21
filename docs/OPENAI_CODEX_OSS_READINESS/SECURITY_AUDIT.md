@@ -79,6 +79,7 @@ The `.github/workflows/security-scan.yml` workflow enforces automated checks on 
 ## 6. Responsible Disclosure & Security Contacts
 
 The ChargeMesh security policy is published in [SECURITY.md](file:///c:/Users/aksde/Videos/My_Codex/Chargemesh_app/SECURITY.md):
-- **Official Security Desk:** `security@chargemesh.com`
-- **Maintainer Escalation:** `maintainers@chargemesh.com`
-- **Response SLA:** Acknowledgment within 48 hours; initial triage within 7 calendar days; fix delivery within 14–30 days.
+- **Primary Intake:** [GitHub Private Vulnerability Reporting](https://github.com/abhayksingh614/chargemesh-app/security/advisories/new)
+- **Official Security Desk:** `security@chargemesh.in`
+- **Maintainer Escalation:** `abhayksingh614@gmail.com`
+- **Response SLOs:** Acknowledgment within 48h (Critical/High); initial triage within 3–5 business days; remediation within 14–30 business days.

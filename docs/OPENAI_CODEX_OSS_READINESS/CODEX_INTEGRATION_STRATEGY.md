@@ -66,7 +66,7 @@ graph TD
   - Synthesize realistic mock data for Indian metro charging station distributions.
 
 ### 2.4 Documentation & API Schema Synchronization
-- **Function:** Monitor changes in NestJS controllers and DTOs and automatically generate pull requests updating [API_DOCUMENTATION.md](file:///c:/Users/aksde/Videos/My_Codex/Chargemesh_app/API_DOCUMENTATION.md) and OpenAPI JSON specs.
+- **Function:** Monitor changes in NestJS controllers and DTOs and automatically generate pull requests updating [API_DOCUMENTATION.md](file:///c:/Users/aksde/Videos/My_Codex/Chargemesh_app/docs/api/API_DOCUMENTATION.md) and OpenAPI JSON specs.
 - **Outcome:** Eliminates documentation drift, ensuring API docs always reflect actual code.
 
 ### 2.5 Issue Triage & Reproduction Assistance

@@ -25,7 +25,7 @@ ChargeMesh is an open-source, community-driven platform designed to accelerate E
 | **Contribution Guidelines** | [CONTRIBUTING.md](file:///c:/Users/aksde/Videos/My_Codex/Chargemesh_app/CONTRIBUTING.md) | Step-by-step developer guide, branching model, commit conventions |
 | **Open-Source License** | [LICENSE](file:///c:/Users/aksde/Videos/My_Codex/Chargemesh_app/LICENSE) | Apache License 2.0 terms granting community usage and patent protection |
 | **Security Policy** | [SECURITY.md](file:///c:/Users/aksde/Videos/My_Codex/Chargemesh_app/SECURITY.md) | Vulnerability disclosure SLAs, response timelines, safe contact aliases |
-| **Changelog** | [CHANGELOG.md](file:///c:/Users/aksde/Videos/My_Codex/Chargemesh_app/CHANGELOG.md) | Semantic versioning changelog (`v0.5.1-alpha`) |
+| **Changelog** | [CHANGELOG.md](file:///c:/Users/aksde/Videos/My_Codex/Chargemesh_app/docs/maintenance/CHANGELOG.md) | Semantic versioning changelog (`v0.5.1-alpha`) |
 | **Git Strategy** | [.github/GIT_STRATEGY.md](file:///c:/Users/aksde/Videos/My_Codex/Chargemesh_app/.github/GIT_STRATEGY.md) | Two-tier branch structure (`beta` and `prod`) |
 | **Pull Request Template** | [.github/pull_request_template.md](file:///c:/Users/aksde/Videos/My_Codex/Chargemesh_app/.github/pull_request_template.md) | Standardized PR checklist and domain rule verification |
 | **Bug Report Template** | [.github/ISSUE_TEMPLATE/bug_report.yml](file:///c:/Users/aksde/Videos/My_Codex/Chargemesh_app/.github/ISSUE_TEMPLATE/bug_report.yml) | Structured YAML bug submission schema |
@@ -68,7 +68,7 @@ Every pull request submitted to ChargeMesh must satisfy:
   - `MINOR`: New backwards-compatible features, new OCPP RPC handlers.
   - `PATCH`: Backwards-compatible bug fixes, security patches.
   - Current version: **`v0.5.1-alpha`**.
-- Releases are tagged in Git (`git tag -a v0.5.1-alpha -m "..."`) and accompanied by release notes in [CHANGELOG.md](file:///c:/Users/aksde/Videos/My_Codex/Chargemesh_app/CHANGELOG.md).
+- Releases are tagged in Git (`git tag -a v0.5.1-alpha -m "..."`) and accompanied by release notes in [CHANGELOG.md](file:///c:/Users/aksde/Videos/My_Codex/Chargemesh_app/docs/maintenance/CHANGELOG.md).
 
 ---
 
