@@ -20,7 +20,8 @@
     "noFallthroughCasesInSwitch": false,
     "paths": {
       "@chargemesh/shared-types": ["../../packages/shared-types/index.ts"],
-      "@chargemesh/shared-constants": ["../../packages/shared-constants/index.ts"]
+      "@chargemesh/shared-constants": ["../../packages/shared-constants/index.ts"],
+      "@supabase/server/core": ["../../node_modules/@supabase/server/dist/core/index.d.cts"]
     }
   }
 }

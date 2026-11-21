@@ -101,6 +101,22 @@ export class EnvironmentVariables {
   @IsString()
   @IsOptional()
   SMS_API_KEY?: string;
+
+  @IsString()
+  @IsOptional()
+  SUPABASE_URL?: string;
+
+  @IsString()
+  @IsOptional()
+  SUPABASE_PUBLISHABLE_KEY?: string;
+
+  @IsString()
+  @IsOptional()
+  SUPABASE_SECRET_KEY?: string;
+
+  @IsString()
+  @IsOptional()
+  SUPABASE_JWKS_URL?: string;
 }
 
 const DEFAULT_INSECURE_JWT = 'chargemesh-super-secret-jwt-key-2026';

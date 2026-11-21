@@ -15,6 +15,7 @@ import { OcppModule } from './modules/ocpp/ocpp.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { HealthModule } from './modules/health/health.module';
 import { WalletModule } from './modules/wallet/wallet.module';
+import { SupabaseModule } from './modules/supabase/supabase.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { WalletModule } from './modules/wallet/wallet.module';
     }),
     ThrottlerStorageModule,
     DatabaseModule,
+    SupabaseModule,
     ThrottlerModule.forRootAsync({
       imports: [ConfigModule, ThrottlerStorageModule],
       inject: [ConfigService, RedisThrottlerStorageService],

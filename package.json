@@ -46,5 +46,9 @@
     "chargemesh"
   ],
   "author": "ChargeMesh",
-  "license": "Apache-2.0"
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@supabase/server": "^1.9.2",
+    "@supabase/supabase-js": "^2.119.2"
+  }
 }

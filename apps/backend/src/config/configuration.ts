@@ -23,6 +23,13 @@ export interface SmsConfig {
   apiKey?: string;
 }
 
+export interface SupabaseConfig {
+  url?: string;
+  publishableKey?: string;
+  secretKey?: string;
+  jwksUrl?: string;
+}
+
 export interface AppConfig {
   nodeEnv: string;
   isProduction: boolean;
@@ -35,6 +42,7 @@ export interface AppConfig {
   redis: RedisConfig;
   rateLimit: RateLimitConfig;
   sms: SmsConfig;
+  supabase: SupabaseConfig;
 }
 
 export default (): { app: AppConfig } => {
@@ -101,6 +109,12 @@ export default (): { app: AppConfig } => {
       sms: {
         provider: process.env.SMS_PROVIDER || (isProduction ? 'production-stub' : 'mock'),
         apiKey: process.env.SMS_API_KEY || process.env.SMS_PROVIDER_API_KEY || undefined,
+      },
+      supabase: {
+        url: process.env.SUPABASE_URL,
+        publishableKey: process.env.SUPABASE_PUBLISHABLE_KEY,
+        secretKey: process.env.SUPABASE_SECRET_KEY,
+        jwksUrl: process.env.SUPABASE_JWKS_URL,
       },
     },
   };
