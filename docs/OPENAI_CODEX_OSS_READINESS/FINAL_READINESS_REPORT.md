@@ -50,6 +50,12 @@ ChargeMesh is India's open-source EV charging roaming platform unifying fragment
 ### Field 3: Program Interest
 - **Selection:** `Both Codex Security and API credits`
 
+### Field 3a: Why does your project need Codex Security? (Maximum 500 characters)
+*Character Count: 490 characters (including spaces)*
+```text
+ChargeMesh orchestrates critical EV charging infrastructure (OCPP 1.6-J/2.0.1 WebSockets for high-voltage chargers) and financial ledger transactions. Codex Security is essential to: (1) prevent Broken Object-Level Authorization (BOLA) across multi-CPO charging sessions; (2) detect double-spend race conditions in concurrent wallet operations; and (3) identify adversarial hardware payload injections before release, safeguarding grid reliability and driver privacy under India's DPDP Act.
+```
+
 ### Field 4: How will API credits be used? (Maximum 500 characters)
 *Character Count: 494 characters (including spaces)*
 ```text
