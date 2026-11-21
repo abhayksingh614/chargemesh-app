@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { DataTable, Column } from '@/components/DataTable';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Modal } from '@/components/Modal';
 import { INITIAL_STATIONS, AdminStation } from '@/lib/dataService';
+import { adminApiClient } from '@/lib/adminApiClient';
 
 // Dynamically import MapLibre Map to avoid SSR errors
 const AdminMapLibreMap = dynamic(
@@ -19,8 +20,32 @@ export default function StationsPage() {
   const [editTariffStation, setEditTariffStation] = useState<AdminStation | null>(null);
   const [newTariff, setNewTariff] = useState<number>(18.5);
 
-  const handleUpdateTariff = () => {
+  useEffect(() => {
+    let isMounted = true;
+    adminApiClient.getStations().then((res) => {
+      if (isMounted && res.success && res.data && Array.isArray(res.data) && res.data.length > 0) {
+        const backendStations = res.data;
+        setStations((prev) =>
+          prev.map((s) => {
+            const match = backendStations.find((bs: any) => bs.id === s.id || bs.chargePointId === s.id);
+            if (match && match.connectors?.[0]?.pricePerKwh) {
+              return { ...s, tariffPerKwh: match.connectors[0].pricePerKwh };
+            }
+            return s;
+          }),
+        );
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const handleUpdateTariff = async () => {
     if (!editTariffStation) return;
+    try {
+      await adminApiClient.updateStationTariff(editTariffStation.id, newTariff);
+    } catch {}
     setStations((prev) =>
       prev.map((s) => (s.id === editTariffStation.id ? { ...s, tariffPerKwh: newTariff } : s)),
     );

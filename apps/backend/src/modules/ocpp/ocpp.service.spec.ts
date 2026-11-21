@@ -245,5 +245,31 @@ describe('OcppService', () => {
       // Energy reading must remain monotonically non-decreasing (at least 5.0 kWh)
       expect(tx?.energyKwh).toBe(5.0);
     });
+
+    it('SEC-004: should fail closed if database throws an error during station authentication', async () => {
+      jest.spyOn(mockStationRepo, 'findOneBy').mockRejectedValueOnce(new Error('PostgreSQL Connection Pool Exhausted'));
+      const authResult = await service.authenticateChargePoint('CP-DELHI-001', 'Basic dXNlcjpwYXNz');
+      expect(authResult.authorized).toBe(false);
+      expect(authResult.reason).toContain('Database error');
+    });
+
+    it('SEC-004: should reject station authentication in production if credentials are not configured', async () => {
+      const originalEnv = process.env.NODE_ENV;
+      process.env.NODE_ENV = 'production';
+      try {
+        jest.spyOn(mockStationRepo, 'findOneBy').mockResolvedValueOnce({
+          id: 'st-nopass-01',
+          chargePointId: 'CP-NOPASS-001',
+          chargePointPassword: null as any,
+          status: 'ACTIVE',
+        });
+
+        const authResult = await service.authenticateChargePoint('CP-NOPASS-001');
+        expect(authResult.authorized).toBe(false);
+        expect(authResult.reason).toContain('credentials required in production');
+      } finally {
+        process.env.NODE_ENV = originalEnv;
+      }
+    });
   });
 });

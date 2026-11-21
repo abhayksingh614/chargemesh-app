@@ -15,7 +15,7 @@ describe('AuthService (Driver Auth & SEC-005 OTP)', () => {
       id: 'usr-default-01',
       phoneNumber: '+919876543210',
       name: 'Rahul',
-      email: 'rahul@gmail.com',
+      email: 'rahul@chargemesh.com',
       vehicle: {
         make: 'Tata',
         model: 'Nexon EV Max',
@@ -113,5 +113,31 @@ describe('AuthService (Driver Auth & SEC-005 OTP)', () => {
         otp: '999999',
       }),
     ).rejects.toThrow(UnauthorizedException);
+  });
+
+  it('SEC-003: should reject registration without OTP when in production mode', async () => {
+    const originalEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = 'production';
+    try {
+      await expect(
+        service.register({
+          phoneNumber: '+919999111222',
+          name: 'Prod Driver',
+        }),
+      ).rejects.toThrow(BadRequestException);
+    } finally {
+      process.env.NODE_ENV = originalEnv;
+    }
+  });
+
+  it('SEC-003: should accept registration with verified OTP', async () => {
+    const otpRes = await service.requestOtp('+919999333444');
+    const res = await service.register({
+      phoneNumber: '+919999333444',
+      name: 'Verified Driver',
+      otp: otpRes.debugCode,
+    });
+    expect(res).toBeDefined();
+    expect(res.user.phoneNumber).toBe('+919999333444');
   });
 });

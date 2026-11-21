@@ -1,4 +1,4 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { AdminDashboardService } from './admin-dashboard.service';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from './guards/roles.guard';
@@ -19,5 +19,13 @@ export class AdminDashboardController {
   @Get('stats')
   async getStats() {
     return this.dashboardService.getDashboardStats();
+  }
+
+  @Get('sessions')
+  async getSessions(
+    @Query('status') status?: string,
+    @Query('search') search?: string,
+  ) {
+    return this.dashboardService.getAllSessions({ status, search });
   }
 }

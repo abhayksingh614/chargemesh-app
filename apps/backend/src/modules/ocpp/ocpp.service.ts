@@ -29,6 +29,7 @@ import {
   RemoteStopTransactionResponse,
 } from './types/ocpp.types';
 import { TelemetryService } from '../telemetry/telemetry.service';
+import { WalletService } from '../wallet/wallet.service';
 import {
   UserEntity,
   ChargingStationEntity,
@@ -88,6 +89,8 @@ export class OcppService implements OnModuleDestroy, OnModuleInit {
     private readonly sessionRepo?: Repository<ChargingSessionEntity>,
     @Optional()
     private readonly configService?: ConfigService,
+    @Optional()
+    private readonly walletService?: WalletService,
   ) {
     this.initRedis();
   }
@@ -230,6 +233,12 @@ export class OcppService implements OnModuleDestroy, OnModuleInit {
         return { authorized: false, reason: 'Station is marked inactive' };
       }
 
+      // SEC-004: Require credentials in production
+      if (!station.chargePointPassword && process.env.NODE_ENV === 'production') {
+        this.logger.warn(`OCPP authentication rejected for [${chargePointId}]. Credentials required in production.`);
+        return { authorized: false, reason: 'Charge point credentials required in production' };
+      }
+
       if (station.chargePointPassword) {
         if (!authHeader) {
           return { authorized: false, reason: 'Missing Basic authorization header' };
@@ -265,8 +274,9 @@ export class OcppService implements OnModuleDestroy, OnModuleInit {
 
       return { authorized: true };
     } catch (err: any) {
+      // SEC-004: Strict fail-closed security architecture
       this.logger.error(`Database error during station authentication: ${err.message}`);
-      return { authorized: true };
+      return { authorized: false, reason: 'Database error during station authentication' };
     }
   }
 
@@ -628,6 +638,34 @@ export class OcppService implements OnModuleDestroy, OnModuleInit {
           await this.redis.del(`chargemesh:ocpp:tx:${payload.transactionId}`);
         } catch (err: any) {
           this.logger.warn(`Could not delete transaction from Redis: ${err.message}`);
+        }
+      }
+
+      // FIN-001 / SAST-005: Settle financial transaction and debit driver wallet
+      if (this.walletService && tx.idTag) {
+        try {
+          let driverUserId = tx.idTag;
+          if (this.userRepo) {
+            const user = await this.userRepo.findOne({
+              where: [{ id: tx.idTag }, { phoneNumber: tx.idTag }],
+            });
+            if (user) {
+              driverUserId = user.id;
+            }
+          }
+          const minPreauthPaise = parseInt(process.env.WALLET_MIN_PREAUTH_PAISE || '20000', 10);
+          await this.walletService.settleSession(
+            driverUserId,
+            `sess-${payload.transactionId}`,
+            totalCost,
+            minPreauthPaise,
+            consumedKwh,
+          );
+          this.logger.log(
+            `Settled wallet for OCPP session sess-${payload.transactionId} (Driver: ${driverUserId}, Cost: ₹${totalCost.toFixed(2)})`,
+          );
+        } catch (err: any) {
+          this.logger.error(`Failed to settle wallet for OCPP session ${payload.transactionId}: ${err.message}`);
         }
       }
 

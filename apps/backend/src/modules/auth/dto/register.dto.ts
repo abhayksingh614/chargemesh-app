@@ -32,6 +32,10 @@ export class RegisterDto {
   @IsOptional()
   email?: string;
 
+  @IsString()
+  @IsOptional()
+  otp?: string;
+
   @ValidateNested()
   @Type(() => VehicleDto)
   @IsOptional()

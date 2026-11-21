@@ -9,11 +9,11 @@ Thank you for building with ChargeMesh! Whether you are integrating charging sta
 Before raising an issue, review our extensive technical documentation in [`docs/`](docs/):
 
 - **Architecture & System Design:** [`docs/architecture/`](docs/architecture/)
-- **API & CSMS Documentation:** [`docs/API_DOCUMENTATION.md`](docs/API_DOCUMENTATION.md)
-- **Database Models & PostGIS:** [`docs/DATABASE_SCHEMA.md`](docs/DATABASE_SCHEMA.md)
-- **Local Development & Testing:** [`TESTING.md`](TESTING.md) and [`CONTRIBUTING.md`](CONTRIBUTING.md)
-- **Screens & Navigation Directory:** [`docs/SCREENS_AND_NAVIGATION.md`](docs/SCREENS_AND_NAVIGATION.md)
-- **CPO & EV Compatibility Audit:** [`docs/CPO_AND_EV_COMPATIBILITY_AUDIT.md`](docs/CPO_AND_EV_COMPATIBILITY_AUDIT.md)
+- **API & CSMS Documentation:** [`docs/api/API_DOCUMENTATION.md`](../api/API_DOCUMENTATION.md)
+- **Database Models & PostGIS:** [`docs/database/DATABASE_DOCUMENTATION.md`](../database/DATABASE_DOCUMENTATION.md)
+- **Local Development & Testing:** [`docs/testing/TESTING_STRATEGY.md`](../testing/TESTING_STRATEGY.md) and [`CONTRIBUTING.md`](../../CONTRIBUTING.md)
+- **Screens & Navigation Directory:** [`docs/architecture/SCREENS_AND_NAVIGATION.md`](../architecture/SCREENS_AND_NAVIGATION.md)
+- **CPO & EV Compatibility Audit:** [`docs/reports/CPO_AND_EV_COMPATIBILITY_AUDIT.md`](../reports/CPO_AND_EV_COMPATIBILITY_AUDIT.md)
 
 ---
 
@@ -35,7 +35,7 @@ If you encounter an unexpected behavior or bug:
 
 - Check existing [GitHub Issues](https://github.com/abhayksingh614/chargemesh-app/issues) to avoid duplicates.
 - Submit a bug report using our [Bug Report Form](.github/ISSUE_TEMPLATE/bug_report.yml).
-- For security vulnerabilities, follow the [Security Policy](SECURITY.md) (do not post publicly).
+- For security vulnerabilities, follow the [Security Policy](../../SECURITY.md) (do not post publicly).
 
 ---
 

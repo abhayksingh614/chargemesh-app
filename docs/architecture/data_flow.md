@@ -1,64 +1,80 @@
-# End-to-End Data Flow Architecture
+# ChargeMesh — End-to-End Data Flow Specification
 
-> **Component:** End-to-End System Data Flow  
-> **Source:** Mobile Client, Backend REST & OCPP Gateways, Telemetry Broadcaster  
-
-This diagram traces the complete lifecycle of an EV charging session, from QR scan at the physical charger to live telemetry rendering and final financial ledger debit.
+This document details the exact sequence of messages and state transitions across the platform.
 
 ---
 
-## 1. End-to-End Session Data Flow
+## 1. Driver Authentication & Profile Hydration
 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor Driver as EV Driver
-    participant Mobile as Mobile App (CameraX / UI)
-    participant RestApi as Backend REST API
-    participant Sessions as SessionsService
-    participant Ocpp as OcppService / Gateway
+    actor Driver as EV Driver (Mobile App)
+    participant Nest as NestJS API Gateway
+    participant Redis as Redis Cache
+    participant DB as PostgreSQL Database
+
+    Driver->>Nest: POST /api/v1/auth/otp/send ({ phoneNumber })
+    Nest->>Redis: Check Rate Limit (max 5/min)
+    Nest->>Nest: Generate 6-digit CSPRNG OTP
+    Nest->>Redis: SETEX otp:+91... (300s TTL)
+    Nest-->>Driver: { success: true, message: "OTP Dispatched" }
+
+    Driver->>Nest: POST /api/v1/auth/login ({ phoneNumber, otp })
+    Nest->>Redis: Verify OTP & invalidate key
+    Nest->>DB: SELECT * FROM users WHERE phoneNumber = :phoneNumber
+    DB-->>Nest: User Entity
+    Nest->>Nest: Generate HS256 JWT (exp: 15m)
+    Nest-->>Driver: { token, user: { id, name, walletBalancePaise } }
+```
+
+---
+
+## 2. Charging Session Initiation & OCPP RemoteStart
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Driver as EV Driver (Mobile App)
+    participant Nest as NestJS CSMS
+    participant DB as PostgreSQL Database
+    participant Charger as Physical EV Charger (OCPP)
+    actor Admin as Admin Portal (Next.js)
+
+    Driver->>Nest: POST /api/v1/sessions/start ({ stationId, connectorId, target })
+    Nest->>DB: Check walletBalancePaise >= preAuthHold (₹200)
+    Nest->>DB: INSERT INTO charging_sessions (status: 'REQUESTED')
+    Nest->>Charger: RemoteStartTransaction.req (connectorId, idTag)
+    Charger-->>Nest: RemoteStartTransaction.conf (status: 'Accepted')
+    Nest->>DB: UPDATE charging_sessions SET status = 'CHARGING'
+    Nest-->>Driver: { success: true, sessionId, status: 'CHARGING' }
+    Admin->>Nest: GET /api/v1/admin/dashboard/sessions
+    Nest-->>Admin: Returns active charging session row
+```
+
+---
+
+## 3. Telemetry Ingestion & Financial Settlement
+
+```mermaid
+sequenceDiagram
+    autonumber
     participant Charger as Physical EV Charger
-    participant Telemetry as TelemetryGateway
-    participant Ledger as Fast Wallet / Ledger
+    participant Nest as NestJS CSMS
+    participant DB as PostgreSQL Database
+    actor Driver as EV Driver
 
-    Driver->>Mobile: Scans QR code on charging gun (CameraX + ML Kit)
-    Mobile->>Mobile: Resolves `chargePointId` & `connectorId`
-    Mobile->>Driver: Opens PreChargeScreen (Sets target limit: 80% SoC or ₹500)
-    
-    Driver->>Mobile: Taps "Start Charging"
-    Mobile->>RestApi: POST /api/v1/sessions/start { stationId, connectorId, target }
-    RestApi->>Sessions: startSession(userId, dto)
-    Sessions->>Ocpp: sendRemoteStart(chargePointId, connectorId, idTag)
-    Ocpp->>Charger: OCPP RemoteStartTransaction [2, "id", "RemoteStartTransaction", ...]
-    Charger-->>Ocpp: [3, "id", { status: "Accepted" }]
-    Charger->>Ocpp: OCPP StartTransaction [2, "id2", "StartTransaction", ...]
-    Ocpp-->>Charger: [3, "id2", { transactionId: 5501, ... }]
-    
-    Sessions-->>RestApi: Session State: "CHARGING" (session.id: "sess-101")
-    RestApi-->>Mobile: 201 Created + Session Entity
-    Mobile->>Mobile: Navigates to LiveChargingScreen
-    Mobile->>Telemetry: WSS Connect ws://backend/telemetry?sessionId=sess-101
-
-    Note over Charger, Mobile: Live Telemetry Stream During Charging
-    loop Every 5 seconds
-        Charger->>Ocpp: OCPP MeterValues (Power: 48.5 kW, SoC: 52%, Voltage: 395 V, Current: 122 A)
-        Ocpp->>Telemetry: broadcastTelemetry(sessionId, metrics)
-        Telemetry-->>Mobile: WSS Message { currentPowerKw: 48.5, soc: 52, costInr: 142.50 }
-        Mobile->>Mobile: Re-renders Radial Gauge & Live Graph
+    loop Every 10 Seconds
+        Charger->>Nest: MeterValues.req ({ transactionId, energyKwh, powerKw, currentSoC })
+        Nest->>DB: INSERT INTO meter_values
+        Nest->>Nest: Update accumulated cost
+        Nest->>Driver: WS /telemetry Broadcast ({ energyKwh, powerKw, costSoFar })
     end
 
-    Note over Driver, Ledger: Session Termination & Ledger Settlement
-    Driver->>Mobile: Taps "Stop Charging"
-    Mobile->>RestApi: POST /api/v1/sessions/sess-101/stop
-    RestApi->>Sessions: stopSession("sess-101")
-    Sessions->>Ocpp: sendRemoteStop(chargePointId, transactionId)
-    Ocpp->>Charger: OCPP RemoteStopTransaction
-    Charger->>Ocpp: OCPP StopTransaction (meterStop: 18.4 kWh)
-    Ocpp-->>Charger: Accepted
-    
-    Sessions->>Ledger: debitWallet(userId, totalCostInr: ₹312.80 including 18% GST)
-    Ledger-->>Sessions: Wallet Updated (New Balance: ₹687.20)
-    Sessions-->>RestApi: Session Summary (Energy: 18.4 kWh, Total: ₹312.80)
-    RestApi-->>Mobile: 200 OK + Completed Session Payload
-    Mobile->>Mobile: Navigates to SessionCompleteScreen (Shows Invoice & Eco CO₂ Saved)
+    Driver->>Nest: POST /api/v1/sessions/:id/stop
+    Nest->>Charger: RemoteStopTransaction.req
+    Charger->>Nest: StopTransaction.req (finalMeterKwh)
+    Nest->>DB: Atomically debit wallet & record finance_ledger entry
+    Nest->>DB: UPDATE charging_sessions SET status = 'COMPLETED'
+    Nest-->>Driver: Final Session Invoice & Receipt
 ```

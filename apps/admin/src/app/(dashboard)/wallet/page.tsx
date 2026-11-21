@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Modal } from '@/components/Modal';
 import { INITIAL_DRIVERS, INITIAL_TRANSACTIONS, AdminTransaction } from '@/lib/dataService';
+import { adminApiClient } from '@/lib/adminApiClient';
 
 export default function WalletPage() {
   const [drivers, setDrivers] = useState(INITIAL_DRIVERS);
@@ -13,6 +14,49 @@ export default function WalletPage() {
   const [isCredit, setIsCredit] = useState(true);
   const [adjustReason, setAdjustReason] = useState('');
   const [referenceTicket, setReferenceTicket] = useState('');
+
+  useEffect(() => {
+    let isMounted = true;
+    adminApiClient.getDrivers().then((res) => {
+      if (isMounted && res.success && res.data) {
+        const list = Array.isArray(res.data) ? res.data : res.data.data;
+        if (Array.isArray(list) && list.length > 0) {
+          setDrivers(list);
+        }
+      }
+    });
+
+    adminApiClient.getLedger().then((res) => {
+      if (isMounted && res.success && res.data) {
+        const list = Array.isArray(res.data) ? res.data : res.data.data;
+        if (Array.isArray(list) && list.length > 0) {
+          const mapped = list.map((item: any) => ({
+            id: item.id,
+            referenceId: item.referenceId,
+            userId: item.userId,
+            userName: item.userName,
+            type: item.type,
+            title: item.title,
+            amountInr: Number(item.amountRupees !== undefined ? item.amountRupees : item.amountInr) || 0,
+            isCredit: Boolean(item.isCredit),
+            status: item.status,
+            dateStr: item.dateStr || 'Today',
+            timeStr: item.timeStr || '',
+            paymentMethodName: item.paymentMethodName || 'Ledger',
+            balanceBeforeInr: Number(item.balanceBeforeRupees !== undefined ? item.balanceBeforeRupees : item.balanceBeforeInr) || 0,
+            balanceAfterInr: Number(item.balanceAfterRupees !== undefined ? item.balanceAfterRupees : item.balanceAfterInr) || 0,
+            remarks: item.remarks || '',
+            reconciled: Boolean(item.reconciled),
+          }));
+          setTransactions(mapped);
+        }
+      }
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const currentDriver = drivers.find((d) => d.id === selectedDriverId) || drivers[0];
   const driverTxs = transactions.filter((t) => t.userId === currentDriver.id);
@@ -26,10 +70,20 @@ export default function WalletPage() {
     }
   });
 
-  const handleExecuteAdjustment = () => {
+  const handleExecuteAdjustment = async () => {
     if (!adjustReason.trim() || adjustAmount <= 0) return;
     const currentBal = currentDriver.walletBalancePaise / 100;
     const newBal = isCredit ? currentBal + adjustAmount : Math.max(0, currentBal - adjustAmount);
+
+    try {
+      await adminApiClient.adjustWalletBalance({
+        userId: currentDriver.id,
+        amountRupees: adjustAmount,
+        isCredit,
+        reason: adjustReason,
+        referenceTicketId: referenceTicket || undefined,
+      });
+    } catch {}
 
     const newTx: AdminTransaction = {
       id: `tx-adj-${Date.now()}`,

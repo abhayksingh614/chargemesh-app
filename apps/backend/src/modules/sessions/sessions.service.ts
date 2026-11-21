@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import * as crypto from 'crypto';
 import { StartSessionDto } from './dto/start-session.dto';
 import { StationsService } from '../stations/stations.service';
 import { OcppService } from '../ocpp/ocpp.service';
@@ -61,7 +62,8 @@ export class SessionsService {
 
   async startSession(userId: string, dto: StartSessionDto): Promise<SessionRecord> {
     const minPreauthPaise = parseInt(process.env.WALLET_MIN_PREAUTH_PAISE || '20000', 10); // default ₹200.00
-    const sessionId = `sess-${Date.now()}`;
+    // SEC-002: Use cryptographically unguessable UUID for session identifiers
+    const sessionId = `sess-${crypto.randomUUID()}`;
 
     // POL-002 / REM-A05: Atomic wallet pre-authorization hold
     if (this.walletService) {
@@ -302,40 +304,60 @@ export class SessionsService {
     return session;
   }
 
-  async getSession(sessionId: string): Promise<SessionRecord> {
-    const memSession = this.inMemorySessions.get(sessionId);
-    if (memSession) return memSession;
+  async getSession(
+    sessionId: string,
+    caller?: { userId: string; role?: string },
+  ): Promise<SessionRecord> {
+    let session: SessionRecord | undefined = this.inMemorySessions.get(sessionId);
 
-    try {
-      const dbSession = await this.sessionRepo.findOne({
-        where: { id: sessionId },
-        relations: ['meterValues'],
-      });
-      if (dbSession) {
-        return {
-          id: dbSession.id,
-          userId: dbSession.userId,
-          stationId: dbSession.stationId,
-          stationName: dbSession.stationName,
-          connectorId: dbSession.connectorId,
-          connectorType: dbSession.connectorType,
-          chargePointId: dbSession.chargePointId,
-          transactionId: dbSession.transactionId,
-          status: dbSession.status as any,
-          target: dbSession.target,
-          startTime: dbSession.startTime,
-          endTime: dbSession.endTime,
-          energyKwh: dbSession.energyKwh,
-          totalCostInr: dbSession.totalCostInr,
-          pricePerKwh: dbSession.pricePerKwh,
-          startSoC: dbSession.startSoC,
-          currentSoC: dbSession.currentSoC,
-          powerKw: dbSession.powerKw,
-        };
+    if (!session) {
+      try {
+        const dbSession = await this.sessionRepo.findOne({
+          where: { id: sessionId },
+          relations: ['meterValues'],
+        });
+        if (dbSession) {
+          session = {
+            id: dbSession.id,
+            userId: dbSession.userId,
+            stationId: dbSession.stationId,
+            stationName: dbSession.stationName,
+            connectorId: dbSession.connectorId,
+            connectorType: dbSession.connectorType,
+            chargePointId: dbSession.chargePointId,
+            transactionId: dbSession.transactionId,
+            status: dbSession.status as any,
+            target: dbSession.target,
+            startTime: dbSession.startTime,
+            endTime: dbSession.endTime,
+            energyKwh: dbSession.energyKwh,
+            totalCostInr: dbSession.totalCostInr,
+            pricePerKwh: dbSession.pricePerKwh,
+            startSoC: dbSession.startSoC,
+            currentSoC: dbSession.currentSoC,
+            powerKw: dbSession.powerKw,
+          };
+        }
+      } catch {}
+    }
+
+    if (!session) {
+      throw new NotFoundException(`Session ${sessionId} not found`);
+    }
+
+    // SEC-002: Object-level authorization guard (BOLA / IDOR protection)
+    if (caller) {
+      const isOwner = session.userId === caller.userId;
+      const isPrivileged = caller.role && caller.role.includes('ADMIN');
+      if (!isOwner && !isPrivileged) {
+        this.logger.warn(
+          `Unauthorized session query attempt: Caller ${caller.userId} attempted to access session ${sessionId} owned by ${session.userId}`,
+        );
+        throw new ForbiddenException('You are not authorized to view this charging session');
       }
-    } catch {}
+    }
 
-    throw new NotFoundException(`Session ${sessionId} not found`);
+    return session;
   }
 
   async getUserSessions(userId: string): Promise<SessionRecord[]> {

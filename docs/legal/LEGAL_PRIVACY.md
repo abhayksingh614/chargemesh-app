@@ -348,6 +348,6 @@ Before Play Store submission, ensure:
 ## Full Legal Reference
 
 For the complete legal planning framework (all 48 sections), see:  
-[`.docs/ChargeMesh_Legal_Documentation.md`](../.docs/ChargeMesh_Legal_Documentation.md)
+[`.docs/ChargeMesh_Legal_Documentation.md`](../../.docs/ChargeMesh_Legal_Documentation.md)
 
 > That document is the detailed planning source. This file (`LEGAL_PRIVACY.md`) provides the accessible developer-facing summary.

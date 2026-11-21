@@ -11,7 +11,7 @@ import {
   ConnectorEntity,
   UserEntity,
 } from '../../database/entities';
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException } from '@nestjs/common';
 
 describe('SessionsService', () => {
   let service: SessionsService;
@@ -157,5 +157,22 @@ describe('SessionsService', () => {
       connectorId: 'conn-01',
     });
     expect(session.status).toBe('CHARGING');
+  });
+
+  it('SEC-002: should prevent unauthorized non-owner from viewing session details (BOLA/IDOR protection)', async () => {
+    const session = await service.startSession('usr-123', {
+      stationId: 'st-delhi-001',
+      connectorId: 'conn-01',
+    });
+
+    await expect(
+      service.getSession(session.id, { userId: 'usr-attacker', role: 'driver' }),
+    ).rejects.toThrow(ForbiddenException);
+
+    const ownerResult = await service.getSession(session.id, { userId: 'usr-123', role: 'driver' });
+    expect(ownerResult.id).toBe(session.id);
+
+    const adminResult = await service.getSession(session.id, { userId: 'usr-admin-01', role: 'SUPER_ADMIN' });
+    expect(adminResult.id).toBe(session.id);
   });
 });

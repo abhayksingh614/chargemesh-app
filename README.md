@@ -18,7 +18,7 @@
   <a href="#-protocols--standards"><img src="https://img.shields.io/badge/Protocol-OCPP%201.6--J%20%2F%202.0.1-orange.svg" alt="OCPP 1.6-J / 2.0.1" /></a>
   <a href="CONTRIBUTING.md"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" alt="PRs Welcome" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache--2.0-blue.svg" alt="License" /></a>
-  <a href="#-testing--quality-assurance"><img src="https://img.shields.io/badge/Tests-109%20passed-brightgreen.svg" alt="Tests 109 Passed" /></a>
+  <a href="#-testing--quality-assurance"><img src="https://img.shields.io/badge/Tests-115%20passed-brightgreen.svg" alt="Tests 115 Passed" /></a>
 </p>
 
 ---
@@ -176,7 +176,7 @@ Detailed architecture specifications:
 | **Geospatial** | PostGIS / MapLibre GL | `16-3.4` / `^10.1` | Geospatial spatial queries (`ST_DWithin`) & vector maps |
 | **Cache/State** | Redis | `7-alpine` | Ephemeral session state and rate limiting |
 
-*Full stack breakdown:* [`TECH_STACK.md`](TECH_STACK.md)
+*Full stack breakdown:* [`docs/architecture/TECHNOLOGY_STACK.md`](docs/architecture/TECHNOLOGY_STACK.md)
 
 ---
 
@@ -329,7 +329,7 @@ Database initialization is automated via `docker/postgres/init.sql`, enabling:
 | `WSS` | `/ocpp` | Bidirectional OCPP 1.6-J / 2.0.1 CSMS gateway |
 | `WSS` | `/telemetry` | Real-time session telemetry broadcast stream |
 
-*Complete API Schema:* [`docs/API_DOCUMENTATION.md`](docs/API_DOCUMENTATION.md)
+*Complete API Schema:* [`docs/api/API_DOCUMENTATION.md`](docs/api/API_DOCUMENTATION.md)
 
 ---
 
@@ -339,7 +339,7 @@ Database initialization is automated via `docker/postgres/init.sql`, enabling:
 # Run tests across all workspaces (Backend, Admin, Mobile)
 npm test
 
-# Run backend unit tests (90 passing tests across 15 suites, including adversarial financial & OCPP tests)
+# Run backend unit tests (96 passing tests across 15 suites, including adversarial financial, BOLA, & OCPP tests)
 npm run test:backend
 
 # Run backend E2E tests against live PostgreSQL 16 + PostGIS & Redis 7
@@ -358,7 +358,7 @@ npm run typecheck
 npm run lint
 ```
 
-*Testing specifications and guidelines:* [`TESTING.md`](TESTING.md)
+*Testing specifications and guidelines:* [`docs/testing/TESTING_STRATEGY.md`](docs/testing/TESTING_STRATEGY.md)
 
 ---
 
@@ -381,16 +381,59 @@ cd apps/mobile/android
 
 ## 🚢 Deployment & Release Instructions
 
-- **Google Play Store:** Consult [`docs/PLAY_STORE_RELEASE_READINESS.md`](docs/PLAY_STORE_RELEASE_READINESS.md) for production signing, Android 14 requirements, ProGuard keep rules, and store listing assets.
-- **Docker Production Container:** Build images using the multi-stage Dockerfiles specified in [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
+- **Google Play Store:** Consult [`docs/deployment/PLAY_STORE_RELEASE_READINESS.md`](docs/deployment/PLAY_STORE_RELEASE_READINESS.md) for production signing, Android 14 requirements, ProGuard keep rules, and store listing assets.
+- **Docker Production Container:** Build images using the multi-stage Dockerfiles specified in [`docs/deployment/DEPLOYMENT_GUIDE.md`](docs/deployment/DEPLOYMENT_GUIDE.md).
+
+---
+
+## 📚 Project Documentation Hub
+
+All canonical project documentation is centralized inside the [`docs/`](docs/) directory:
+
+| Documentation Domain | Canonical Location | Description |
+| :--- | :--- | :--- |
+| **System Architecture** | [`docs/architecture/`](docs/architecture/) | Overall 3-tier architecture, data flow, telemetry, CPO protocol, and design system |
+| **Development & Setup** | [`docs/development/`](docs/development/) | Installation, environment configuration, roadmap, and project requirements |
+| **REST & WebSocket API** | [`docs/api/`](docs/api/) | Full OpenAPI REST endpoints, request/response models, and OCPP 1.6-J / 2.0.1 specs |
+| **Database & PostGIS** | [`docs/database/`](docs/database/) | Relational entity schemas, TypeORM models, spatial queries, and vehicle database |
+| **Deployment & Containers** | [`docs/deployment/`](docs/deployment/) | Docker orchestration, Play Store release readiness, and build walkthroughs |
+| **Testing & Quality Assurance** | [`docs/testing/`](docs/testing/) | Unit, integration, security test suites, and device verification workflows |
+| **Security & Privacy** | [`docs/security/`](docs/security/) | Zero-trust guidelines, BOLA defense, threat models, and security reference |
+| **Maintenance & Operations** | [`docs/maintenance/`](docs/maintenance/) | Operational runbooks, troubleshooting playbooks, changelog, and support channels |
+| **Legal & Compliance** | [`docs/legal/`](docs/legal/) | DPDP Act 2023 privacy reference, license evaluation, copyright, and third-party notices |
+| **Engineering Reports** | [`docs/reports/`](docs/reports/) | Open-source readiness audits, SAST reports, and compatibility reviews |
+
+### 🏆 Open-Source & OpenAI Codex Readiness Audits
+Detailed quality, hygiene, and security reports are maintained under [`docs/REPOSITORY_QUALITY_AUDIT/`](docs/REPOSITORY_QUALITY_AUDIT/):
+- [`DOCUMENTATION_AUDIT.md`](docs/REPOSITORY_QUALITY_AUDIT/DOCUMENTATION_AUDIT.md) — Documentation completeness and codebase alignment
+- [`FILE_MANAGEMENT_AUDIT.md`](docs/REPOSITORY_QUALITY_AUDIT/FILE_MANAGEMENT_AUDIT.md) — File categorization (KEEP, MOVE, UPDATE, REMOVE)
+- [`REPOSITORY_STRUCTURE_REPORT.md`](docs/REPOSITORY_QUALITY_AUDIT/REPOSITORY_STRUCTURE_REPORT.md) — Monorepo workspace analysis and architecture
+- [`SENSITIVE_DATA_AUDIT.md`](docs/REPOSITORY_QUALITY_AUDIT/SENSITIVE_DATA_AUDIT.md) — Secret scanning, sanitization, and fail-closed protections
+- [`UNUSED_FILES_REPORT.md`](docs/REPOSITORY_QUALITY_AUDIT/UNUSED_FILES_REPORT.md) — Elimination of duplicate, temporary, and obsolete files
+- [`GIT_HISTORY_SECURITY_REPORT.md`](docs/REPOSITORY_QUALITY_AUDIT/GIT_HISTORY_SECURITY_REPORT.md) — Forensic audit of 8 historical Git commits
+- [`CLEANUP_CHANGELOG.md`](docs/REPOSITORY_QUALITY_AUDIT/CLEANUP_CHANGELOG.md) — Itemized modification ledger
+- [`FINAL_REPOSITORY_QUALITY_REPORT.md`](docs/REPOSITORY_QUALITY_AUDIT/FINAL_REPOSITORY_QUALITY_REPORT.md) — Final scorecard (**98/100**) and Codex readiness
+
+### 🤖 OpenAI Codex for Open Source Program Documentation
+Comprehensive application and program readiness specifications are maintained under [`docs/OPENAI_CODEX_OSS_READINESS/`](docs/OPENAI_CODEX_OSS_READINESS/):
+- [`ELIGIBILITY_ASSESSMENT.md`](docs/OPENAI_CODEX_OSS_READINESS/ELIGIBILITY_ASSESSMENT.md) — Evidence-based eligibility criteria evaluation
+- [`CODEBASE_HEALTH_AUDIT.md`](docs/OPENAI_CODEX_OSS_READINESS/CODEBASE_HEALTH_AUDIT.md) — Architecture, type safety, and component health
+- [`SECURITY_AUDIT.md`](docs/OPENAI_CODEX_OSS_READINESS/SECURITY_AUDIT.md) — Threat models, BOLA defense, and zero-leak secrets
+- [`TESTING_AND_CI_CD_REPORT.md`](docs/OPENAI_CODEX_OSS_READINESS/TESTING_AND_CI_CD_REPORT.md) — 115 passing tests and 5 GitHub Actions workflows
+- [`OPEN_SOURCE_GOVERNANCE.md`](docs/OPENAI_CODEX_OSS_READINESS/OPEN_SOURCE_GOVERNANCE.md) — Governance structure, PR lifecycle, and issue templates
+- [`CODEX_INTEGRATION_STRATEGY.md`](docs/OPENAI_CODEX_OSS_READINESS/CODEX_INTEGRATION_STRATEGY.md) — Maintainer workflows and API credits allocation
+- [`MAINTENANCE_ROADMAP.md`](docs/OPENAI_CODEX_OSS_READINESS/MAINTENANCE_ROADMAP.md) — Actionable GitHub issue backlog and runbooks
+- [`FINAL_READINESS_REPORT.md`](docs/OPENAI_CODEX_OSS_READINESS/FINAL_READINESS_REPORT.md) — Executive summary, official form responses, and checklist
 
 ---
 
 ## 🛡️ Security & Privacy Posture
 
-- **Responsible Disclosure:** If you find a security vulnerability, please email **security@chargemesh.in** directly. Do NOT create public GitHub issues. See [`SECURITY.md`](SECURITY.md).
+- **Responsible Disclosure:** If you find a security vulnerability, please email **security@chargemesh.com** directly. Do NOT create public GitHub issues. See [`SECURITY.md`](SECURITY.md).
 - **Zero Secrets Committed:** Automated scanning verifies no credentials, API keys, or private keys exist in version control.
-- **Data Protection:** Implements data minimization and consent standards compliant with India's **Digital Personal Data Protection (DPDP) Act 2023**.
+- **Data Protection & Privacy:** Implements data minimization, object-level authorization (BOLA defense), and consent standards compliant with India's **Digital Personal Data Protection (DPDP) Act 2023** and **GDPR Art. 32**.
+- **Financial & Protocol Integrity:** Authoritative gateway payment verification, pessimistic wallet locking, and fail-closed OCPP CSMS gateway connectivity.
+- **Audit Verification Report:** Full SAST audit and remediation attestation is documented in [`reports/SAST_ChargeMesh_SECURITY_REPORT.html`](reports/SAST_ChargeMesh_SECURITY_REPORT.html) (Security Score: **97.3/100**, Code Quality: **8.8/10**).
 
 ---
 
@@ -413,14 +456,14 @@ ChargeMesh development is organized into 5 clear phases:
 - **Phase 4: Platform Expansion & Operations** *(Scaffolded — Next.js Admin active)*
 - **Phase 5: Open-Source Community Ecosystem** *(Active)*
 
-*Track detailed milestones:* [`ROADMAP.md`](ROADMAP.md)
+*Track detailed milestones:* [`docs/development/ROADMAP.md`](docs/development/ROADMAP.md)
 
 ---
 
 ## 📄 Licensing & Copyright
 
-- **Copyright:** Copyright (c) 2026 Abhay Kumar Singh and ChargeMesh Contributors. See [`COPYRIGHT.md`](COPYRIGHT.md).
-- **License:** Distributed under the **Apache-2.0 License**. See [`LICENSE`](LICENSE) and [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
+- **Copyright:** Copyright (c) 2026 Abhay Kumar Singh and ChargeMesh Contributors. See [`docs/legal/COPYRIGHT.md`](docs/legal/COPYRIGHT.md).
+- **License:** Distributed under the **Apache-2.0 License**. See [`LICENSE`](LICENSE) and [`docs/legal/THIRD_PARTY_NOTICES.md`](docs/legal/THIRD_PARTY_NOTICES.md).
 
 ---
 
@@ -428,5 +471,6 @@ ChargeMesh development is organized into 5 clear phases:
 
 - **GitHub Discussions:** [Ask questions and share ideas](https://github.com/abhayksingh614/chargemesh-app/discussions)
 - **Issue Tracker:** [Report bugs or request features](https://github.com/abhayksingh614/chargemesh-app/issues)
+- **Support Documentation:** [`docs/maintenance/SUPPORT.md`](docs/maintenance/SUPPORT.md)
 - **Project Maintainer:** Abhay Kumar Singh ([@abhayksingh614](https://github.com/abhayksingh614))
 - **Email:** [support@chargemesh.in](mailto:support@chargemesh.in)

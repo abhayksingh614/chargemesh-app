@@ -38,3 +38,9 @@ jobs:
 
       - name: Typecheck
         run: npm run typecheck --workspace=apps/admin
+
+      - name: Run Admin Tests
+        run: npm run test:admin
+
+      - name: Build Admin Portal
+        run: npm run build:admin

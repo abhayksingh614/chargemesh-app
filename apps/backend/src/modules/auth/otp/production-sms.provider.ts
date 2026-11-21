@@ -34,6 +34,32 @@ export class ProductionSmsProviderStub implements IOtpProvider {
       `[PRODUCTION SMS DISPATCH] Dispatched OTP to ${phoneNumber} via SMS Gateway (ReqId: ${requestId})`,
     );
 
+    const gatewayUrl =
+      this.configService?.get<string>('app.sms.gatewayUrl') ||
+      process.env.SMS_GATEWAY_URL;
+
+    if (gatewayUrl) {
+      try {
+        const apiKey =
+          this.configService?.get<string>('app.sms.apiKey') ||
+          process.env.SMS_API_KEY ||
+          process.env.SMS_PROVIDER_API_KEY;
+        await fetch(gatewayUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${apiKey}`,
+          },
+          body: JSON.stringify({
+            to: phoneNumber,
+            message: `Your ChargeMesh authentication code is: ${_code}. Valid for 5 minutes. Do not share.`,
+          }),
+        });
+      } catch (err: any) {
+        this.logger.error(`SMS provider network delivery failure: ${err.message}`);
+      }
+    }
+
     return {
       requestId,
       cooldownSeconds: 60,

@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useRef } from 'r
 import { ChargeTarget, Connector, SessionStatus } from '@chargemesh/shared-types';
 import { StationWithDetails } from '../services/mockData';
 import { useAuth } from './AuthContext';
+import { apiClient } from '../services/apiClient';
 
 export interface ActiveSessionDetails {
   sessionId: string;
@@ -152,7 +153,18 @@ export const ChargingProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     targetValue: number,
     initialSoc = 28
   ): Promise<boolean> => {
-    const sessionId = `ses-${Date.now()}`;
+    let sessionId = `ses-${Date.now()}`;
+    try {
+      const res = await apiClient.startSession({
+        stationId: station.id,
+        connectorId: connector.id,
+        target: { type: targetType, value: targetValue },
+      });
+      if (res.success && res.data?.id) {
+        sessionId = res.data.id;
+      }
+    } catch {}
+
     const newSession: ActiveSessionDetails = {
       sessionId,
       station,
@@ -182,6 +194,10 @@ export const ChargingProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
     }
+
+    try {
+      await apiClient.stopSession(activeSession.sessionId, 'USER_STOPPED');
+    } catch {}
 
     const completed: ActiveSessionDetails = {
       ...activeSession,

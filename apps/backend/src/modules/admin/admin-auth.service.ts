@@ -8,6 +8,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
+import * as crypto from 'crypto';
 import { AdminUser, AdminRole, AdminStatus } from '@chargemesh/shared-types';
 import { assertPasswordComplexity } from '../../common/utils/password-policy.util';
 import { AdminUserEntity } from '../../database/entities';
@@ -225,7 +226,10 @@ export class AdminAuthService {
       throw new BadRequestException('Target admin account not found');
     }
 
-    const generatedPassword = tempPassword || `Temp@${Date.now()}!`;
+    // SEC-008: Cryptographically unguessable CSPRNG temporary password
+    const generatedPassword =
+      tempPassword ||
+      `Temp@${crypto.randomBytes(6).toString('hex').toUpperCase()}!${crypto.randomInt(10, 99)}`;
     this.validatePasswordStrength(generatedPassword);
 
     const newHash = await bcrypt.hash(generatedPassword, this.SALT_ROUNDS);

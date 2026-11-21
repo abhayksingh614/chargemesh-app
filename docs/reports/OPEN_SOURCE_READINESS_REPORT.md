@@ -132,7 +132,7 @@
 - **Current State:** Proprietary notice in `LICENSE` (`PROPRIETARY SOFTWARE LICENSE Copyright (c) 2026 ChargeMesh. All Rights Reserved.`) and `"license": "UNLICENSED"` in `package.json`.
 - **Recommendation:** **MIT License** (permits commercial use, modification, distribution, and broad adoption across CPOs and independent developers).
 - **Alternative:** **Apache License 2.0** (if explicit patent grants and trademark clauses are required).
-- **Next Step:** To protect the repository owner's rights, the proprietary license has been preserved until explicit owner sign-off. The proposed MIT terms are documented in [`docs/LICENSE_EVALUATION.md`](docs/LICENSE_EVALUATION.md).
+- **Next Step:** To protect the repository owner's rights, the proprietary license has been preserved until explicit owner sign-off. The proposed MIT terms are documented in [`docs/legal/LICENSE_EVALUATION.md`](../legal/LICENSE_EVALUATION.md).
 
 ---
 

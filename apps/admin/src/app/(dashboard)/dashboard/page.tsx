@@ -1,11 +1,11 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { KpiCard } from '@/components/KpiCard';
 import { StatusBadge } from '@/components/StatusBadge';
 import { TelemetryLineChart } from '@/components/TelemetryLineChart';
 import { INITIAL_CPOS, INITIAL_SESSIONS } from '@/lib/dataService';
-
+import { adminApiClient } from '@/lib/adminApiClient';
 
 const POWER_LOAD_DATA = [
   { time: '00:00', value: 45 },
@@ -28,7 +28,20 @@ const REVENUE_DATA = [
 ];
 
 export default function ExecutiveDashboard() {
+  const [stats, setStats] = useState<any>(null);
   const activeSessions = INITIAL_SESSIONS.filter((s) => s.status === 'CHARGING');
+
+  useEffect(() => {
+    let isMounted = true;
+    adminApiClient.getDashboard().then((res) => {
+      if (isMounted && res.success && res.data) {
+        setStats(res.data);
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
@@ -57,7 +70,11 @@ export default function ExecutiveDashboard() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
         <KpiCard
           title="Today's Revenue"
-          value="₹48,920.00"
+          value={
+            stats?.todayRevenueInr
+              ? `₹${Number(stats.todayRevenueInr).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`
+              : '₹48,920.00'
+          }
           change="14.2% vs yesterday"
           isPositive={true}
           icon="💳"
@@ -65,28 +82,44 @@ export default function ExecutiveDashboard() {
         />
         <KpiCard
           title="Total Energy Delivered"
-          value="2,450.8 kWh"
+          value={
+            stats?.todayEnergyKwh
+              ? `${Number(stats.todayEnergyKwh).toLocaleString('en-IN')} kWh`
+              : '2,450.8 kWh'
+          }
           change="8.6% increase"
           isPositive={true}
           icon="⚡"
         />
         <KpiCard
           title="CO₂ Avoided"
-          value="1,740.1 kg"
+          value={
+            stats?.todayCo2SavedKg
+              ? `${Number(stats.todayCo2SavedKg).toLocaleString('en-IN')} kg`
+              : '1,740.1 kg'
+          }
           change="Grid factor 0.71"
           isPositive={true}
           icon="🌱"
         />
         <KpiCard
           title="Active Live Sessions"
-          value="42 Sessions"
+          value={
+            stats?.activeLiveSessions
+              ? `${stats.activeLiveSessions} Sessions`
+              : `${activeSessions.length || 42} Sessions`
+          }
           subtitle="Peak concurrent load"
           icon="⏱️"
           badge="Live"
         />
         <KpiCard
           title="Online Fast Chargers"
-          value="1,242 / 1,280"
+          value={
+            stats?.chargers
+              ? `${stats.chargers.available + stats.chargers.inUse} / ${stats.chargers.total}`
+              : '1,242 / 1,280'
+          }
           change="97.0% Availability"
           isPositive={true}
           icon="🔌"

@@ -4,6 +4,7 @@ import { ConfigModule } from '@nestjs/config';
 import { OcppService } from './ocpp.service';
 import { OcppGateway } from './ocpp.gateway';
 import { TelemetryModule } from '../telemetry/telemetry.module';
+import { WalletModule } from '../wallet/wallet.module';
 import {
   UserEntity,
   ChargingStationEntity,
@@ -14,6 +15,7 @@ import {
   imports: [
     TelemetryModule,
     ConfigModule,
+    WalletModule,
     TypeOrmModule.forFeature([
       UserEntity,
       ChargingStationEntity,

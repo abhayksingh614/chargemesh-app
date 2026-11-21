@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DataTable, Column } from '@/components/DataTable';
 import { Modal } from '@/components/Modal';
 import { INITIAL_TRANSACTIONS, AdminTransaction } from '@/lib/dataService';
-
+import { adminApiClient } from '@/lib/adminApiClient';
 
 export default function FinancePage() {
   const [transactions, setTransactions] = useState<AdminTransaction[]>(INITIAL_TRANSACTIONS);
@@ -12,8 +12,50 @@ export default function FinancePage() {
   const [refundTx, setRefundTx] = useState<AdminTransaction | null>(null);
   const [refundReason, setRefundReason] = useState('');
 
-  const handleProcessRefund = () => {
+  useEffect(() => {
+    let isMounted = true;
+    adminApiClient.getLedger().then((res) => {
+      if (isMounted && res.success && res.data) {
+        const list = Array.isArray(res.data) ? res.data : res.data.data;
+        if (Array.isArray(list) && list.length > 0) {
+          const mapped = list.map((item: any) => ({
+            id: item.id,
+            referenceId: item.referenceId,
+            userId: item.userId,
+            userName: item.userName,
+            type: item.type,
+            title: item.title,
+            amountInr: Number(item.amountRupees !== undefined ? item.amountRupees : item.amountInr) || 0,
+            isCredit: Boolean(item.isCredit),
+            status: item.status,
+            dateStr: item.dateStr || 'Today',
+            timeStr: item.timeStr || '',
+            paymentMethodName: item.paymentMethodName || 'Ledger',
+            balanceBeforeInr: Number(item.balanceBeforeRupees !== undefined ? item.balanceBeforeRupees : item.balanceBeforeInr) || 0,
+            balanceAfterInr: Number(item.balanceAfterRupees !== undefined ? item.balanceAfterRupees : item.balanceAfterInr) || 0,
+            remarks: item.remarks || '',
+            reconciled: Boolean(item.reconciled),
+          }));
+          setTransactions(mapped);
+        }
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const handleProcessRefund = async () => {
     if (!refundTx || !refundReason.trim()) return;
+    try {
+      await adminApiClient.adjustWalletBalance({
+        userId: refundTx.userId,
+        amountRupees: refundTx.amountInr,
+        isCredit: true,
+        reason: `Refund for ${refundTx.referenceId}: ${refundReason}`,
+        referenceTicketId: refundTx.referenceId,
+      });
+    } catch {}
     const newRefund: AdminTransaction = {
       id: `tx-ref-${Date.now()}`,
       referenceId: `REF-${Date.now().toString().slice(-8)}`,

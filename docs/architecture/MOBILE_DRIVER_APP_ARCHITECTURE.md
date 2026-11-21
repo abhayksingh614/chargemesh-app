@@ -183,7 +183,7 @@ Canonical Data Sources (Local — Current)
 | App signing | Debug keystore | Production keystore (Play Store) |
 | Credentials in code | Dev-only, labelled | Remove before production release |
 
-See [`SECURITY.md`](SECURITY.md) for full security documentation.
+See [`SECURITY.md`](../../SECURITY.md) and [`SECURITY_GUIDELINES.md`](../security/SECURITY_GUIDELINES.md) for full security documentation.
 
 ---
 

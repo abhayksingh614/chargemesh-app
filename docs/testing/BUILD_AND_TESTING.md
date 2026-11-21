@@ -84,7 +84,7 @@ cd apps/mobile/android
 
 Output: `apps/mobile/android/app/build/outputs/apk/release/app-release.apk`
 
-> ⚠️ **IMPORTANT:** The release build currently uses the **debug keystore**. This is **NOT suitable for Play Store submission**. See [`SECURITY.md`](SECURITY.md) for production keystore setup.
+> ⚠️ **IMPORTANT:** The release build currently uses the **debug keystore**. This is **NOT suitable for Play Store submission**. See [`SECURITY.md`](../../SECURITY.md) and [`SECURITY_GUIDELINES.md`](../security/SECURITY_GUIDELINES.md) for production keystore setup.
 
 ---
 
@@ -254,7 +254,7 @@ cd packages/shared-types
 npm test
 ```
 
-For testing procedures, acceptance criteria, and regression test plans, see [`.agents/skills/testing/SKILL.md`](../.agents/skills/testing/SKILL.md).
+For testing procedures, acceptance criteria, and regression test plans, see [`.agents/skills/testing/SKILL.md`](../../.agents/skills/testing/SKILL.md).
 
 ---
 

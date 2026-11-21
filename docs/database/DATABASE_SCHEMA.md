@@ -1,7 +1,7 @@
 # ChargeMesh — Database Schema & Data Models
 
 > **Status:** ⚠️ PLANNED — PostgreSQL schema is not yet active. The mobile app uses local JSON mock data.
-> This document describes the intended future database design. See [`CPO_AND_STATIONS.md`](CPO_AND_STATIONS.md) for the current TypeScript data model.
+> This document describes the intended future database design. See [`CPO_AND_STATIONS.md`](../architecture/CPO_AND_STATIONS.md) for the current TypeScript data model.
 
 ## 1. Relational Entities (PostgreSQL)
 

@@ -71,5 +71,16 @@ jobs:
           JWT_SECRET: ci_test_jwt_secret_at_least_64_chars_long_for_testing_only
           JWT_REFRESH_SECRET: ci_test_refresh_secret_at_least_64_chars_long_for_testing_only
 
+      - name: Admin Portal Unit Tests
+        run: npm run test:admin
+
+      - name: Mobile Application Unit Tests
+        run: npm run test --workspace=apps/mobile
+        env:
+          NODE_ENV: test
+
       - name: Backend Build Check
         run: npm run build:backend
+
+      - name: Admin Portal Build Check
+        run: npm run build:admin

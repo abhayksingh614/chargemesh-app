@@ -23,8 +23,8 @@ Security patches and bug fixes are applied to the active development branches:
 If you discover a security vulnerability, credential leak, authentication bypass, or potential exploit in ChargeMesh:
 
 1. **Email Details:** Send an encrypted or confidential report to:  
-   📧 **[security@chargemesh.in](mailto:security@chargemesh.in)**  
-   *Cc:* **[abhayksingh614@gmail.com](mailto:abhayksingh614@gmail.com)**
+   📧 **[security@chargemesh.com](mailto:security@chargemesh.com)**  
+   *Cc:* **[maintainers@chargemesh.com](mailto:maintainers@chargemesh.com)**
 2. **Subject Line:** `[SECURITY] ChargeMesh Vulnerability Report — <Brief Description>`
 3. **Report Contents:**
    - Detailed description of the vulnerability.

@@ -1,15 +1,28 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DataTable, Column } from '@/components/DataTable';
 import { Modal } from '@/components/Modal';
 import { JsonDiffViewer } from '@/components/JsonDiffViewer';
 import { INITIAL_AUDIT_LOGS } from '@/lib/dataService';
 import { AuditLogEntry } from '@chargemesh/shared-types';
+import { adminApiClient } from '@/lib/adminApiClient';
 
 export default function AuditLogsPage() {
-  const [logs] = useState<AuditLogEntry[]>(INITIAL_AUDIT_LOGS);
+  const [logs, setLogs] = useState<AuditLogEntry[]>(INITIAL_AUDIT_LOGS);
   const [selectedLog, setSelectedLog] = useState<AuditLogEntry | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    adminApiClient.getAuditLogs().then((res) => {
+      if (isMounted && res.success && res.data && Array.isArray(res.data) && res.data.length > 0) {
+        setLogs(res.data);
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
 
   const columns: Column<AuditLogEntry>[] = [

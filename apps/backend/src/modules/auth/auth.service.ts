@@ -9,6 +9,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
+import * as crypto from 'crypto';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { OtpService } from './otp/otp.service';
@@ -33,6 +34,15 @@ export class AuthService {
   }
 
   async register(dto: RegisterDto) {
+    const isProduction = process.env.NODE_ENV === 'production';
+    if (isProduction && !dto.otp) {
+      throw new BadRequestException('OTP verification code is required for registration');
+    }
+
+    if (dto.otp) {
+      await this.otpService.verifyOtp(dto.phoneNumber, dto.otp);
+    }
+
     let existing: UserEntity | null = null;
     try {
       existing = await this.userRepo.findOneBy({ phoneNumber: dto.phoneNumber });
@@ -45,7 +55,7 @@ export class AuthService {
     }
 
     const newUser: Partial<UserEntity> = {
-      id: `usr-${Date.now()}`,
+      id: `usr-${crypto.randomUUID()}`,
       phoneNumber: dto.phoneNumber,
       name: dto.name,
       email: dto.email,
@@ -98,7 +108,7 @@ export class AuthService {
         throw new UnauthorizedException('User account not found. Please register first.');
       }
       const newUser: Partial<UserEntity> = {
-        id: `usr-${Date.now()}`,
+        id: `usr-${crypto.randomUUID()}`,
         phoneNumber: dto.phoneNumber,
         name: 'New Driver',
         status: 'ACTIVE',

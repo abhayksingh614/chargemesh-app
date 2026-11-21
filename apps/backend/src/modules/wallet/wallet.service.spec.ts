@@ -3,6 +3,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import * as crypto from 'crypto';
 import { WalletService } from './wallet.service';
 import { RazorpayService } from './razorpay.service';
 import { UserEntity, FinanceLedgerEntity } from '../../database/entities';
@@ -122,7 +123,6 @@ describe('WalletService & RazorpayService (FIN-001 & REM-A05)', () => {
       const paymentId = 'pay_test_456';
       const secret = 'mockKeySecret12345';
 
-      const crypto = require('crypto');
       const validSig = crypto
         .createHmac('sha256', secret)
         .update(`${orderId}|${paymentId}`)
@@ -368,6 +368,26 @@ describe('WalletService & RazorpayService (FIN-001 & REM-A05)', () => {
       await expect(
         walletService.settleSession(mockUser.id, 'sess-fail-01', 100, 20000, 5),
       ).rejects.toThrow('PostgreSQL Ledger Foreign Key Violation');
+    });
+
+    it('SEC-001: should reject fraudulent verification when client tampered amount does not match authoritative order amount', async () => {
+      jest.spyOn(razorpayService, 'fetchOrder').mockResolvedValueOnce({
+        orderId: 'order_honest_10',
+        amountPaise: 1000,
+        amountRupees: 10,
+        status: 'created',
+      });
+      jest.spyOn(razorpayService, 'verifyPaymentSignature').mockReturnValueOnce(true);
+
+      await expect(
+        walletService.verifyAndCreditTopup(
+          mockUser.id,
+          'order_honest_10',
+          'pay_tampered_001',
+          'mock_sig',
+          50000,
+        ),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 });

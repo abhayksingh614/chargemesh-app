@@ -1,14 +1,30 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DataTable, Column } from '@/components/DataTable';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Modal } from '@/components/Modal';
 import { INITIAL_SESSIONS, AdminSession } from '@/lib/dataService';
+import { adminApiClient } from '@/lib/adminApiClient';
 
 export default function SessionsPage() {
-  const [sessions] = useState<AdminSession[]>(INITIAL_SESSIONS);
+  const [sessions, setSessions] = useState<AdminSession[]>(INITIAL_SESSIONS);
   const [selectedSession, setSelectedSession] = useState<AdminSession | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    adminApiClient.getSessions().then((res) => {
+      if (isMounted && res.success && res.data) {
+        const list = Array.isArray(res.data) ? res.data : res.data.data;
+        if (Array.isArray(list) && list.length > 0) {
+          setSessions(list);
+        }
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
 
   const activeSessions = sessions.filter((s) => s.status === 'CHARGING');

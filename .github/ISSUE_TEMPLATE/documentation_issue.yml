@@ -12,7 +12,7 @@ body:
     attributes:
       label: Documentation Page or File Path
       description: Which file or URL needs attention?
-      placeholder: "e.g., docs/API_DOCUMENTATION.md or README.md"
+      placeholder: "e.g., docs/api/API_DOCUMENTATION.md or README.md"
     validations:
       required: true
   - type: textarea

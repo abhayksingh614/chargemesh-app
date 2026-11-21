@@ -13,6 +13,7 @@ import {
   UserEntity,
   FinanceLedgerEntity,
   AuditLogEntity,
+  ChargingSessionEntity,
 } from '../../database/entities';
 
 import { AdminAuditService } from './admin-audit.service';
@@ -38,6 +39,7 @@ import { AdminAuditController } from './admin-audit.controller';
       UserEntity,
       FinanceLedgerEntity,
       AuditLogEntity,
+      ChargingSessionEntity,
     ]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({

@@ -164,7 +164,8 @@ docs(readme): add local setup troubleshooting steps
 
 ## 8. Documentation Requirements
 
-- If your change introduces or modifies an API endpoint, update `docs/API_DOCUMENTATION.md`.
+- All new documentation files must be placed inside the appropriate category subfolder under `docs/` (e.g., `docs/architecture/`, `docs/development/`, `docs/api/`, `docs/database/`, `docs/deployment/`, `docs/testing/`, `docs/security/`, `docs/maintenance/`, `docs/reports/`, `docs/legal/`). Keep the root directory minimal.
+- If your change introduces or modifies an API endpoint, update [`docs/api/API_DOCUMENTATION.md`](docs/api/API_DOCUMENTATION.md).
 - If your change affects environment variables, update `.env.example` across the affected workspaces.
 - If your change alters system architecture or state machines, update the corresponding diagram in `docs/architecture/`.
 

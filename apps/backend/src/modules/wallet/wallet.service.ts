@@ -103,7 +103,7 @@ export class WalletService {
     orderId: string,
     paymentId: string,
     signature: string,
-    amountRupees: number,
+    amountRupees?: number,
   ) {
     // 1. Verify cryptographic signature if razorpay is configured
     if (this.razorpayService.isConfigured()) {
@@ -115,10 +115,32 @@ export class WalletService {
       throw new BadRequestException('Payment gateway signature required in production');
     }
 
-    const amountPaise = Math.round(amountRupees * 100);
-    if (amountPaise <= 0) {
+    // SEC-001: Determine authoritative credit amount from Razorpay / Sandbox order record
+    let verifiedAmountRupees = amountRupees;
+    try {
+      const authoritativeOrder = await this.razorpayService.fetchOrder(orderId);
+      if (authoritativeOrder && authoritativeOrder.amountRupees > 0) {
+        if (amountRupees !== undefined && amountRupees !== null) {
+          const clientPaise = Math.round(amountRupees * 100);
+          if (Math.abs(clientPaise - authoritativeOrder.amountPaise) > 1) {
+            this.logger.error(
+              `Financial discrepancy detected! User ${userId} submitted ₹${amountRupees} but order ${orderId} was authorized for ₹${authoritativeOrder.amountRupees}. Rejecting fraudulent verification.`,
+            );
+            throw new BadRequestException('Submitted amount does not match authorized order amount');
+          }
+        }
+        verifiedAmountRupees = authoritativeOrder.amountRupees;
+      }
+    } catch (err: any) {
+      if (err instanceof BadRequestException) throw err;
+      this.logger.warn(`Could not verify authoritative order ${orderId}: ${err.message}`);
+    }
+
+    if (!verifiedAmountRupees || verifiedAmountRupees <= 0) {
       throw new BadRequestException('Invalid top-up credit amount');
     }
+
+    const amountPaise = Math.round(verifiedAmountRupees * 100);
 
     // 2. Execute idempotent atomic balance credit
     if (this.dataSource && this.dataSource.isInitialized) {
@@ -160,8 +182,8 @@ export class WalletService {
           userId: user.id,
           userName: user.name,
           type: 'WALLET_TOPUP_UPI',
-          title: `₹${amountRupees.toFixed(2)} Added via UPI / Razorpay`,
-          amountRupees,
+          title: `₹${verifiedAmountRupees.toFixed(2)} Added via UPI / Razorpay`,
+          amountRupees: verifiedAmountRupees,
           isCredit: true,
           status: 'SUCCESS',
           dateStr: now.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
@@ -175,7 +197,7 @@ export class WalletService {
         });
 
         const saved = await manager.getRepository(FinanceLedgerEntity).save(tx);
-        this.logger.log(`Successfully credited ₹${amountRupees} to user ${userId} (Ref: ${paymentId})`);
+        this.logger.log(`Successfully credited ₹${verifiedAmountRupees} to user ${userId} (Ref: ${paymentId})`);
 
         return {
           success: true,

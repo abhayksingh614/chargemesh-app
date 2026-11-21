@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DataTable, Column } from '@/components/DataTable';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Modal } from '@/components/Modal';
 import { INITIAL_DRIVERS } from '@/lib/dataService';
+import { adminApiClient } from '@/lib/adminApiClient';
 import { Vehicle } from '@chargemesh/shared-types';
-
 
 type DriverRecord = typeof INITIAL_DRIVERS[0];
 
@@ -16,14 +16,32 @@ export default function UsersPage() {
   const [statusActionDriver, setStatusActionDriver] = useState<DriverRecord | null>(null);
   const [actionReason, setActionReason] = useState('');
 
+  useEffect(() => {
+    let isMounted = true;
+    adminApiClient.getDrivers().then((res) => {
+      if (isMounted && res.success && res.data) {
+        const list = Array.isArray(res.data) ? res.data : res.data.data;
+        if (Array.isArray(list) && list.length > 0) {
+          setDrivers(list);
+        }
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const handleToggleStatus = (driver: DriverRecord) => {
     setStatusActionDriver(driver);
     setActionReason('');
   };
 
-  const confirmStatusChange = () => {
+  const confirmStatusChange = async () => {
     if (!statusActionDriver || !actionReason.trim()) return;
     const newStatus = statusActionDriver.status === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE';
+    try {
+      await adminApiClient.updateUserStatus(statusActionDriver.id, newStatus, actionReason);
+    } catch {}
     setDrivers((prev) =>
       prev.map((d) => (d.id === statusActionDriver.id ? { ...d, status: newStatus } : d)),
     );

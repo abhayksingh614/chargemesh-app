@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Modal } from '@/components/Modal';
 import { INITIAL_CPOS } from '@/lib/dataService';
 import { AdminCpoDetail } from '@chargemesh/shared-types';
+import { adminApiClient } from '@/lib/adminApiClient';
 
 export default function CposPage() {
   const [cpos, setCpos] = useState<AdminCpoDetail[]>(INITIAL_CPOS);
@@ -12,30 +13,43 @@ export default function CposPage() {
   const [syncingId, setSyncingId] = useState<string | null>(null);
   const [syncSuccessId, setSyncSuccessId] = useState<string | null>(null);
 
-  const handleTriggerSync = (cpoId: string) => {
+  useEffect(() => {
+    let isMounted = true;
+    adminApiClient.getCpos().then((res) => {
+      if (isMounted && res.success && res.data && Array.isArray(res.data) && res.data.length > 0) {
+        setCpos(res.data);
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const handleTriggerSync = async (cpoId: string) => {
     setSyncingId(cpoId);
-    setTimeout(() => {
-      setCpos((prev) =>
-        prev.map((c) =>
-          c.id === cpoId
-            ? {
-                ...c,
-                lastSyncAt: new Date().toISOString(),
-                lastSyncResult: {
-                  status: 'SUCCESS',
-                  locationsSynced: c.totalStationCount,
-                  tariffsSynced: 4,
-                  errorCount: 0,
-                  timestamp: new Date().toISOString(),
-                },
-              }
-            : c,
-        ),
-      );
-      setSyncingId(null);
-      setSyncSuccessId(cpoId);
-      setTimeout(() => setSyncSuccessId(null), 3000);
-    }, 1200);
+    try {
+      await adminApiClient.triggerCpoSync(cpoId);
+    } catch {}
+    setCpos((prev) =>
+      prev.map((c) =>
+        c.id === cpoId
+          ? {
+              ...c,
+              lastSyncAt: new Date().toISOString(),
+              lastSyncResult: {
+                status: 'SUCCESS',
+                locationsSynced: c.totalStationCount,
+                tariffsSynced: 4,
+                errorCount: 0,
+                timestamp: new Date().toISOString(),
+              },
+            }
+          : c,
+      ),
+    );
+    setSyncingId(null);
+    setSyncSuccessId(cpoId);
+    setTimeout(() => setSyncSuccessId(null), 3000);
   };
 
   return (

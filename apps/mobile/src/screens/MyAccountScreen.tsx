@@ -969,7 +969,7 @@ export const MyAccountScreen: React.FC<MyAccountScreenProps> = ({ navigation }) 
                   onChangeText={setEditEmail}
                   keyboardType="email-address"
                   autoCapitalize="none"
-                  placeholder="rahul@gmail.com"
+                  placeholder="driver@chargemesh.com"
                   placeholderTextColor={theme.textMuted}
                 />
               </View>

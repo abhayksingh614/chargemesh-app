@@ -130,7 +130,7 @@ export class SeedService implements OnApplicationBootstrap {
         id: 'usr-abhay-01',
         phoneNumber: '+919876543210',
         name: 'Abhay Singh',
-        email: 'abhay@gmail.com',
+        email: 'abhay@chargemesh.com',
         vehicle: {
           make: 'Tata',
           model: 'Nexon EV Max Empowered+',
@@ -147,7 +147,7 @@ export class SeedService implements OnApplicationBootstrap {
         id: 'usr-rahul-02',
         phoneNumber: '+919412602135',
         name: 'Rahul Sharma',
-        email: 'rahul@gmail.com',
+        email: 'rahul@chargemesh.com',
         vehicle: {
           make: 'MG',
           model: 'ZS EV Exclusive',

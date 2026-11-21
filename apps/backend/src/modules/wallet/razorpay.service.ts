@@ -18,6 +18,7 @@ export class RazorpayService {
   private readonly keyId: string | undefined;
   private readonly keySecret: string | undefined;
   private readonly webhookSecret: string | undefined;
+  private readonly sandboxOrders = new Map<string, RazorpayOrderResult>();
 
   constructor(@Optional() private readonly configService?: ConfigService) {
     this.keyId =
@@ -97,7 +98,7 @@ export class RazorpayService {
     const sandboxOrderId = `order_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
     this.logger.log(`[RAZORPAY TEST MODE] Created sandbox order ${sandboxOrderId} for ₹${amountRupees}`);
 
-    return {
+    const sandboxOrder: RazorpayOrderResult = {
       orderId: sandboxOrderId,
       amountPaise,
       amountRupees,
@@ -106,10 +107,66 @@ export class RazorpayService {
       receipt,
       status: 'created',
     };
+    this.sandboxOrders.set(sandboxOrderId, sandboxOrder);
+
+    return sandboxOrder;
+  }
+
+  async fetchOrder(
+    orderId: string,
+  ): Promise<{ orderId: string; amountPaise: number; amountRupees: number; status: string }> {
+    if (this.isConfigured()) {
+      try {
+        const authHeader = Buffer.from(`${this.keyId}:${this.keySecret}`).toString('base64');
+        const res = await fetch(`https://api.razorpay.com/v1/orders/${orderId}`, {
+          method: 'GET',
+          headers: {
+            Authorization: `Basic ${authHeader}`,
+          },
+        });
+        if (!res.ok) {
+          throw new BadRequestException(`Order ${orderId} not found on Razorpay`);
+        }
+        const data: any = await res.json();
+        return {
+          orderId: data.id,
+          amountPaise: data.amount,
+          amountRupees: data.amount / 100,
+          status: data.status,
+        };
+      } catch (err: any) {
+        if (err instanceof BadRequestException) throw err;
+        this.logger.error(`Failed to fetch order from Razorpay: ${err.message}`);
+        throw new BadRequestException('Unable to verify order with payment gateway');
+      }
+    }
+
+    const sandbox = this.sandboxOrders.get(orderId);
+    if (sandbox) {
+      return {
+        orderId: sandbox.orderId,
+        amountPaise: sandbox.amountPaise,
+        amountRupees: sandbox.amountRupees,
+        status: sandbox.status,
+      };
+    }
+
+    return {
+      orderId,
+      amountPaise: 0,
+      amountRupees: 0,
+      status: 'unknown',
+    };
   }
 
   verifyPaymentSignature(orderId: string, paymentId: string, signature: string): boolean {
     if (!orderId || !paymentId || !signature) {
+      return false;
+    }
+
+    const isProduction = process.env.NODE_ENV === 'production';
+    if (isProduction && !this.keySecret) {
+      this.logger.error('CRITICAL SEC-013: Missing RAZORPAY_KEY_SECRET in production. Fails closed.');
       return false;
     }
 
@@ -134,8 +191,15 @@ export class RazorpayService {
       return false;
     }
 
-    const secret = this.webhookSecret || this.keySecret || 'test_webhook_secret';
-    const generated = crypto.createHmac('sha256', secret).update(rawBody).digest('hex');
+    const isProduction = process.env.NODE_ENV === 'production';
+    const secret = this.webhookSecret || this.keySecret;
+    if (isProduction && !secret) {
+      this.logger.error('CRITICAL SEC-013: Missing RAZORPAY_WEBHOOK_SECRET in production. Fails closed.');
+      return false;
+    }
+
+    const effectiveSecret = secret || 'test_webhook_secret';
+    const generated = crypto.createHmac('sha256', effectiveSecret).update(rawBody).digest('hex');
 
     try {
       const generatedBuf = Buffer.from(generated, 'utf-8');

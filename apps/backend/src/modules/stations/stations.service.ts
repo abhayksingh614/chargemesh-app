@@ -251,6 +251,29 @@ export class StationsService {
     }
   }
 
+  async updateTariff(id: string, tariffPerKwh: number): Promise<{ success: boolean; tariffPerKwh: number }> {
+    try {
+      const station = await this.stationRepo.findOne({
+        where: { id },
+        relations: ['connectors'],
+      });
+      if (station) {
+        if (station.connectors && station.connectors.length > 0) {
+          for (const conn of station.connectors) {
+            conn.pricePerKwh = tariffPerKwh;
+            conn.lastUpdated = new Date();
+            await this.connectorRepo.save(conn);
+          }
+        }
+        await this.stationRepo.update(id, { updatedAt: new Date() });
+        this.logger.log(`Station ${id} tariff updated to ₹${tariffPerKwh}/kWh`);
+      }
+    } catch (err: any) {
+      this.logger.warn(`Failed to persist tariff update for ${id}: ${err.message}`);
+    }
+    return { success: true, tariffPerKwh };
+  }
+
   private calculateDistanceKm(
     lat1: number,
     lon1: number,

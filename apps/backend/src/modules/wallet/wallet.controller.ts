@@ -12,6 +12,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { Throttle } from '@nestjs/throttler';
 import { WalletService } from './wallet.service';
 import { RazorpayService } from './razorpay.service';
 
@@ -41,6 +42,7 @@ export class WalletController {
   }
 
   @UseGuards(AuthGuard('jwt'))
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   @Post('order')
   @HttpCode(HttpStatus.OK)
   async createOrder(@Request() req: any, @Body() body: { amountRupees: number }) {
@@ -49,25 +51,37 @@ export class WalletController {
   }
 
   @UseGuards(AuthGuard('jwt'))
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   @Post('verify')
   @HttpCode(HttpStatus.OK)
   async verifyPayment(
     @Request() req: any,
     @Body()
     body: {
-      orderId: string;
-      paymentId: string;
-      signature: string;
-      amountRupees: number;
+      orderId?: string;
+      paymentId?: string;
+      signature?: string;
+      razorpayOrderId?: string;
+      razorpayPaymentId?: string;
+      razorpaySignature?: string;
+      amountRupees?: number;
     },
   ) {
     const userId = req.user.userId || req.user.id || req.user.sub;
+    const orderId = body.orderId || body.razorpayOrderId;
+    const paymentId = body.paymentId || body.razorpayPaymentId;
+    const signature = body.signature || body.razorpaySignature;
+
+    if (!orderId || !paymentId || !signature) {
+      throw new BadRequestException('Missing orderId, paymentId, or signature in payment verification callback');
+    }
+
     return this.walletService.verifyAndCreditTopup(
       userId,
-      body.orderId,
-      body.paymentId,
-      body.signature,
-      Number(body.amountRupees),
+      orderId,
+      paymentId,
+      signature,
+      body.amountRupees !== undefined ? Number(body.amountRupees) : undefined,
     );
   }
 

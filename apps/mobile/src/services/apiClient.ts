@@ -144,10 +144,18 @@ class ApiClient {
     razorpayPaymentId: string;
     razorpaySignature: string;
     amountRupees: number;
+    orderId?: string;
+    paymentId?: string;
+    signature?: string;
   }): Promise<ApiResponse<{ success: boolean; newBalanceRupees: number }>> {
     return this.request('/wallet/verify', {
       method: 'POST',
-      body: JSON.stringify(paymentData),
+      body: JSON.stringify({
+        ...paymentData,
+        orderId: paymentData.orderId || paymentData.razorpayOrderId,
+        paymentId: paymentData.paymentId || paymentData.razorpayPaymentId,
+        signature: paymentData.signature || paymentData.razorpaySignature,
+      }),
     });
   }
 

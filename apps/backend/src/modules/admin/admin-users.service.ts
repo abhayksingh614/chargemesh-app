@@ -29,7 +29,7 @@ export class AdminUsersService {
       firstName: 'Abhay',
       lastName: 'Singh',
       phoneNumber: '+91 98765 43210',
-      email: 'abhay@gmail.com',
+      email: 'abhay@chargemesh.com',
       dob: '1993-11-22',
       gender: UserGender.MALE,
       state: 'Uttar Pradesh',

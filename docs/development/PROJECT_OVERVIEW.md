@@ -125,7 +125,7 @@ The mobile app includes demo credentials for development and testing purposes:
 - No real API keys, payment credentials, or user data are present in the codebase
 - All `.env` files are excluded from version control via `.gitignore`
 
-For full security documentation, see [`SECURITY.md`](SECURITY.md).
+For full security documentation, see [`SECURITY_GUIDELINES.md`](../security/SECURITY_GUIDELINES.md) and [`SECURITY.md`](../../SECURITY.md).
 
 ---
 
@@ -144,10 +144,10 @@ For full security documentation, see [`SECURITY.md`](SECURITY.md).
 
 | Document | Link |
 |----------|------|
-| Screen catalog | [SCREENS_AND_NAVIGATION.md](SCREENS_AND_NAVIGATION.md) |
+| Screen catalog | [SCREENS_AND_NAVIGATION.md](../architecture/SCREENS_AND_NAVIGATION.md) |
 | Feature matrix | [PRODUCT_FEATURES.md](PRODUCT_FEATURES.md) |
-| Build & testing | [BUILD_AND_TESTING.md](BUILD_AND_TESTING.md) |
-| Architecture detail | [ARCHITECTURE.md](ARCHITECTURE.md) |
-| Design system | [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md) |
-| Security | [SECURITY.md](SECURITY.md) |
-| Legal & privacy | [LEGAL_PRIVACY.md](LEGAL_PRIVACY.md) |
+| Build & testing | [BUILD_AND_TESTING.md](../testing/BUILD_AND_TESTING.md) |
+| Architecture detail | [system_architecture.md](../architecture/system_architecture.md) |
+| Design system | [DESIGN_SYSTEM.md](../architecture/DESIGN_SYSTEM.md) |
+| Security | [SECURITY_GUIDELINES.md](../security/SECURITY_GUIDELINES.md) |
+| Legal & privacy | [LEGAL_PRIVACY.md](../legal/LEGAL_PRIVACY.md) |
