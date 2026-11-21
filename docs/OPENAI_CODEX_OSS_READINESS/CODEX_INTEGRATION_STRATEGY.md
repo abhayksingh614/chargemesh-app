@@ -31,7 +31,7 @@ graph TD
     end
 
     subgraph Project Assets
-        Repo["Git Repository (develop branch)"]
+        Repo["Git Repository (prod / beta branches)"]
         CI["GitHub Actions CI Pipeline"]
     end
 

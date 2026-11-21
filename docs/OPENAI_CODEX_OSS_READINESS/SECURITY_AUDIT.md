@@ -69,7 +69,7 @@ Every incoming API payload is validated at the framework boundary using NestJS `
 
 ## 5. Security in CI/CD Pipeline
 
-The `.github/workflows/security-scan.yml` workflow enforces automated checks on every push and pull request targeting `main` and `develop`:
+The `.github/workflows/security-scan.yml` workflow enforces automated checks on every push and pull request targeting `prod` and `beta`:
 1. Scans codebase for credential signatures.
 2. Audits npm dependencies for known critical CVEs.
 3. Fails the build if any unauthorized credential or critical vulnerability is introduced.

@@ -2,7 +2,7 @@
 
 **Audit Date:** November 21, 2026  
 **Project:** ChargeMesh Repository  
-**Branch:** `develop`  
+**Branch:** `prod` & `beta`  
 **Classification Standard:** Production Open-Source Repository Standards  
 
 ---

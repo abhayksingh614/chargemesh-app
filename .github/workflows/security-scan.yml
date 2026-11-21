@@ -2,9 +2,9 @@ name: Security & Secret Scan
 
 on:
   push:
-    branches: [main, develop]
+    branches: [prod, beta]
   pull_request:
-    branches: [main, develop]
+    branches: [prod, beta]
 
 jobs:
   secret-scan:

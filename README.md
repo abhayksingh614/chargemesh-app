@@ -442,7 +442,7 @@ Comprehensive application and program readiness specifications are maintained un
 We welcome community pull requests, bug reports, and protocol contributions!
 1. Read the [Code of Conduct](CODE_OF_CONDUCT.md).
 2. Follow our [Contribution Guidelines](CONTRIBUTING.md).
-3. Review our [Git Branching Strategy](.github/GIT_STRATEGY.md) (All PRs must target `develop`).
+3. Review our [Git Branching Strategy](.github/GIT_STRATEGY.md) (All PRs must target `beta`).
 4. Follow Conventional Commits format (`feat:`, `fix:`, `docs:`).
 
 ---

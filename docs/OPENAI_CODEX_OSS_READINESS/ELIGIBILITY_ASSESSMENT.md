@@ -68,7 +68,7 @@ To ensure the application is evaluated positively without administrative rejecti
 1. **Remote Repository Public Visibility:**
    Confirm that the GitHub repository (`https://github.com/abhayksingh614/chargemesh-app`) is set to **Public** (not Private).
 2. **Push Local Commits and Tags:**
-   Review and push local commits and tags (`v0.5.1-alpha`) to the remote `develop` and `main` branches.
+   Review and push local commits and tags (`v0.5.1-alpha`) to the remote `prod` and `beta` branches.
 3. **Supply Personal Account Details:**
    The form requires:
    - Your exact GitHub handle (`abhayksingh614`)

@@ -84,20 +84,21 @@ Before setting up the project locally, ensure you have installed:
 
 ## 4. Branching Strategy & Workflow
 
-We follow the standard Git branching model described in [`.github/GIT_STRATEGY.md`](.github/GIT_STRATEGY.md):
+We maintain exactly two permanent branches as defined in [`.github/GIT_STRATEGY.md`](.github/GIT_STRATEGY.md):
 
 ```
-main          ◄── Production releases (tagged with SemVer vX.Y.Z)
+prod          ◄── Production releases (Default branch, tagged with SemVer vX.Y.Z)
   ▲
-develop       ◄── Main development integration branch. Target ALL PRs here!
+beta          ◄── Active development & testing integration branch. Target ALL PRs here!
   ▲
 feature/CM-XXX-description
 fix/CM-XXX-description
 chore/description
 ```
 
-- **Protected Branches:** Never commit directly to `main` or `develop`.
-- **Target Branch:** All pull requests must target `develop`.
+- **Protected Branches:** Never push untested or direct commits to `prod`.
+- **Target Branch:** All pull requests and feature contributions must target `beta`.
+- **Promotion to `prod`:** Only code that passes 100% of CI/CD checks and testing on `beta` is merged/promoted to `prod`.
 
 ---
 
@@ -177,7 +178,7 @@ docs(readme): add local setup troubleshooting steps
    ```bash
    git push origin feature/CM-042-my-feature
    ```
-2. Open a Pull Request targeting the `develop` branch of `abhayksingh614/chargemesh-app`.
+2. Open a Pull Request targeting the `beta` branch of `abhayksingh614/chargemesh-app`.
 3. Fill out the [Pull Request Template](.github/PULL_REQUEST_TEMPLATE.md) completely.
 4. Ensure the GitHub Actions CI passes on your PR.
 5. Address any reviewer feedback promptly.

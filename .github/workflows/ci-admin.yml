@@ -2,13 +2,13 @@ name: CI — Admin Portal
 
 on:
   push:
-    branches: [main, develop]
+    branches: [prod, beta]
     paths:
       - 'apps/admin/**'
       - 'packages/**'
       - '.github/workflows/ci-admin.yml'
   pull_request:
-    branches: [main, develop]
+    branches: [prod, beta]
     paths:
       - 'apps/admin/**'
       - 'packages/**'

@@ -1,7 +1,7 @@
 # Git History Security & Secret Audit Report
 
 **Audit Date:** November 21, 2026  
-**Repository Branch:** `develop`  
+**Repository Branch:** `prod` & `beta`  
 **Commit Range Analyzed:** Root commit `5e55bf8` to HEAD `dacd5c9` (8 total commits)  
 **Classification:** Open-Source Release Security Audit  
 

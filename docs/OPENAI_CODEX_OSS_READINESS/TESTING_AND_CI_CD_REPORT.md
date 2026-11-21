@@ -81,7 +81,7 @@ The repository contains 5 dedicated GitHub Actions workflow definitions in [`.gi
 ```
 
 ### 3.1 `ci-monorepo.yml` Configuration
-Runs on every push and pull request targeting `main` and `develop`. It provisions:
+Runs on every push and pull request targeting `prod` and `beta`. It provisions:
 - **PostgreSQL 16 + PostGIS:** Container service `postgis/postgis:16-3.4-alpine` on port 5432.
 - **Redis 7.2:** Container service `redis:7-alpine` on port 6379.
 - **Execution Pipeline:**

@@ -2,9 +2,9 @@ name: CI — Monorepo Typecheck & Test
 
 on:
   push:
-    branches: [main, develop]
+    branches: [prod, beta]
   pull_request:
-    branches: [main, develop]
+    branches: [prod, beta]
 
 jobs:
   verify:

@@ -72,7 +72,7 @@ Prior to clicking **Submit** on `https://openai.com/form/codex-for-oss/`, please
 2. **Repository URL:** `https://github.com/abhayksingh614/chargemesh-app` (ensure the repository visibility is set to **Public**).
 3. **Email Associated with ChatGPT:** Your registered OpenAI account email address.
 4. **OpenAI Organization ID:** Retrieve from [https://platform.openai.com/account/organization](https://platform.openai.com/account/organization) (e.g. `org-xxxxxxxxxxxxxxxxxxxxxxxx`).
-5. **Pre-Submission Remote Sync:** Ensure local commits and tags are pushed to GitHub (`develop` and `main`).
+5. **Pre-Submission Remote Sync:** Ensure local commits and tags are pushed to GitHub (`prod` and `beta`).
 
 ---
 

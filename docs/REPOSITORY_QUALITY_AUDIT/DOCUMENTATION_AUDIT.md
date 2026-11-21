@@ -2,7 +2,7 @@
 
 **Audit Date:** November 21, 2026  
 **Project:** ChargeMesh (India's Interoperable Open EV Roaming Platform)  
-**Repository Branch:** `develop`  
+**Repository Branch:** `prod` & `beta`  
 **Auditor:** Open-Source Engineering & Security Architecture Team  
 
 ---

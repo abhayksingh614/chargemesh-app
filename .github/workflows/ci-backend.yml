@@ -2,13 +2,13 @@ name: CI — Backend Gateway
 
 on:
   push:
-    branches: [main, develop]
+    branches: [prod, beta]
     paths:
       - 'apps/backend/**'
       - 'packages/**'
       - '.github/workflows/ci-backend.yml'
   pull_request:
-    branches: [main, develop]
+    branches: [prod, beta]
     paths:
       - 'apps/backend/**'
       - 'packages/**'

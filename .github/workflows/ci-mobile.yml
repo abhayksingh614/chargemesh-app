@@ -2,13 +2,13 @@ name: CI — Mobile Application
 
 on:
   push:
-    branches: [main, develop]
+    branches: [prod, beta]
     paths:
       - 'apps/mobile/**'
       - 'packages/**'
       - '.github/workflows/ci-mobile.yml'
   pull_request:
-    branches: [main, develop]
+    branches: [prod, beta]
     paths:
       - 'apps/mobile/**'
       - 'packages/**'

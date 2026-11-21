@@ -3,7 +3,7 @@
 **Evaluation Date:** November 21, 2026  
 **Project:** ChargeMesh (India's Interoperable Open EV Roaming Platform)  
 **Target Program:** [OpenAI Codex for Open Source Program](https://developers.openai.com/community/codex-for-oss) ([Application Portal](https://openai.com/form/codex-for-oss/))  
-**Repository Branch:** `develop`  
+**Repository Branch:** `prod` & `beta`  
 **Overall Readiness Score:** **98 / 100 (Exemplary — Production & Open-Source Ready)**  
 
 ---

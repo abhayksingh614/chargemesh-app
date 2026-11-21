@@ -26,7 +26,7 @@ ChargeMesh is an open-source, community-driven platform designed to accelerate E
 | **Open-Source License** | [LICENSE](file:///c:/Users/aksde/Videos/My_Codex/Chargemesh_app/LICENSE) | Apache License 2.0 terms granting community usage and patent protection |
 | **Security Policy** | [SECURITY.md](file:///c:/Users/aksde/Videos/My_Codex/Chargemesh_app/SECURITY.md) | Vulnerability disclosure SLAs, response timelines, safe contact aliases |
 | **Changelog** | [CHANGELOG.md](file:///c:/Users/aksde/Videos/My_Codex/Chargemesh_app/CHANGELOG.md) | Semantic versioning changelog (`v0.5.1-alpha`) |
-| **Git Strategy** | [.github/GIT_STRATEGY.md](file:///c:/Users/aksde/Videos/My_Codex/Chargemesh_app/.github/GIT_STRATEGY.md) | Two-tier branch structure (`develop` and `main`) |
+| **Git Strategy** | [.github/GIT_STRATEGY.md](file:///c:/Users/aksde/Videos/My_Codex/Chargemesh_app/.github/GIT_STRATEGY.md) | Two-tier branch structure (`beta` and `prod`) |
 | **Pull Request Template** | [.github/pull_request_template.md](file:///c:/Users/aksde/Videos/My_Codex/Chargemesh_app/.github/pull_request_template.md) | Standardized PR checklist and domain rule verification |
 | **Bug Report Template** | [.github/ISSUE_TEMPLATE/bug_report.yml](file:///c:/Users/aksde/Videos/My_Codex/Chargemesh_app/.github/ISSUE_TEMPLATE/bug_report.yml) | Structured YAML bug submission schema |
 | **Feature Request Template** | [.github/ISSUE_TEMPLATE/feature_request.yml](file:///c:/Users/aksde/Videos/My_Codex/Chargemesh_app/.github/ISSUE_TEMPLATE/feature_request.yml) | Architecture-aligned feature proposal schema |
@@ -41,17 +41,17 @@ flowchart TD
     Issue["1. GitHub Issue Opened<br/>(Bug / Feature RFC)"] --> Triage["2. Maintainer Triage<br/>(Label: 'good first issue' / 'enhancement')"]
     Triage --> Fork["3. Contributor Forks Repo<br/>(Branch: feat/CM-xxx)"]
     Fork --> LocalDev["4. Local Dev & Verification<br/>(npm run typecheck && npm test)"]
-    LocalDev --> PR["5. Pull Request Submitted<br/>(Target: develop branch)"]
+    LocalDev --> PR["5. Pull Request Submitted<br/>(Target: beta branch)"]
     PR --> CI["6. Automated CI Pipeline<br/>(Typecheck, Tests, Build, Secret Scan)"]
     CI --> Review["7. Maintainer Code Review<br/>(Code quality, BOLA, tests)"]
     Review -->|Changes Requested| LocalDev
-    Review -->|Approved & CI Green| Merge["8. Squash & Merge to develop"]
-    Merge --> Release["9. Tagged Release to main<br/>(e.g. v0.5.1-alpha)"]
+    Review -->|Approved & CI Green| Merge["8. Squash & Merge to beta"]
+    Merge --> Release["9. Promote to prod & Tag Release<br/>(e.g. v0.5.1-alpha)"]
 ```
 
 ### 3.1 Pull Request Requirements
 Every pull request submitted to ChargeMesh must satisfy:
-1. **Branch Target:** All feature branches target `develop` (never direct to `main`).
+1. **Branch Target:** All feature branches target `beta` (never direct to `prod`).
 2. **Typecheck & Tests:** Must pass `npm run typecheck` and `npm run test` with zero failures.
 3. **Domain Status Invariants:**
    - Unknown connector status (`UNKNOWN`) must never be rendered as available.

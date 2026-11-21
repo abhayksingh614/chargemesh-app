@@ -10,8 +10,8 @@ Security patches and bug fixes are applied to the active development branches:
 
 | Version / Branch | Supported | Notes |
 | :--- | :--- | :--- |
-| `develop` | ✅ Yes | Active development integration branch |
-| `main` | ✅ Yes | Production-ready tagged releases |
+| `prod` | ✅ Yes | Official production-ready default branch |
+| `beta` | ✅ Yes | Active development and staging branch |
 | `< 1.0.0` releases | ❌ No | Please upgrade to the latest tagged release |
 
 ---
