@@ -29,23 +29,22 @@
 2. [The Problem Statement](#-the-problem-statement)
 3. [The ChargeMesh Solution](#-the-charge-mesh-solution)
 4. [Key Features](#-key-features)
-5. [Visual Gallery & UI Catalog](#-visual-gallery--ui-catalog)
-6. [Architecture Overview](#-architecture-overview)
-7. [Technology Stack](#-technology-stack)
-8. [Repository Monorepo Structure](#-repository-monorepo-structure)
-9. [Prerequisites & System Requirements](#-prerequisites--system-requirements)
-10. [Local Development Setup](#-local-development-setup)
-11. [Environment Variable Configuration](#-environment-variable-configuration)
-12. [Database & Infrastructure Setup](#-database--infrastructure-setup)
-13. [API & WebSocket Gateway Documentation](#-api--websocket-gateway-documentation)
-14. [Testing & Quality Assurance](#-testing--quality-assurance)
-15. [Build Instructions](#-build-instructions)
-16. [Deployment & Release Instructions](#-deployment--release-instructions)
-17. [Security & Privacy Posture](#-security--privacy-posture)
-18. [Contributing Guidelines](#-contributing-guidelines)
-19. [Development Roadmap](#-development-roadmap)
-20. [Licensing & Copyright](#-licensing--copyright)
-21. [Support, Community & Contact](#-support-community--contact)
+5. [Architecture Overview](#-architecture-overview)
+6. [Technology Stack](#-technology-stack)
+7. [Repository Monorepo Structure](#-repository-monorepo-structure)
+8. [Prerequisites & System Requirements](#-prerequisites--system-requirements)
+9. [Local Development Setup](#-local-development-setup)
+10. [Environment Variable Configuration](#-environment-variable-configuration)
+11. [Database & Infrastructure Setup](#-database--infrastructure-setup)
+12. [API & WebSocket Gateway Documentation](#-api--websocket-gateway-documentation)
+13. [Testing & Quality Assurance](#-testing--quality-assurance)
+14. [Build Instructions](#-build-instructions)
+15. [Deployment & Release Instructions](#-deployment--release-instructions)
+16. [Security & Privacy Posture](#-security--privacy-posture)
+17. [Contributing Guidelines](#-contributing-guidelines)
+18. [Development Roadmap](#-development-roadmap)
+19. [Licensing & Copyright](#-licensing--copyright)
+20. [Support, Community & Contact](#-support-community--contact)
 
 ---
 
@@ -97,17 +96,6 @@ ChargeMesh creates an interoperable, transparent ecosystem:
 ### 💻 Operations & CPO Admin Portal (`apps/admin`)
 - **14 Administrative Views:** Executive Dashboard, CPO Registry, Live Station Directory, Charger Health Donut, Bookings, Sessions, Fast Wallet Adjustments, and Immutable Audit Trails.
 - **Interactive MapLibre Map:** Nationwide station hub clustering and status visualization.
-
----
-
-## 🖼️ Visual Gallery & UI Catalog
-
-| Discovery & Map | Live Telemetry & Charging | Fast Wallet & Ledger |
-| :---: | :---: | :---: |
-| <img src="docs/screenshots/onboarding_01_verified_chargers.png" width="240" alt="Discovery & Map" /> | <img src="docs/screenshots/onboarding_02_live_telemetry.png" width="240" alt="Live Telemetry" /> | <img src="docs/screenshots/onboarding_03_one_wallet.png" width="240" alt="Fast Wallet" /> |
-| *Unified map discovery across all CPO networks* | *Real-time radial gauge (kW, %, V, A)* | *Single wallet balance with 18% GST audit* |
-
-> 📸 **Complete Visual Documentation:** Browse the full [Screenshots & Visual Catalog](docs/screenshots/README.md) for detailed descriptions of all 22 mobile screens and 14 admin portal views.
 
 ---
 
