@@ -429,7 +429,7 @@ Comprehensive application and program readiness specifications are maintained un
 
 ## 🛡️ Security & Privacy Posture
 
-- **Responsible Disclosure:** If you find a security vulnerability, please email **security@chargemesh.com** directly. Do NOT create public GitHub issues. See [`SECURITY.md`](SECURITY.md).
+- **Responsible Disclosure:** If you discover a security vulnerability, please submit a report confidentially via [GitHub Private Vulnerability Reporting](https://github.com/abhayksingh614/chargemesh-app/security/advisories/new) or refer to our [Security Policy](SECURITY.md) (`security@chargemesh.in`). Do NOT create public GitHub issues.
 - **Zero Secrets Committed:** Automated scanning verifies no credentials, API keys, or private keys exist in version control.
 - **Data Protection & Privacy:** Implements data minimization, object-level authorization (BOLA defense), and consent standards compliant with India's **Digital Personal Data Protection (DPDP) Act 2023** and **GDPR Art. 32**.
 - **Financial & Protocol Integrity:** Authoritative gateway payment verification, pessimistic wallet locking, and fail-closed OCPP CSMS gateway connectivity.

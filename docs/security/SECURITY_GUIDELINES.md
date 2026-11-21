@@ -37,4 +37,4 @@ This document establishes the mandatory security standards and coding practices 
 
 ## 4. Vulnerability Reporting
 
-If you identify a security vulnerability, please refer to our responsible disclosure policy in [SECURITY.md](file:///c:/Users/aksde/Videos/My_Codex/Chargemesh_app/SECURITY.md) and email **security@chargemesh.in**. Do NOT file public GitHub issues for security vulnerabilities.
+If you identify a security vulnerability, please submit a report confidentially via [GitHub Private Vulnerability Reporting](https://github.com/abhayksingh614/chargemesh-app/security/advisories/new) or refer to our [Security Policy](../../SECURITY.md) (fallback: `security@chargemesh.in`). Do NOT file public GitHub issues or discussions for security vulnerabilities.
