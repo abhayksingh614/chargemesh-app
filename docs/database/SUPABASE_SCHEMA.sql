@@ -197,7 +197,7 @@ CREATE TABLE IF NOT EXISTS public.audit_logs (
 -- Performance & Spatial Indexes
 -- =============================================================================
 CREATE INDEX IF NOT EXISTS "IDX_stations_spatial" ON public.charging_stations USING gist (
-    ST_SetSRID(ST_MakePoint(longitude, latitude), 4326)::geography
+    ((ST_SetSRID(ST_MakePoint(longitude, latitude), 4326))::geography)
 );
 CREATE INDEX IF NOT EXISTS "IDX_stations_city" ON public.charging_stations (city);
 CREATE INDEX IF NOT EXISTS "IDX_stations_status" ON public.charging_stations (status);
@@ -231,3 +231,16 @@ VALUES (
     'Operations'
 )
 ON CONFLICT (email) DO NOTHING;
+
+-- =============================================================================
+-- Supabase API Permissions (anon, authenticated, service_role)
+-- =============================================================================
+GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
+GRANT ALL ON ALL TABLES IN SCHEMA public TO anon, authenticated, service_role;
+GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated, service_role;
+GRANT ALL ON ALL ROUTINES IN SCHEMA public TO anon, authenticated, service_role;
+
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO anon, authenticated, service_role;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO anon, authenticated, service_role;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON ROUTINES TO anon, authenticated, service_role;
+
